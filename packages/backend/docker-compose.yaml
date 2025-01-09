@@ -1,13 +1,4 @@
 services:
-  redis:
-    image: redis/redis-stack:7.2.0-v13
-    container_name: dyvy_redis
-    volumes:
-      - ./.redis:/data/
-    ports:
-      - 6341:6379 # exposed 6341 port for avoiding conflicts with other instances
-      - 8041:8001 # RedisInsight dashboard
-
   db:
     image: postgres:16.2
     container_name: dyvy_db
@@ -20,3 +11,24 @@ services:
       - POSTGRES_DB=db
     ports:
       - 5441:5432 # exposed 5441 port for avoiding conflicts with other instances
+
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: dyvy_rabbitmq
+    volumes:
+      - ./.rabbitmq:/var/lib/rabbitmq/
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password123
+    ports:
+      - 5672:5672
+      - 15672:15672 # Management dashboard
+
+  redis:
+    image: redis/redis-stack:7.2.0-v13
+    container_name: dyvy_redis
+    volumes:
+      - ./.redis:/data/
+    ports:
+      - 6379:6379
+      - 8001:8001 # RedisInsight dashboard
