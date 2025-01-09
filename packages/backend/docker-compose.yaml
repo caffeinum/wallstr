@@ -1,0 +1,22 @@
+services:
+  redis:
+    image: redis/redis-stack:7.2.0-v13
+    container_name: dyvy_redis
+    volumes:
+      - ./.redis:/data/
+    ports:
+      - 6341:6379 # exposed 6341 port for avoiding conflicts with other instances
+      - 8041:8001 # RedisInsight dashboard
+
+  db:
+    image: postgres:16.2
+    container_name: dyvy_db
+    command: postgres -c log_statement=all
+    volumes:
+      - ./.db/:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=db
+    ports:
+      - 5441:5432 # exposed 5441 port for avoiding conflicts with other instances
