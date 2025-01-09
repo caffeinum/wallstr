@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     # required
     DATABASE_URL: str
+    RABBITMQ_URL: str
+    REDIS_URL: str
 
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True, extra="ignore"
