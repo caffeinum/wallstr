@@ -1,0 +1,21 @@
+{
+  "name": "dyvy",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20.11.1"
+  },
+  "type": "module",
+  "packageManager": "pnpm@9.15.3",
+  "description": "DyvyAI",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "Guro Bokum <jiojiajiu@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7"
+  }
+}
