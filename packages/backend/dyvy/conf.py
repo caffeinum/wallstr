@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Env(str, Enum):
     dev = "dev"
     prod = "prod"
+    test = "test"
 
 
 class Settings(BaseSettings):
