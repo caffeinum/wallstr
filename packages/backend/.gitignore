@@ -1,0 +1,9 @@
+.coverage
+.env
+.python-version
+
+__pycache__/
+.db/
+.redis/
+
+.sw?

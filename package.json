@@ -8,11 +8,13 @@
   "packageManager": "pnpm@9.15.3",
   "description": "DyvyAI",
   "scripts": {
+    "backend:lint": "cd packages/backend && task lint",
+    "backend:mypy": "cd packages/backend && task mypy",
     "prepare": "husky"
   },
   "keywords": [],
   "author": "Guro Bokum <jiojiajiu@gmail.com>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
