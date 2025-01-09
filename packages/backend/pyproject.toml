@@ -10,6 +10,9 @@ readme = "README.md"
 lint = "ruff format --check . && ruff check --diff"
 format = "ruff format"
 mypy = "mypy ."
+alembic_print = "bash scripts/alembic.sh"
+makemigrations = "alembic revision --autogenerate -m"
+migrate = "alembic upgrade head"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -20,9 +23,11 @@ pydantic-settings = "^2.7.1"
 mypy = "^1.14.1"
 ruff = "^0.8.6"
 taskipy = "^1.14.1"
+alembic = "^1.14.0"
+alembic-postgresql-enum = "^1.5.0"
 
-# https://mypy.readthedocs.io/en/latest/config_file.html
 [tool.mypy]
+# https://mypy.readthedocs.io/en/latest/config_file.html
 strict_optional = true
 show_error_codes = true
 show_column_numbers = true
@@ -42,8 +47,8 @@ warn_return_any = true
 warn_unused_configs = true
 strict_equality = true
 
-# https://docs.astral.sh/ruff/configuration
 [tool.ruff]
+# https://docs.astral.sh/ruff/configuration
 line-length = 88 # default
 
 [tool.ruff.lint]
