@@ -17,6 +17,20 @@ defaults:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.2
+        env:
+          POSTGRES_DB: db_test
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5439:5432
 
     steps:
     - uses: actions/checkout@v4
@@ -47,3 +61,8 @@ jobs:
       run: |
         source .venv/bin/activate
         task mypy
+    - name: Test with pytest
+      run: |
+        source .venv/bin/activate
+        task test
+        coverage json
