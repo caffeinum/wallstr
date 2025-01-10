@@ -8,6 +8,9 @@
   "packageManager": "pnpm@9.15.3",
   "description": "DyvyAI",
   "scripts": {
+    "frontend:lint": "pnpm -F dyvy_frontend lint",
+    "frontend:format:check": "pnpm -F dyvy_frontend format:check",
+    "frontend:ts": "pnpm -F dyvy_frontend ts",
     "backend:lint": "cd packages/backend && task lint",
     "backend:mypy": "cd packages/backend && task mypy",
     "prepare": "husky"
