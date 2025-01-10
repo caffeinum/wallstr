@@ -64,9 +64,13 @@ strict_equality = true
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration
 line-length = 88 # default
+indent-width = 4
 
 [tool.ruff.lint]
 extend-select = ["B", "I", "SIM", "UP"]
+
+[tool.ruff.format]
+indent-style = "space"
 
 [tool.pytest.ini_options]
 env_files = ".env.test"
