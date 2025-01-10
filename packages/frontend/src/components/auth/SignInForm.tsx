@@ -19,14 +19,19 @@ export default function SignInForm({ urls }: { urls: { forgotPassword: string; s
       <h2 className="text-2xl font-bold text-center">Sign In</h2>
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-1">
-          <label className="label">Email</label>
-          <input type="email" className="input w-full" placeholder="Enter your email" />
+          <label className="label" htmlFor="email">
+            Email
+          </label>
+          <input className="input w-full" id="email" type="email" placeholder="Enter your email" />
         </div>
 
         <div className="space-y-1">
-          <label className="label">Password</label>
+          <label className="label" htmlFor="password">
+            Password
+          </label>
           <input
             className="input w-full"
+            id="password"
             type="password"
             {...register("password", { required: true })}
             placeholder="Enter your password"
