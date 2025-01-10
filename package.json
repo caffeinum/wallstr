@@ -8,9 +8,13 @@
   "packageManager": "pnpm@9.15.3",
   "description": "DyvyAI",
   "scripts": {
+    "frontend:dev": "pnpm -F dyvy_frontend dev",
     "frontend:lint": "pnpm -F dyvy_frontend lint",
     "frontend:format:check": "pnpm -F dyvy_frontend format:check",
     "frontend:ts": "pnpm -F dyvy_frontend ts",
+    "docker-compose": "docker-compose -f packages/backend/docker-compose.yaml up",
+    "backend:dev": "cd packages/backend && task dev",
+    "backend:worker": "cd packages/backend && task worker",
     "backend:lint": "cd packages/backend && task lint",
     "backend:mypy": "cd packages/backend && task mypy",
     "prepare": "husky"

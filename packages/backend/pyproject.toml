@@ -5,6 +5,7 @@ description = "DyvyAI backend"
 authors = ["Guro Bokum <jiojiajiu@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
+package-mode = false
 
 [tool.taskipy.tasks]
 dev = "uvicorn dyvy.server:app --reload --reload-include .env"

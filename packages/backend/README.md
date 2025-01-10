@@ -2,7 +2,7 @@
 
 ## Installation
 
-1. Install [Poetry](https://python-poetry.org/docs/#installation)
+1. Install [poetry](https://python-poetry.org/docs/#installation)
 2. `poetry install`
 
 ## Running locally
