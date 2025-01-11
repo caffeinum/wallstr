@@ -15,6 +15,7 @@ const preview: Preview = {
     viewport: {
       viewports: MINIMAL_VIEWPORTS,
     },
+    layout: "centered",
   },
 };
 
