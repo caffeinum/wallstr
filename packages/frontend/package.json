@@ -17,8 +17,7 @@
     "tsw": "tsc --noEmit --watch",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "test": "playwright test",
-    "test-ct": "playwright test -c playwright-ct.config.ts"
+    "test": "playwright test"
   },
   "dependencies": {
     "next": "15.1.4",
