@@ -5,10 +5,11 @@ services:
     command: postgres -c log_statement=all
     volumes:
       - ./.db/:/var/lib/postgresql/data/
+      - ./scripts/create_multiple_postgresql_databases.sh:/docker-entrypoint-initdb.d/09_create_multiple_postgresql_databases.sh
     environment:
+      - POSTGRES_MULTIPLE_DATABASES=db,db_test
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password123
-      - POSTGRES_DB=db
     ports:
       - 5441:5432 # exposed 5441 port for avoiding conflicts with other instances
 
