@@ -6,12 +6,17 @@ from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dyvy.auth.models import UserModel
-from dyvy.auth.services import AuthService
+from dyvy.auth.services import AuthService, UserService
 
 
 @pytest.fixture
-def auth_service(db_session: AsyncSession) -> AuthService:
+def auth_svc(db_session: AsyncSession) -> AuthService:
     return AuthService(db_session)
+
+
+@pytest.fixture
+def user_svc(db_session: AsyncSession) -> UserService:
+    return UserService(db_session)
 
 
 @pytest_asyncio.fixture
@@ -30,8 +35,8 @@ async def user(db_session: AsyncSession) -> AsyncGenerator[UserModel]:
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_email(auth_service: AuthService, user: UserModel) -> None:
+async def test_get_user_by_email(user_svc: UserService, user: UserModel) -> None:
     email = "test@example.com"
 
-    result = await auth_service.get_user_by_email(email)
+    result = await user_svc.get_user_by_email(email)
     assert result == user
