@@ -9,7 +9,9 @@ from redis.asyncio import Redis
 from dyvy import worker
 from dyvy.conf import settings
 from dyvy.db import AsyncSessionMaker, create_async_engine, create_session_maker
+from dyvy.logging import configure_logging
 
+configure_logging()
 logger = logging.getLogger(__name__)
 
 

@@ -19,8 +19,9 @@ makemigrations = "alembic revision --autogenerate -m"
 migrate = "alembic upgrade head"
 
 [tool.poetry.dependencies]
-python = "^3.12"
-pydantic = "^2.10.5"
+# crypt is removed in 3.13 but is required by passlib
+python = ">=3.12,<3.13"
+pydantic = {extras = ["email"], version = "^2.10.5"}
 pydantic-settings = "^2.7.1"
 dramatiq = {extras = ["rabbitmq", "watch"], version = "^1.17.1"}
 redis = {extras = ["hiredis"], version = "^5.2.1"}
@@ -29,6 +30,7 @@ sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 uvicorn = {extras = ["standard"], version = "^0.34.0"}
 asyncpg = "^0.30.0"
 sqlalchemy-utils = {extras = ["encrypted", "password"], version = "^0.41.2"}
+structlog = "^24.4.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -62,14 +64,10 @@ warn_no_return = true
 warn_return_any = true
 warn_unused_configs = true
 strict_equality = true
-exclude = [
-  "^examples/"
-]
+exclude = ["^examples/"]
 
 [[tool.mypy.overrides]]
-module = [
-  "sqlalchemy_utils.*",
-]
+module = ["sqlalchemy_utils.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -87,6 +85,7 @@ indent-style = "space"
 env_files = ".env.test"
 asyncio_mode = "auto"
 env_override_existing_values = 1
+norecursedirs = ["examples"]
 
 [build-system]
 requires = ["poetry-core"]
