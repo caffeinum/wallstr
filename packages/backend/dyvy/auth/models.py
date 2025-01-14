@@ -9,7 +9,7 @@ from sqlalchemy_utils.types import IPAddressType, PasswordType
 from dyvy.models.base import HashType, RecordModel, string_column
 
 
-class User(RecordModel):
+class UserModel(RecordModel):
     __tablename__ = "auth_users"
 
     email: Mapped[EmailStr] = mapped_column(unique=True, index=True, nullable=False)
@@ -28,12 +28,12 @@ class User(RecordModel):
     is_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
 
-    sessions: Mapped[list["Session"]] = relationship(
+    sessions: Mapped[list["SessionModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
 
-class Session(RecordModel):
+class SessionModel(RecordModel):
     __tablename__ = "auth_sessions"
 
     refresh_token: Mapped[str] = mapped_column(
@@ -44,7 +44,7 @@ class Session(RecordModel):
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("auth_users.id"), nullable=False, index=True
     )
-    user: Mapped[User] = relationship(back_populates="sessions")
+    user: Mapped[UserModel] = relationship(back_populates="sessions")
 
     device_info: Mapped[str | None] = string_column(255)
     ip_address: Mapped[str | None] = mapped_column(

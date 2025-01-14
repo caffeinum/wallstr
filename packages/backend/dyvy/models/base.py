@@ -98,3 +98,8 @@ class RecordModel(TimestampModel):
     id: MappedColumn[UUID] = mapped_column(
         PostgresUUID, primary_key=True, default=uuid4
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__qualname__}(id='{self.id}')"
+        )
