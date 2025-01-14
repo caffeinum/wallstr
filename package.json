@@ -17,6 +17,7 @@
     "docker-compose": "docker-compose -f packages/backend/docker-compose.yaml up",
     "backend:dev": "cd packages/backend && task dev",
     "backend:worker": "cd packages/backend && task worker",
+    "backend:format": "cd packages/backend && task format",
     "backend:lint": "cd packages/backend && task lint",
     "backend:mypy": "cd packages/backend && task mypy",
     "prepare": "husky"

@@ -1,8 +1,11 @@
 import asyncio
 from logging.config import fileConfig
+from typing import Any, Literal
 
 import alembic_postgresql_enum  # type: ignore[import-untyped] # noqa
+import sqlalchemy_utils
 from alembic import context
+from alembic.autogenerate.api import AutogenContext
 from alembic.operations.ops import MigrationScript
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
@@ -54,6 +57,17 @@ def process_revision_directives(
     migration_script.rev_id = f"{rev_id:04d}"
 
 
+# https://github.com/kvesteri/sqlalchemy-utils/issues/129#issuecommentLiteral082
+def render_item(
+    type_: str, obj: Any, autogen_context: AutogenContext
+) -> str | Literal[False]:
+    if type_ == "type" and isinstance(obj, sqlalchemy_utils.types.PasswordType):
+        max_length = obj.calculate_max_length()
+        return f"sa.LargeBinary(length={max_length})"
+
+    return False
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -70,6 +84,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
+        render_item=render_item,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         process_revision_directives=process_revision_directives,
@@ -83,6 +98,7 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        render_item=render_item,
         process_revision_directives=process_revision_directives,
     )
 

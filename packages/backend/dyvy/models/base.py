@@ -1,13 +1,16 @@
+import hashlib
 from datetime import UTC, datetime
-from typing import cast
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import sqlalchemy
-from pydantic import HttpUrl
-from sqlalchemy import MetaData, String
+from pydantic import EmailStr, HttpUrl
+from sqlalchemy import LargeBinary, MetaData, String, TypeDecorator
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedColumn, mapped_column
 from sqlalchemy.types import TIMESTAMP
+from sqlalchemy_utils.types import EmailType
 
 
 def utc_now() -> datetime:
@@ -42,11 +45,39 @@ PostgresUUID = cast(
 )
 
 
+class HashType(TypeDecorator[str]):
+    impl = LargeBinary(64)
+    cache_ok = True
+
+    def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
+        if value is None:
+            return None
+        return hashlib.sha512(value.encode()).digest()
+
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
+        if value is None:
+            return None
+        return value.hex()
+
+
+def string_column(
+    length: int, nullable: bool = False, default: str | None = "", **kwargs: Any
+) -> Any:
+    """
+    Factory for creating string columns with sane defaults.
+
+    This follows the convention of avoiding NULL for string columns.
+    Instead, an empty string is used as the default value when the column is not nullable.
+    """
+    return mapped_column(String(length), nullable=nullable, default=default, **kwargs)
+
+
 class BaseModel(DeclarativeBase):
     __abstract__ = True
     type_annotation_map = {
         datetime: TIMESTAMP(timezone=True),
         HttpUrl: String(4096),
+        EmailStr: EmailType(),
         UUID: PostgresUUID,
     }
 

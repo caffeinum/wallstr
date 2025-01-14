@@ -28,6 +28,7 @@ fastapi = "^0.115.6"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 uvicorn = {extras = ["standard"], version = "^0.34.0"}
 asyncpg = "^0.30.0"
+sqlalchemy-utils = {extras = ["encrypted", "password"], version = "^0.41.2"}
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -64,6 +65,12 @@ strict_equality = true
 exclude = [
   "^examples/"
 ]
+
+[[tool.mypy.overrides]]
+module = [
+  "sqlalchemy_utils.*",
+]
+ignore_missing_imports = true
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration
