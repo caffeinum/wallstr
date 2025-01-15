@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,15 +11,26 @@ class Env(str, Enum):
     test = "test"
 
 
+class JWTSettings(BaseSettings):
+    issuer: str = "https://github.com/limanAI/dyvy"
+    algorithm: Literal["HS512"] = "HS512"
+    access_token_expire_minutes: int = 60
+    refresh_token_expire_days: int = 7
+
+
 class Settings(BaseSettings):
     ENV: Env = Env.dev
     DEBUG: bool = False
     DEBUG_SQL: bool = False
 
     # required
+    SECRET_KEY: SecretStr
     DATABASE_URL: SecretStr
     RABBITMQ_URL: SecretStr
     REDIS_URL: SecretStr
+
+    # JWT
+    JWT: JWTSettings = JWTSettings()
 
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True, extra="ignore"

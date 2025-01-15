@@ -10,6 +10,11 @@ class SignUpRequest(BaseModel):
     fullname: str | None
 
 
+class SignInRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
 class User(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

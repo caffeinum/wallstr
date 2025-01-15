@@ -1,3 +1,4 @@
+import base64
 import secrets
 from datetime import timedelta
 from uuid import UUID
@@ -12,6 +13,8 @@ from dyvy.auth.errors import (
 )
 from dyvy.auth.models import SessionModel, UserModel
 from dyvy.auth.schemas import SignUpRequest
+from dyvy.auth.utils import generate_jwt
+from dyvy.conf import settings
 from dyvy.models.base import utc_now
 from dyvy.services import BaseService
 
@@ -27,7 +30,9 @@ class AuthService(BaseService):
 
             return await user_svc.create_user(payload)
 
-    async def signin_with_password(self, email: str, password: str) -> tuple[str, str]:
+    async def signin_with_password(
+        self, email: str, password: str, device_info: str | None, ip_address: str | None
+    ) -> tuple[str, str]:
         user_svc = UserService(self.db)
         async with self.tx():
             user = await user_svc.get_user_by_email(email)
@@ -37,12 +42,11 @@ class AuthService(BaseService):
             if not user.password:
                 raise PasswordNotSupportedError()
 
-            if not user.password != password:
+            if user.password != password:
                 raise InvalidPasswordError()
 
-            # TODO: create jwt token
-            access_token = ""
-            session = await user_svc.create_session(user.id)
+            access_token = generate_jwt(user.id)
+            session = await user_svc.create_session(user.id, device_info, ip_address)
         return access_token, session.refresh_token
 
 
@@ -62,9 +66,9 @@ class UserService(BaseService):
         return result.scalar_one()
 
     async def create_session(
-        self, user_id: UUID, device_info: str | None = None
+        self, user_id: UUID, device_info: str | None, ip_address: str | None
     ) -> SessionModel:
-        refresh_token = secrets.token_urlsafe(32)
+        refresh_token = secrets.token_bytes(64)
         async with self.tx():
             result = await self.db.execute(
                 sql.insert(SessionModel)
@@ -72,8 +76,9 @@ class UserService(BaseService):
                     refresh_token=refresh_token,
                     user_id=user_id,
                     device_info=device_info,
-                    # TODO: move 7 days to settings
-                    expires_at=utc_now() + timedelta(days=7),
+                    ip_address=ip_address,
+                    expires_at=utc_now()
+                    + timedelta(days=settings.JWT.refresh_token_expire_days),
                 )
                 .returning(SessionModel)
             )
@@ -83,7 +88,8 @@ class UserService(BaseService):
         async with self.tx():
             result = await self.db.execute(
                 sql.select(SessionModel).where(
-                    SessionModel.refresh_token == refresh_token,
+                    SessionModel.refresh_token
+                    == base64.urlsafe_b64decode(refresh_token),
                     SessionModel.expires_at > utc_now(),
                 )
             )
@@ -92,5 +98,7 @@ class UserService(BaseService):
     async def revoke_session(self, refresh_token: str) -> None:
         async with self.tx():
             await self.db.execute(
-                sql.delete(SessionModel).filter_by(refresh_token=refresh_token)
+                sql.delete(SessionModel).filter_by(
+                    refresh_token=base64.urlsafe_b64decode(refresh_token)
+                )
             )

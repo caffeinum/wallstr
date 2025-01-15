@@ -1,4 +1,4 @@
-import hashlib
+import base64
 from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID, uuid4
@@ -49,15 +49,10 @@ class HashType(TypeDecorator[str]):
     impl = LargeBinary(64)
     cache_ok = True
 
-    def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
-        if value is None:
-            return None
-        return hashlib.sha512(value.encode()).digest()
-
     def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
         if value is None:
             return None
-        return value.hex()
+        return base64.urlsafe_b64encode(value).decode("utf-8")
 
 
 def string_column(

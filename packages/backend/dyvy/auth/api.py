@@ -1,20 +1,25 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.security import OAuth2PasswordBearer
 
 from dyvy.auth.errors import AuthError, EmailAlreadyRegisteredError
 from dyvy.auth.schemas import (
     AccessToken,
     RefreshToken,
+    SignInRequest,
     SignUpRequest,
-    TokenPair,
     User,
 )
 from dyvy.auth.services import AuthService, UserService
+from dyvy.auth.utils import generate_jwt
+from dyvy.conf import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
+
+logger = structlog.get_logger()
 
 
 @router.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
@@ -33,31 +38,42 @@ async def signup(
     return User.model_validate(user)
 
 
-@router.post("/signin", response_model=TokenPair)
+@router.post("/signin", response_model=AccessToken)
 async def signin(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    data: SignInRequest,
+    request: Request,
+    response: Response,
     auth_svc: Annotated[AuthService, Depends(AuthService.inject_svc)],
-) -> TokenPair:
+) -> AccessToken:
     try:
         access_token, refresh_token = await auth_svc.signin_with_password(
-            form_data.username, form_data.password
+            data.email,
+            data.password,
+            device_info=request.headers.get("User-Agent"),
+            ip_address=request.client.host if request.client else None,
         )
     except AuthError as e:
+        logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
 
-    return TokenPair(
-        access_token=AccessToken(token=access_token),
-        refresh_token=RefreshToken(token=refresh_token),
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        max_age=settings.JWT.refresh_token_expire_days * 24 * 60 * 60,
     )
+    return AccessToken(token=access_token)
 
 
+# TOOD: get token from cookies
 @router.post("/refresh-token", response_model=AccessToken)
 async def refresh_token(
     refresh_token: RefreshToken,
+    response: Response,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> AccessToken:
     session = await user_svc.get_session_by_token(refresh_token.token)
@@ -67,8 +83,7 @@ async def refresh_token(
             detail="Invalid or expired refresh token",
         )
 
-    # TODO: create jwt token
-    access_token = ""
+    access_token = generate_jwt(session.user_id)
     return AccessToken(token=access_token)
 
 

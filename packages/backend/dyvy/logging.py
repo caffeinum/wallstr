@@ -106,6 +106,7 @@ LOGGING_CONFIG = {
             "handlers": ["default"],
             "level": "NOTSET",
         },
+        "authlib": {"level": "DEBUG"},
         "uvicorn": {"level": "DEBUG"},
         "uvicorn.access": {
             "level": "DEBUG",

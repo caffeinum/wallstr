@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from redis.asyncio import Redis
 
 from dyvy import worker
+from dyvy.auth.api import router as auth_router
 from dyvy.conf import settings
 from dyvy.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from dyvy.logging import configure_logging
@@ -33,12 +34,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
         }
     finally:
         try:
-            await redis.close()
+            await redis.aclose()
+        except Exception as e:
+            logger.exception(e)
+        try:
+            await engine.dispose()
         except Exception as e:
             logger.exception(e)
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth_router)
 
 
 @app.get("/")

@@ -31,6 +31,8 @@ uvicorn = {extras = ["standard"], version = "^0.34.0"}
 asyncpg = "^0.30.0"
 sqlalchemy-utils = {extras = ["encrypted", "password"], version = "^0.41.2"}
 structlog = "^24.4.0"
+authlib = "^1.4.0"
+python-multipart = "^0.0.20"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -43,6 +45,7 @@ pytest-watch = "^4.2.0"
 pytest-dotenv = "^0.5.2"
 pytest-asyncio = "^0.25.2"
 coverage = "^7.6.10"
+httpx = "^0.28.1"
 
 [tool.mypy]
 # https://mypy.readthedocs.io/en/latest/config_file.html
@@ -67,7 +70,7 @@ strict_equality = true
 exclude = ["^examples/"]
 
 [[tool.mypy.overrides]]
-module = ["sqlalchemy_utils.*"]
+module = ["sqlalchemy_utils.*", "authlib.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
