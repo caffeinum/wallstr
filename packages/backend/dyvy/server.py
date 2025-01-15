@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import TypedDict
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 from dyvy import worker
@@ -44,7 +45,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
 
 
 app = FastAPI(lifespan=lifespan)
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+    allow_headers=["*"],
+)
 app.include_router(auth_router)
 
 

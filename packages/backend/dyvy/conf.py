@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     RABBITMQ_URL: SecretStr
     REDIS_URL: SecretStr
 
+    CORS_ALLOW_ORIGINS: list[str] = []
+
     # JWT
     JWT: JWTSettings = JWTSettings()
 
