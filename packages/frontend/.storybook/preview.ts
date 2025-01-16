@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react";
 
 import { MINIMAL_VIEWPORTS } from "@storybook/addon-viewport";
 
+import { withAppRouterContext } from "./AppRouterContextMock";
 import "../app/globals.css";
 
 const preview: Preview = {
@@ -16,7 +17,11 @@ const preview: Preview = {
       viewports: MINIMAL_VIEWPORTS,
     },
     layout: "centered",
+    nextjs: {
+      appDirectory: true,
+    },
   },
+  decorators: [withAppRouterContext],
 };
 
 export default preview;
