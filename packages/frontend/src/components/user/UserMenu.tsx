@@ -2,6 +2,7 @@
 import {useCallback, useEffect, useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
+import { clearLocalStorage } from "@/hooks/useLocalStorage";
 
 interface UserData {
   username: string;
@@ -58,6 +59,7 @@ export default function UserMenu() {
       }
     } finally {
       sessionStorage.removeItem("access_token");
+      clearLocalStorage();
       router.push("/auth/signin");
     }
   }, [router]);
