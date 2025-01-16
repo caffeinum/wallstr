@@ -144,7 +144,7 @@ export default function SignUpForm({urls}: {urls: {signIn: string}}) {
           {errors.password && <span className="text-error text-sm">{errors.password.message}</span>}
         </div>
 
-        <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-neutral w-full" disabled={isSubmitting}>
           {isSubmitting ? "Creating Account..." : "Create Account"}
         </button>
 

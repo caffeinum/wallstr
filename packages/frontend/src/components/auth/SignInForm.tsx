@@ -42,7 +42,7 @@ export default function SignInForm({urls}: {urls: {forgotPassword: string; signU
         const {token} = await res.json();
         localStorage.setItem("access_token", token);
 
-        router.push("/");
+        router.push("/app");
       } catch {
         setError("Network error. Please try again.");
       }
@@ -101,7 +101,7 @@ export default function SignInForm({urls}: {urls: {forgotPassword: string; signU
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary w-full" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-neutral w-full" disabled={isSubmitting}>
           {isSubmitting ? "Signing In..." : "Sign In"}
         </button>
 

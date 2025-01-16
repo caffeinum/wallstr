@@ -1,9 +1,9 @@
-import type {Preview} from "@storybook/react";
+import type { Preview } from "@storybook/react";
 
-import {MINIMAL_VIEWPORTS} from "@storybook/addon-viewport";
-import {initialize, mswLoader, getWorker} from "msw-storybook-addon";
+import { MINIMAL_VIEWPORTS } from "@storybook/addon-viewport";
+import { initialize, mswLoader, getWorker } from "msw-storybook-addon";
 
-import {withAppRouterContext} from "./AppRouterContextMock";
+import { withAppRouterContext } from "./AppRouterContextMock";
 import "../app/globals.css";
 
 initialize();
