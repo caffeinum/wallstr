@@ -7,12 +7,15 @@ from dyvy.conf import settings
 from dyvy.models.base import utc_now
 
 
-def generate_jwt(user_id: UUID) -> str:
+def generate_jwt(
+    user_id: UUID,
+    expires_in: timedelta = timedelta(minutes=settings.JWT.access_token_expire_minutes),
+) -> str:
     header = {"alg": settings.JWT.algorithm, "typ": "JWT"}
     payload = {
         "iss": settings.JWT.issuer,
         "sub": user_id.hex,
-        "exp": utc_now() + timedelta(minutes=settings.JWT.access_token_expire_minutes),
+        "exp": utc_now() + expires_in,
         "iat": utc_now(),
     }
     b = jwt.encode(header, payload, settings.SECRET_KEY.get_secret_value())

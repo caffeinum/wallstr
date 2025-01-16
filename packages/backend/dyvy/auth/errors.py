@@ -28,3 +28,10 @@ class InvalidPasswordError(AuthError):
 
     def __init__(self, message: str = "Invalid password") -> None:
         super().__init__(message)
+
+
+class TokenExpiredError(AuthError):
+    """Raised when a tokend expired."""
+
+    def __init__(self, message: str = "Token expired") -> None:
+        super().__init__(message)
