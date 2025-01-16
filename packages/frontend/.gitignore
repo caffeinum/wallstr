@@ -40,6 +40,7 @@ yarn-error.log*
 next-env.d.ts
 
 *storybook.log
+/public/mockServiceWorker.js
 /test-results/
 /playwright-report/
 /blob-report/

@@ -1,9 +1,12 @@
-import type { Preview } from "@storybook/react";
+import type {Preview} from "@storybook/react";
 
-import { MINIMAL_VIEWPORTS } from "@storybook/addon-viewport";
+import {MINIMAL_VIEWPORTS} from "@storybook/addon-viewport";
+import {initialize, mswLoader, getWorker} from "msw-storybook-addon";
 
-import { withAppRouterContext } from "./AppRouterContextMock";
+import {withAppRouterContext} from "./AppRouterContextMock";
 import "../app/globals.css";
+
+initialize();
 
 const preview: Preview = {
   parameters: {
@@ -22,6 +25,8 @@ const preview: Preview = {
     },
   },
   decorators: [withAppRouterContext],
+  // https://github.com/mswjs/msw-storybook-addon/issues/89#issuecomment-2051972538
+  loaders: [mswLoader, () => getWorker().start()],
 };
 
 export default preview;
