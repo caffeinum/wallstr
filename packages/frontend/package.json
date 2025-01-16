@@ -17,7 +17,7 @@
     "tsw": "tsc --noEmit --watch",
     "storybook": "pnpm dlx msw init && storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "test": "playwright test"
+    "test": "pnpm dlx msw init && playwright test"
   },
   "dependencies": {
     "next": "15.1.4",

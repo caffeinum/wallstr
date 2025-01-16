@@ -1,5 +1,5 @@
 "use client";
-import {useEffect, useRef} from "react";
+import {useEffect, useMemo, useRef} from "react";
 
 interface Message {
   id: string;
@@ -12,14 +12,17 @@ export default function ChatMessages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Example messages - replace with real data
-  const messages: Message[] = [
-    {
-      id: "1",
-      content: "Hello! How can I help you today?",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ];
+  const messages: Message[] = useMemo(
+    () => [
+      {
+        id: "1",
+        content: "Hello! How can I help you today?",
+        isUser: false,
+        timestamp: new Date(),
+      },
+    ],
+    [],
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
