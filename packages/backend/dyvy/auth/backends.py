@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from authlib.jose import jwt
-from authlib.jose.errors import BadSignatureError
+from authlib.jose.errors import BadSignatureError, DecodeError
 from fastapi.requests import HTTPConnection
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser
 
@@ -59,5 +59,5 @@ class JWTAuthenticationBackend(AuthenticationBackend):
                 user_id=UUID(user_id),
             )
             return AuthCredentials(["authenticated"]), user
-        except (BadSignatureError, ValueError, TokenExpiredError):
+        except (BadSignatureError, DecodeError, ValueError, TokenExpiredError):
             return None

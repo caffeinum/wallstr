@@ -51,6 +51,11 @@ class AuthService(BaseService):
 
 
 class UserService(BaseService):
+    async def get_user(self, id: UUID) -> UserModel | None:
+        async with self.tx():
+            result = await self.db.execute(sql.select(UserModel).filter_by(id=id))
+        return result.scalar_one_or_none()
+
     async def get_user_by_email(self, email: str) -> UserModel | None:
         async with self.tx():
             result = await self.db.execute(sql.select(UserModel).filter_by(email=email))

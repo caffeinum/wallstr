@@ -3,6 +3,7 @@ import secrets
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import ANY
+from uuid import uuid4
 
 import pytest
 import pytest_mock
@@ -11,6 +12,7 @@ from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dyvy.auth.models import SessionModel, UserModel
+from dyvy.auth.utils import generate_jwt
 from dyvy.conf import settings
 from dyvy.models.base import utc_now
 
@@ -159,3 +161,43 @@ async def test_success_signout(client: TestClient, user_session: SessionModel) -
     )
 
     assert response.status_code == 204
+
+
+async def test_get_current_user_success(client: TestClient, alice: UserModel) -> None:
+    token = generate_jwt(alice.id)
+    response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200, response.json()
+    data = response.json()
+    assert data == {
+        "id": str(alice.id),
+        "email": alice.email,
+        "username": alice.username,
+        "fullname": alice.fullname,
+    }
+
+
+async def test_get_current_user_no_auth(client: TestClient) -> None:
+    response = client.get("/auth/me")
+    assert response.status_code == 403, response.json()
+
+
+async def test_get_current_user_invalid_token(client: TestClient) -> None:
+    response = client.get("/auth/me", headers={"Authorization": "Bearer invalid_token"})
+    assert response.status_code == 403, response.json()
+
+
+async def test_get_current_user_expired_token(
+    client: TestClient, alice: UserModel
+) -> None:
+    token = generate_jwt(alice.id, expires_in=timedelta(minutes=-5))
+    response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 403, response.json()
+
+
+async def test_get_current_user_not_found(client: TestClient) -> None:
+    token = generate_jwt(uuid4())
+
+    response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 404, response.json()
+    assert response.json() == {"detail": "User not found"}

@@ -1,8 +1,10 @@
 from typing import Annotated
+from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
+from starlette.authentication import requires
 
 from dyvy.auth.errors import AuthError, EmailAlreadyRegisteredError
 from dyvy.auth.schemas import (
@@ -114,3 +116,20 @@ async def signout(
 ) -> Response:
     await user_svc.revoke_session(token.token)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/me", response_model=User)
+@requires("authenticated")
+async def get_current_user(
+    request: Request,
+    user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
+) -> User:
+    auth_user = request.user
+    user = await user_svc.get_user(UUID(auth_user.identity))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return User.model_validate(user)
