@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import ANY
 
 import pytest
+import pytest_mock
 from fastapi.testclient import TestClient
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +29,7 @@ async def user_session(
                 device_info="Test Device",
                 ip_address="127.0.0.1",
                 expires_at=utc_now()
-                + timedelta(minutes=settings.JWT.access_token_expire_minutes),
+                + timedelta(days=settings.JWT.refresh_token_expire_days),
             )
             .returning(SessionModel)
         )
@@ -106,12 +107,9 @@ async def test_signin_invalid_credentials(client: TestClient, alice: UserModel) 
 
 
 async def test_refresh_token(client: TestClient, user_session: SessionModel) -> None:
-    response = client.post(
-        "/auth/refresh-token",
-        json={
-            "token": user_session.refresh_token,
-        },
-    )
+    client.cookies["refresh_token"] = user_session.refresh_token
+
+    response = client.post("/auth/refresh-token")
 
     assert response.status_code == 200, response.json()
     data = response.json()
@@ -121,15 +119,35 @@ async def test_refresh_token(client: TestClient, user_session: SessionModel) -> 
 
 
 async def test_refresh_token_invalid(client: TestClient) -> None:
-    response = client.post(
-        "/auth/refresh-token",
-        json={
-            "token": base64.urlsafe_b64encode(secrets.token_bytes(64)).decode("utf-8"),
-        },
-    )
+    client.cookies["refresh_token"] = base64.urlsafe_b64encode(
+        secrets.token_bytes(64)
+    ).decode("utf-8")
+
+    response = client.post("/auth/refresh-token")
 
     assert response.status_code == 401, response.json()
     assert response.json() == {"detail": "Invalid or expired refresh token"}
+
+
+async def test_refresh_token_with_new_session(
+    client: TestClient, user_session: SessionModel, mocker: pytest_mock.MockFixture
+) -> None:
+    client.cookies["refresh_token"] = user_session.refresh_token
+
+    future_datetime = utc_now() + timedelta(
+        days=settings.JWT.refresh_token_expire_days
+        - settings.JWT.refresh_token_expire_days // 3
+    )
+    mock_utc_now = mocker.patch("dyvy.auth.api.utc_now")
+    mock_utc_now.return_value = future_datetime
+    response = client.post("/auth/refresh-token")
+
+    assert response.status_code == 200, response.json()
+    data = response.json()
+    assert "token" in data
+    assert "token_type" in data
+    assert data["token_type"] == "bearer"
+    assert response.cookies["refresh_token"] != user_session.refresh_token
 
 
 async def test_success_signout(client: TestClient, user_session: SessionModel) -> None:

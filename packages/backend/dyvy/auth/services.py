@@ -95,6 +95,24 @@ class UserService(BaseService):
             )
         return result.scalar_one_or_none()
 
+    async def renew_session(
+        self, session: SessionModel, device_info: str | None, ip_address: str | None
+    ) -> SessionModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(SessionModel)
+                .filter_by(id=session.id)
+                .values(
+                    refresh_token=secrets.token_bytes(64),
+                    device_info=device_info,
+                    ip_address=ip_address,
+                    expires_at=utc_now()
+                    + timedelta(days=settings.JWT.refresh_token_expire_days),
+                )
+                .returning(SessionModel)
+            )
+        return result.scalar_one()
+
     async def revoke_session(self, refresh_token: str) -> None:
         async with self.tx():
             await self.db.execute(

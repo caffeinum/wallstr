@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Annotated
 
 import structlog
@@ -15,6 +16,7 @@ from dyvy.auth.schemas import (
 from dyvy.auth.services import AuthService, UserService
 from dyvy.auth.utils import generate_jwt
 from dyvy.conf import settings
+from dyvy.models.base import utc_now
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
@@ -69,18 +71,40 @@ async def signin(
     return AccessToken(token=access_token)
 
 
-# TOOD: get token from cookies
 @router.post("/refresh-token", response_model=AccessToken)
 async def refresh_token(
-    refresh_token: RefreshToken,
+    request: Request,
     response: Response,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> AccessToken:
-    session = await user_svc.get_session_by_token(refresh_token.token)
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+
+    session = await user_svc.get_session_by_token(refresh_token)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
+        )
+
+    # update refresh token if it's about to expire
+    if session.expires_at - utc_now() < timedelta(
+        days=settings.JWT.refresh_token_expire_days // 3
+    ):
+        new_session = await user_svc.renew_session(
+            session,
+            device_info=request.headers.get("User-Agent"),
+            ip_address=request.client.host if request.client else None,
+        )
+        response.set_cookie(
+            "refresh_token",
+            new_session.refresh_token,
+            httponly=True,
+            max_age=settings.JWT.refresh_token_expire_days * 24 * 60 * 60,
         )
 
     access_token = generate_jwt(session.user_id)
