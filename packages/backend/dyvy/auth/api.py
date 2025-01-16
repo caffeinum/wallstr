@@ -1,4 +1,3 @@
-from datetime import timedelta
 from typing import Annotated
 
 import structlog
@@ -16,7 +15,6 @@ from dyvy.auth.schemas import (
 from dyvy.auth.services import AuthService, UserService
 from dyvy.auth.utils import generate_jwt
 from dyvy.conf import settings
-from dyvy.models.base import utc_now
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
@@ -92,9 +90,7 @@ async def refresh_token(
         )
 
     # update refresh token if it's about to expire
-    if session.expires_at - utc_now() < timedelta(
-        days=settings.JWT.refresh_token_expire_days // 3
-    ):
+    if session.is_expiring_soon:
         new_session = await user_svc.renew_session(
             session,
             device_info=request.headers.get("User-Agent"),

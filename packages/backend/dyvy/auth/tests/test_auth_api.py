@@ -138,7 +138,7 @@ async def test_refresh_token_with_new_session(
         days=settings.JWT.refresh_token_expire_days
         - settings.JWT.refresh_token_expire_days // 3
     )
-    mock_utc_now = mocker.patch("dyvy.auth.api.utc_now")
+    mock_utc_now = mocker.patch("dyvy.auth.models.utc_now")
     mock_utc_now.return_value = future_datetime
     response = client.post("/auth/refresh-token")
 

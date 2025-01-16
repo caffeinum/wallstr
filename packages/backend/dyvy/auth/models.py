@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from pydantic import EmailStr
@@ -6,7 +6,8 @@ from sqlalchemy import ForeignKey, Unicode
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import PasswordType
 
-from dyvy.models.base import HashType, RecordModel, string_column
+from dyvy.conf import settings
+from dyvy.models.base import HashType, RecordModel, string_column, utc_now
 
 
 class UserModel(RecordModel):
@@ -50,3 +51,9 @@ class SessionModel(RecordModel):
     ip_address: Mapped[str | None] = mapped_column(
         Unicode(50), nullable=False, default=""
     )
+
+    @property
+    def is_expiring_soon(self) -> bool:
+        return self.expires_at - utc_now() < timedelta(
+            days=settings.JWT.refresh_token_expire_days // 3
+        )
