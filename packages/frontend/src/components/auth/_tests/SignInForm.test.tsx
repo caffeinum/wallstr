@@ -1,6 +1,6 @@
-import {createTest} from "@storybook/react/experimental-playwright";
 import {test as base} from "@playwright/experimental-ct-react";
 
+import createTest from "@/../.storybook/createTest";
 import stories from "../_stories/SignInForm.stories.portable";
 
 const test = createTest(base);
