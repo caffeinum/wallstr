@@ -1,6 +1,6 @@
 import {FaXTwitter} from "react-icons/fa6";
 
-const footerLines = [GithubLine, XLine, DyvyLine, YearLine];
+const footerLines = [GithubLine, XLine, YearLine];
 
 export default function FooterLine() {
   const index = Math.round(Math.random() * (footerLines.length - 1));
@@ -45,6 +45,7 @@ function XLine() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DyvyLine() {
   return (
     <a
