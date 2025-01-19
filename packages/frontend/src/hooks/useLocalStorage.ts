@@ -3,8 +3,8 @@ export const STORAGE_KEYS = {
   DRAFT_MESSAGE: "dyvy_draft_message",
 } as const;
 
-export function clearLocalStorage() {
+export const clearLocalStorage = () => {
   Object.values(STORAGE_KEYS).forEach((key) => {
     localStorage.removeItem(key);
   });
-}
+};
