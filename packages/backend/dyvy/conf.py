@@ -15,6 +15,7 @@ class JWTSettings(BaseSettings):
     issuer: str = "https://github.com/limanAI/dyvy"
     algorithm: Literal["HS512"] = "HS512"
     access_token_expire_minutes: int = 60
+    access_token_renewal_leeway_days: int = 3
     refresh_token_expire_days: int = 7
 
 

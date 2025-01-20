@@ -1,12 +1,10 @@
 from uuid import UUID
 
-from authlib.jose import jwt
-from authlib.jose.errors import BadSignatureError, DecodeError
 from fastapi.requests import HTTPConnection
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser
 
 from dyvy.auth.errors import TokenExpiredError
-from dyvy.conf import settings
+from dyvy.auth.schemas import AccessToken
 from dyvy.models.base import utc_now
 
 
@@ -36,28 +34,16 @@ class JWTAuthenticationBackend(AuthenticationBackend):
             return None
 
         try:
-            scheme, token = auth_header.split()
-            if scheme.lower() != "bearer":
-                return None
-        except ValueError:
-            return None
+            access_token = AccessToken.from_auth_header(auth_header)
+            payload = access_token.decode()
 
-        try:
-            payload = jwt.decode(
-                token,
-                settings.SECRET_KEY.get_secret_value(),
-            )
-            exp = payload.get("exp")
-            if not exp:
-                raise ValueError("Missed exp claim")
-
-            if exp < utc_now().timestamp():
+            if payload["exp"] < utc_now().timestamp():
                 raise TokenExpiredError()
 
-            user_id = payload.get("sub")
+            user_id = str(payload["sub"])
             user = AuthenticatedUser(
                 user_id=UUID(user_id),
             )
             return AuthCredentials(["authenticated"]), user
-        except (BadSignatureError, DecodeError, ValueError, TokenExpiredError):
+        except (ValueError, TokenExpiredError):
             return None

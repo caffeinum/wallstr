@@ -108,9 +108,11 @@ async def test_signin_invalid_credentials(client: TestClient, alice: UserModel) 
 
 
 async def test_refresh_token(client: TestClient, user_session: SessionModel) -> None:
+    token = generate_jwt(user_session.user_id)
     client.cookies["refresh_token"] = user_session.refresh_token
-
-    response = client.post("/auth/refresh-token")
+    response = client.post(
+        "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}
+    )
 
     assert response.status_code == 200, response.json()
     data = response.json()
@@ -119,10 +121,45 @@ async def test_refresh_token(client: TestClient, user_session: SessionModel) -> 
     assert data["token_type"] == "bearer"
 
 
-async def test_refresh_token_invalid(client: TestClient) -> None:
+async def test_refresh_token_with_missed_access_token(
+    client: TestClient, user_session: SessionModel
+) -> None:
+    client.cookies["refresh_token"] = user_session.refresh_token
+    response = client.post("/auth/refresh-token")
+
+    assert response.status_code == 401, response.json()
+    assert response.json() == {"detail": "Invalid access token"}
+
+
+async def test_refresh_token_with_expired_access_token(
+    client: TestClient, user_session: SessionModel, mocker: pytest_mock.MockFixture
+) -> None:
+    token = generate_jwt(user_session.user_id)
+    client.cookies["refresh_token"] = user_session.refresh_token
+
+    future_datetime = utc_now() + timedelta(
+        days=settings.JWT.access_token_renewal_leeway_days,
+        minutes=settings.JWT.access_token_expire_minutes,
+    )
+    mock_utc_now = mocker.patch("dyvy.auth.schemas.utc_now")
+    mock_utc_now.return_value = future_datetime
+    response = client.post(
+        "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 401, response.json()
+    assert response.json() == {"detail": "Invalid access token"}
+
+
+async def test_refresh_token_invalid(
+    client: TestClient, user_session: SessionModel
+) -> None:
+    token = generate_jwt(user_session.user_id)
     client.cookies["refresh_token"] = secrets.token_urlsafe(64)
 
-    response = client.post("/auth/refresh-token")
+    response = client.post(
+        "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}
+    )
 
     assert response.status_code == 401, response.json()
     assert response.json() == {"detail": "Invalid or expired refresh token"}
@@ -131,6 +168,7 @@ async def test_refresh_token_invalid(client: TestClient) -> None:
 async def test_refresh_token_with_new_session(
     client: TestClient, user_session: SessionModel, mocker: pytest_mock.MockFixture
 ) -> None:
+    token = generate_jwt(user_session.user_id)
     client.cookies["refresh_token"] = user_session.refresh_token
 
     future_datetime = utc_now() + timedelta(
@@ -139,7 +177,9 @@ async def test_refresh_token_with_new_session(
     )
     mock_utc_now = mocker.patch("dyvy.auth.models.utc_now")
     mock_utc_now.return_value = future_datetime
-    response = client.post("/auth/refresh-token")
+    response = client.post(
+        "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}
+    )
 
     assert response.status_code == 200, response.json()
     data = response.json()

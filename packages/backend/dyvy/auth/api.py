@@ -84,12 +84,31 @@ async def refresh_token(
             detail="Invalid or expired refresh token",
         )
 
+    # use access_token as csrf token
+    exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid access token",
+    )
+    auth_header = request.headers.get("Authorization", "")
+    try:
+        access_token = AccessToken.from_auth_header(auth_header)
+        if not access_token.can_renew:
+            raise exception
+        payload = access_token.decode()
+    except ValueError:
+        raise exception from None
+
     session = await user_svc.get_session_by_token(refresh_token)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
         )
+
+    user_id = payload.get("sub")
+    if str(session.user_id) != user_id:
+        logger.critical(f"User {user_id} uses session for {session.user_id}")
+        raise exception
 
     # update refresh token if it's about to expire
     if session.is_expiring_soon:
@@ -105,8 +124,8 @@ async def refresh_token(
             max_age=settings.JWT.refresh_token_expire_days * 24 * 60 * 60,
         )
 
-    access_token = generate_jwt(session.user_id)
-    return AccessToken(token=access_token)
+    jwt_token = generate_jwt(session.user_id)
+    return AccessToken(token=jwt_token)
 
 
 @router.post("/signout", status_code=status.HTTP_204_NO_CONTENT)

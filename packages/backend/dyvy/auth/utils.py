@@ -14,7 +14,7 @@ def generate_jwt(
     header = {"alg": settings.JWT.algorithm, "typ": "JWT"}
     payload = {
         "iss": settings.JWT.issuer,
-        "sub": user_id.hex,
+        "sub": str(user_id),
         "exp": utc_now() + expires_in,
         "iat": utc_now(),
     }

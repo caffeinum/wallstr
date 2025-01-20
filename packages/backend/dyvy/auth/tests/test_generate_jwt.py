@@ -15,4 +15,4 @@ def test_generate_jwt() -> None:
 
     payload = jwt.decode(token, settings.SECRET_KEY.get_secret_value())
     assert payload["iss"] == settings.JWT.issuer
-    assert payload["sub"] == user_id.hex
+    assert payload["sub"] == str(user_id)
