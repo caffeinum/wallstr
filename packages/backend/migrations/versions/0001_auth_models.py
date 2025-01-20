@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises:
-Create Date: 2025-01-14 17:20:34.426504
+Create Date: 2025-01-20 21:21:10.132395
 
 """
 
@@ -12,8 +12,6 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy_utils.types
 from alembic import op
-
-import dyvy.models.base
 
 # revision identifiers, used by Alembic.
 revision: str = "0001"
@@ -45,17 +43,11 @@ def upgrade() -> None:
     op.create_table(
         "auth_sessions",
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column(
-            "refresh_token", dyvy.models.base.HashType(length=64), nullable=False
-        ),
+        sa.Column("refresh_token", sa.String(length=128), nullable=False),
         sa.Column("expires_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("device_info", sa.String(length=255), nullable=False),
-        sa.Column(
-            "ip_address",
-            sqlalchemy_utils.types.ip_address.IPAddressType(length=50),
-            nullable=False,
-        ),
+        sa.Column("user_agent", sa.String(length=255), nullable=False),
+        sa.Column("ip_addr", sa.String(length=64), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
@@ -63,6 +55,7 @@ def upgrade() -> None:
             ["user_id"],
             ["auth_users.id"],
             name=op.f("fk_auth_sessions_auth_users__user_id"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_auth_sessions")),
     )

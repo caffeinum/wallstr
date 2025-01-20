@@ -51,8 +51,8 @@ async def signin(
         access_token, refresh_token = await auth_svc.signin_with_password(
             data.email,
             data.password,
-            device_info=request.headers.get("User-Agent"),
-            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("User-Agent"),
+            ip_addr=request.client.host if request.client else None,
         )
     except AuthError as e:
         logger.exception(e)
@@ -95,8 +95,8 @@ async def refresh_token(
     if session.is_expiring_soon:
         new_session = await user_svc.renew_session(
             session,
-            device_info=request.headers.get("User-Agent"),
-            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("User-Agent"),
+            ip_addr=request.client.host if request.client else None,
         )
         response.set_cookie(
             "refresh_token",

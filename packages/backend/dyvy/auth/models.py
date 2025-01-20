@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from pydantic import EmailStr
-from sqlalchemy import ForeignKey, Unicode
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import PasswordType
 
 from dyvy.conf import settings
-from dyvy.models.base import HashType, RecordModel, string_column, utc_now
+from dyvy.models.base import RecordModel, string_column, utc_now
 
 
 class UserModel(RecordModel):
@@ -38,7 +38,7 @@ class SessionModel(RecordModel):
     __tablename__ = "auth_sessions"
 
     refresh_token: Mapped[str] = mapped_column(
-        HashType(), unique=True, nullable=False, index=True
+        String(128), unique=True, nullable=False, index=True
     )
     expires_at: Mapped[datetime] = mapped_column(nullable=False)
 
@@ -47,10 +47,8 @@ class SessionModel(RecordModel):
     )
     user: Mapped[UserModel] = relationship(back_populates="sessions")
 
-    device_info: Mapped[str | None] = string_column(255)
-    ip_address: Mapped[str | None] = mapped_column(
-        Unicode(50), nullable=False, default=""
-    )
+    user_agent: Mapped[str | None] = string_column(255)
+    ip_addr: Mapped[str | None] = string_column(64)
 
     @property
     def is_expiring_soon(self) -> bool:

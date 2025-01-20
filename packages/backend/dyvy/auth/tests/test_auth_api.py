@@ -1,4 +1,3 @@
-import base64
 import secrets
 from collections.abc import AsyncGenerator
 from datetime import timedelta
@@ -27,9 +26,9 @@ async def user_session(
             sql.insert(SessionModel)
             .values(
                 user_id=alice.id,
-                refresh_token=secrets.token_bytes(64),
-                device_info="Test Device",
-                ip_address="127.0.0.1",
+                refresh_token=secrets.token_urlsafe(64),
+                user_agent="Test Device",
+                ip_addr="127.0.0.1",
                 expires_at=utc_now()
                 + timedelta(days=settings.JWT.refresh_token_expire_days),
             )
@@ -121,9 +120,7 @@ async def test_refresh_token(client: TestClient, user_session: SessionModel) -> 
 
 
 async def test_refresh_token_invalid(client: TestClient) -> None:
-    client.cookies["refresh_token"] = base64.urlsafe_b64encode(
-        secrets.token_bytes(64)
-    ).decode("utf-8")
+    client.cookies["refresh_token"] = secrets.token_urlsafe(64)
 
     response = client.post("/auth/refresh-token")
 

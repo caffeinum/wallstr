@@ -1,4 +1,3 @@
-import base64
 import secrets
 from datetime import timedelta
 from uuid import UUID
@@ -31,7 +30,7 @@ class AuthService(BaseService):
             return await user_svc.create_user(payload)
 
     async def signin_with_password(
-        self, email: str, password: str, device_info: str | None, ip_address: str | None
+        self, email: str, password: str, user_agent: str | None, ip_addr: str | None
     ) -> tuple[str, str]:
         user_svc = UserService(self.db)
         async with self.tx():
@@ -46,7 +45,7 @@ class AuthService(BaseService):
                 raise InvalidPasswordError()
 
             access_token = generate_jwt(user.id)
-            session = await user_svc.create_session(user.id, device_info, ip_address)
+            session = await user_svc.create_session(user.id, user_agent, ip_addr)
         return access_token, session.refresh_token
 
 
@@ -71,17 +70,17 @@ class UserService(BaseService):
         return result.scalar_one()
 
     async def create_session(
-        self, user_id: UUID, device_info: str | None, ip_address: str | None
+        self, user_id: UUID, user_agent: str | None, ip_addr: str | None
     ) -> SessionModel:
-        refresh_token = secrets.token_bytes(64)
+        refresh_token = secrets.token_urlsafe(64)
         async with self.tx():
             result = await self.db.execute(
                 sql.insert(SessionModel)
                 .values(
                     refresh_token=refresh_token,
                     user_id=user_id,
-                    device_info=device_info,
-                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    ip_addr=ip_addr,
                     expires_at=utc_now()
                     + timedelta(days=settings.JWT.refresh_token_expire_days),
                 )
@@ -93,24 +92,24 @@ class UserService(BaseService):
         async with self.tx():
             result = await self.db.execute(
                 sql.select(SessionModel).where(
-                    SessionModel.refresh_token
-                    == base64.urlsafe_b64decode(refresh_token),
+                    SessionModel.refresh_token == refresh_token,
                     SessionModel.expires_at > utc_now(),
                 )
             )
         return result.scalar_one_or_none()
 
     async def renew_session(
-        self, session: SessionModel, device_info: str | None, ip_address: str | None
+        self, session: SessionModel, user_agent: str | None, ip_addr: str | None
     ) -> SessionModel:
+        refresh_token = secrets.token_urlsafe(64)
         async with self.tx():
             result = await self.db.execute(
                 sql.update(SessionModel)
                 .filter_by(id=session.id)
                 .values(
-                    refresh_token=secrets.token_bytes(64),
-                    device_info=device_info,
-                    ip_address=ip_address,
+                    refresh_token=refresh_token,
+                    user_agent=user_agent,
+                    ip_addr=ip_addr,
                     expires_at=utc_now()
                     + timedelta(days=settings.JWT.refresh_token_expire_days),
                 )
@@ -121,7 +120,5 @@ class UserService(BaseService):
     async def revoke_session(self, refresh_token: str) -> None:
         async with self.tx():
             await self.db.execute(
-                sql.delete(SessionModel).filter_by(
-                    refresh_token=base64.urlsafe_b64decode(refresh_token)
-                )
+                sql.delete(SessionModel).filter_by(refresh_token=refresh_token)
             )
