@@ -14,6 +14,10 @@ from dyvy.auth.backends import JWTAuthenticationBackend
 from dyvy.conf import settings
 from dyvy.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from dyvy.logging import configure_logging
+from dyvy.openapi import (
+    configure_openapi,
+    generate_unique_id_function,
+)
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -46,7 +50,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
             logger.exception(e)
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    version=settings.VERSION,
+    lifespan=lifespan,
+    generate_unique_id_function=generate_unique_id_function,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ALLOW_ORIGINS,
@@ -62,3 +70,6 @@ app.include_router(auth_router)
 async def root(a: int, b: int) -> dict[str, str]:
     worker.add.send(a, b)
     return {"message": f"Job triggered with {a} and {b}"}
+
+
+configure_openapi(app)

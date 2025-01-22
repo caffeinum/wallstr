@@ -1,8 +1,15 @@
 from enum import Enum
 from typing import Literal
 
+import tomllib
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_version() -> str:
+    with open("pyproject.toml", "rb") as f:
+        data = tomllib.load(f)
+        return data["tool"]["poetry"]["version"]
 
 
 class Env(str, Enum):
@@ -20,6 +27,7 @@ class JWTSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    VERSION: str = get_version()
     ENV: Env = Env.dev
     DEBUG: bool = False
     DEBUG_SQL: bool = False

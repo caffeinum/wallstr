@@ -3,8 +3,7 @@ from typing import Any
 from uuid import UUID
 
 from authlib.jose import jwt
-from authlib.jose.errors import DecodeError
-from authlib.jose.rfc7515.jws import BadSignatureError
+from authlib.jose.errors import BadSignatureError, DecodeError
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from dyvy.conf import settings
