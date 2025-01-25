@@ -13,6 +13,8 @@
     "frontend:format:check": "pnpm -F wallstr_frontend format:check",
     "frontend:ts": "pnpm -F wallstr_frontend ts",
     "frontend:test": "pnpm -F wallstr_frontend test",
+    "frontend:generate_openapi": "pnpm -F wallstr_frontend generate_openapi",
+    "generate_openapi": "pnpm backend:generate_openapi && pnpm frontend:generate_openapi",
     "storybook": "pnpm -F wallstr_frontend storybook",
     "docker-compose": "docker-compose -f packages/backend/docker-compose.yaml up",
     "backend:dev": "cd packages/backend && task dev",
@@ -20,6 +22,7 @@
     "backend:format": "cd packages/backend && task format",
     "backend:lint": "cd packages/backend && task lint",
     "backend:mypy": "cd packages/backend && task mypy",
+    "backend:generate_openapi": "cd packages/backend && task generate_openapi",
     "prepare": "husky"
   },
   "keywords": [],
