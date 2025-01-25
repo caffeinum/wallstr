@@ -17,6 +17,7 @@ test = "coverage run -m pytest && coverage report -m"
 alembic_print = "bash scripts/alembic.sh"
 makemigrations = "alembic revision --autogenerate -m"
 migrate = "alembic upgrade head"
+generate_openapi = "python -m scripts.generate_openapi_scheme"
 
 [tool.poetry.dependencies]
 # crypt is removed in 3.13 but is required by passlib
