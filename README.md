@@ -1,4 +1,4 @@
-# DyvyAI
+# WallStr.chat
 
 ## Installation
 

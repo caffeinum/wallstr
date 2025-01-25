@@ -7,7 +7,7 @@ export default function AppPage() {
     <div className="flex flex-col grow">
       <header className="border-b border-base-300 bg-base-100">
         <div className="flex h-16 items-center justify-between px-4">
-          <h1 className="text-xl font-semibold">Dyvy</h1>
+          <h1 className="text-xl font-semibold">WallStr.chat</h1>
           <UserMenu />
         </div>
       </header>
