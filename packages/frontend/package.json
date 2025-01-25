@@ -17,9 +17,11 @@
     "tsw": "tsc --noEmit --watch",
     "storybook": "pnpm dlx msw init && storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
-    "test": "pnpm dlx msw init && playwright test"
+    "test": "pnpm dlx msw init && playwright test",
+    "generate_openapi": "openapi-ts"
   },
   "dependencies": {
+    "@hey-api/client-fetch": "^0.7.1",
     "@tanstack/react-query": "^5.64.1",
     "@tanstack/react-query-devtools": "^5.64.1",
     "next": "15.1.4",
@@ -27,12 +29,14 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@chromatic-com/playwright": "^0.10.2",
     "@chromatic-com/storybook": "^3.2.3",
     "@eslint/eslintrc": "^3",
+    "@hey-api/openapi-ts": "^0.62.3",
     "@playwright/experimental-ct-react": "^1.49.1",
     "@playwright/test": "^1.49.1",
     "@storybook/addon-essentials": "^8.4.7",
