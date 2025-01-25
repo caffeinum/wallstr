@@ -1,11 +1,9 @@
 from typing import Annotated
-from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.security import OAuth2PasswordBearer
-from starlette.authentication import requires
 
+from dyvy.auth.dependencies import Auth, AuthExp, AuthOrAnonym
 from dyvy.auth.errors import AuthError, EmailAlreadyRegisteredError
 from dyvy.auth.schemas import (
     AccessToken,
@@ -19,7 +17,6 @@ from dyvy.auth.utils import generate_jwt
 from dyvy.conf import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
 
 logger = structlog.get_logger()
 
@@ -73,6 +70,7 @@ async def signin(
 
 @router.post("/refresh-token", response_model=AccessToken)
 async def refresh_token(
+    auth: AuthExp,
     request: Request,
     response: Response,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
@@ -130,6 +128,7 @@ async def refresh_token(
 
 @router.post("/signout", status_code=status.HTTP_204_NO_CONTENT)
 async def signout(
+    _: AuthOrAnonym,
     token: RefreshToken,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> Response:
@@ -138,13 +137,11 @@ async def signout(
 
 
 @router.get("/me", response_model=User)
-@requires("authenticated")
 async def get_current_user(
-    request: Request,
+    auth: Auth,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> User:
-    auth_user = request.user
-    user = await user_svc.get_user(UUID(auth_user.identity))
+    user = await user_svc.get_user(auth.user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

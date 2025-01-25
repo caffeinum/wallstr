@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal
+from typing import Literal, cast
 
 import tomllib
 from pydantic import SecretStr
@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 def get_version() -> str:
     with open("pyproject.toml", "rb") as f:
         data = tomllib.load(f)
-        return data["tool"]["poetry"]["version"]
+        return cast(str, data["tool"]["poetry"]["version"])
 
 
 class Env(str, Enum):

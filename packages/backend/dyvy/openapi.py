@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.routing import APIRoute
@@ -5,7 +7,7 @@ from fastapi.routing import APIRoute
 from dyvy.conf import settings
 
 
-def configure_openapi(app: FastAPI):
+def configure_openapi(app: FastAPI) -> dict[str, Any]:
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
