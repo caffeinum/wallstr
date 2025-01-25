@@ -1,4 +1,4 @@
-from dyvy.auth.models import SessionModel, UserModel
+from wallstr.auth.models import SessionModel, UserModel
 
 __all__ = [
     # auth

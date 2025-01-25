@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dyvy.auth.services import UserService
+from wallstr.auth.services import UserService
 
 
 @pytest.fixture(scope="function")

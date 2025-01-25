@@ -3,8 +3,8 @@ from uuid import UUID
 
 from authlib.jose import jwt
 
-from dyvy.conf import settings
-from dyvy.models.base import utc_now
+from wallstr.conf import settings
+from wallstr.models.base import utc_now
 
 
 def generate_jwt(

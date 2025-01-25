@@ -6,8 +6,8 @@ from authlib.jose import jwt
 from authlib.jose.errors import BadSignatureError, DecodeError
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from dyvy.conf import settings
-from dyvy.models.base import utc_now
+from wallstr.conf import settings
+from wallstr.models.base import utc_now
 
 
 class SignUpRequest(BaseModel):

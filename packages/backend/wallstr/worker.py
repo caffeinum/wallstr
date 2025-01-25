@@ -3,7 +3,7 @@ from dramatiq.brokers.rabbitmq import RabbitmqBroker
 from dramatiq.results import Results
 from dramatiq.results.backends import RedisBackend
 
-from dyvy.conf import settings
+from wallstr.conf import settings
 
 rabbitmq_broker = RabbitmqBroker(url=settings.RABBITMQ_URL.get_secret_value())  # type: ignore[no-untyped-call]
 redis_backend = RedisBackend(url=settings.REDIS_URL.get_secret_value())

@@ -3,9 +3,9 @@ from uuid import UUID
 from fastapi.requests import HTTPConnection
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser
 
-from dyvy.auth.errors import TokenExpiredError
-from dyvy.auth.schemas import AccessToken
-from dyvy.models.base import utc_now
+from wallstr.auth.errors import TokenExpiredError
+from wallstr.auth.schemas import AccessToken
+from wallstr.models.base import utc_now
 
 
 class AuthenticatedUser(BaseUser):

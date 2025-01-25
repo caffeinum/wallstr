@@ -4,18 +4,18 @@ from uuid import UUID
 
 from sqlalchemy import sql
 
-from dyvy.auth.errors import (
+from wallstr.auth.errors import (
     EmailAlreadyRegisteredError,
     EmailNotRegisteredError,
     InvalidPasswordError,
     PasswordNotSupportedError,
 )
-from dyvy.auth.models import SessionModel, UserModel
-from dyvy.auth.schemas import SignUpRequest
-from dyvy.auth.utils import generate_jwt
-from dyvy.conf import settings
-from dyvy.models.base import utc_now
-from dyvy.services import BaseService
+from wallstr.auth.models import SessionModel, UserModel
+from wallstr.auth.schemas import SignUpRequest
+from wallstr.auth.utils import generate_jwt
+from wallstr.conf import settings
+from wallstr.models.base import utc_now
+from wallstr.services import BaseService
 
 
 class AuthService(BaseService):

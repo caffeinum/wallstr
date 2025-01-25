@@ -9,12 +9,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from dyvy.auth.models import UserModel
-from dyvy.conf import settings
-from dyvy.db import create_async_engine, create_session_maker, get_db_session
-from dyvy.logging import configure_logging
-from dyvy.models.base import BaseModel
-from dyvy.server import app
+from wallstr.auth.models import UserModel
+from wallstr.conf import settings
+from wallstr.db import create_async_engine, create_session_maker, get_db_session
+from wallstr.logging import configure_logging
+from wallstr.models.base import BaseModel
+from wallstr.server import app
 
 logger = structlog.get_logger(__name__)
 
@@ -75,7 +75,7 @@ def client() -> Generator[TestClient]:
         await session.close()
 
     app.dependency_overrides[get_db_session] = _get_db_session
-    with TestClient(app=app, base_url="http://testdyvy/") as client:
+    with TestClient(app=app, base_url="http://testwallstr/") as client:
         yield client
     app.dependency_overrides.pop(get_db_session)
 

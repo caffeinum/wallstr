@@ -2,8 +2,8 @@ from uuid import uuid4
 
 from authlib.jose import jwt
 
-from dyvy.auth.utils import generate_jwt
-from dyvy.conf import settings
+from wallstr.auth.utils import generate_jwt
+from wallstr.conf import settings
 
 
 def test_generate_jwt() -> None:

@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dyvy.auth.models import UserModel
-from dyvy.auth.services import AuthService, UserService
+from wallstr.auth.models import UserModel
+from wallstr.auth.services import AuthService, UserService
 
 
 @pytest.fixture

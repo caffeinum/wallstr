@@ -1,7 +1,7 @@
 # /usr/bin/env python
 import json
 
-from dyvy.server import app
+from wallstr.server import app
 
 filename = "openapi.json"
 with open(filename, "w") as f:

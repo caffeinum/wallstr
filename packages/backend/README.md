@@ -1,4 +1,4 @@
-# DyvyAI Backend
+# WallStr Backend
 
 ## Installation
 

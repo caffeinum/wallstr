@@ -1,15 +1,15 @@
 [tool.poetry]
-name = "dyvy_backend"
+name = "wallstr_backend"
 version = "0.1.0"
-description = "DyvyAI backend"
+description = "WallStr backend"
 authors = ["Guro Bokum <jiojiajiu@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 package-mode = false
 
 [tool.taskipy.tasks]
-dev = "uvicorn dyvy.server:app --reload --reload-include .env"
-worker = "dramatiq dyvy.worker --watch . -p 1 -t 1"
+dev = "uvicorn wallstr.server:app --reload --reload-include .env"
+worker = "dramatiq wallstr.worker --watch . -p 1 -t 1"
 lint = "ruff format --check . && ruff check --diff"
 format = "ruff format"
 mypy = "mypy ."

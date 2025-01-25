@@ -7,9 +7,9 @@ import pytest
 from fastapi.requests import HTTPConnection
 from pydantic import SecretStr
 
-from dyvy.auth.backends import AuthenticatedUser, JWTAuthenticationBackend
-from dyvy.auth.utils import generate_jwt
-from dyvy.conf import settings
+from wallstr.auth.backends import AuthenticatedUser, JWTAuthenticationBackend
+from wallstr.auth.utils import generate_jwt
+from wallstr.conf import settings
 
 
 @pytest.fixture

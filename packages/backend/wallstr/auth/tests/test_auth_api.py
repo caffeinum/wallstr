@@ -10,10 +10,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dyvy.auth.models import SessionModel, UserModel
-from dyvy.auth.utils import generate_jwt
-from dyvy.conf import settings
-from dyvy.models.base import utc_now
+from wallstr.auth.models import SessionModel, UserModel
+from wallstr.auth.utils import generate_jwt
+from wallstr.conf import settings
+from wallstr.models.base import utc_now
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ async def test_refresh_token_with_expired_access_token(
         days=settings.JWT.access_token_renewal_leeway_days,
         minutes=settings.JWT.access_token_expire_minutes,
     )
-    mock_utc_now = mocker.patch("dyvy.auth.schemas.utc_now")
+    mock_utc_now = mocker.patch("wallstr.auth.schemas.utc_now")
     mock_utc_now.return_value = future_datetime
     response = client.post(
         "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}
@@ -175,7 +175,7 @@ async def test_refresh_token_with_new_session(
         days=settings.JWT.refresh_token_expire_days
         - settings.JWT.refresh_token_expire_days // 3
     )
-    mock_utc_now = mocker.patch("dyvy.auth.models.utc_now")
+    mock_utc_now = mocker.patch("wallstr.auth.models.utc_now")
     mock_utc_now.return_value = future_datetime
     response = client.post(
         "/auth/refresh-token", headers={"Authorization": f"Bearer {token}"}

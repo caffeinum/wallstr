@@ -14,9 +14,9 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from dyvy.conf import settings
-from dyvy.models.all import *  # noqa
-from dyvy.models.base import BaseModel
+from wallstr.conf import settings
+from wallstr.models.all import *  # noqa
+from wallstr.models.base import BaseModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -3,18 +3,18 @@ from typing import Annotated
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from dyvy.auth.dependencies import Auth, AuthExp, AuthOrAnonym
-from dyvy.auth.errors import AuthError, EmailAlreadyRegisteredError
-from dyvy.auth.schemas import (
+from wallstr.auth.dependencies import Auth, AuthExp, AuthOrAnonym
+from wallstr.auth.errors import AuthError, EmailAlreadyRegisteredError
+from wallstr.auth.schemas import (
     AccessToken,
     RefreshToken,
     SignInRequest,
     SignUpRequest,
     User,
 )
-from dyvy.auth.services import AuthService, UserService
-from dyvy.auth.utils import generate_jwt
-from dyvy.conf import settings
+from wallstr.auth.services import AuthService, UserService
+from wallstr.auth.utils import generate_jwt
+from wallstr.conf import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

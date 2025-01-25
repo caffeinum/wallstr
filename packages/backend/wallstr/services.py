@@ -7,7 +7,7 @@ import structlog
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dyvy.db import get_db_session
+from wallstr.db import get_db_session
 
 logger = structlog.get_logger()
 

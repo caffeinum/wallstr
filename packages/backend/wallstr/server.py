@@ -8,13 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 from starlette.middleware.authentication import AuthenticationMiddleware
 
-from dyvy import worker
-from dyvy.auth.api import router as auth_router
-from dyvy.auth.backends import JWTAuthenticationBackend
-from dyvy.conf import settings
-from dyvy.db import AsyncSessionMaker, create_async_engine, create_session_maker
-from dyvy.logging import configure_logging
-from dyvy.openapi import (
+from wallstr import worker
+from wallstr.auth.api import router as auth_router
+from wallstr.auth.backends import JWTAuthenticationBackend
+from wallstr.conf import settings
+from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
+from wallstr.logging import configure_logging
+from wallstr.openapi import (
     configure_openapi,
     generate_unique_id_function,
 )
@@ -30,7 +30,7 @@ class AppState(TypedDict):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
-    engine = create_async_engine(settings.DATABASE_URL, "dyvy")
+    engine = create_async_engine(settings.DATABASE_URL, "wallstr")
     session_maker = create_session_maker(engine)
 
     redis = Redis.from_url(settings.REDIS_URL.get_secret_value())

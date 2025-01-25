@@ -5,8 +5,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
-from dyvy.auth.schemas import AccessToken
-from dyvy.models.base import utc_now
+from wallstr.auth.schemas import AccessToken
+from wallstr.models.base import utc_now
 
 
 class AuthSession(BaseModel):

@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16.2
-    container_name: dyvy_db
+    container_name: wallstr_db
     command: postgres -c log_statement=all
     volumes:
       - ./.db/:/var/lib/postgresql/data/
@@ -15,7 +15,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:4.0-management
-    container_name: dyvy_rabbitmq
+    container_name: wallstr_rabbitmq
     volumes:
       - ./.rabbitmq:/var/lib/rabbitmq/
     environment:
@@ -27,7 +27,7 @@ services:
 
   redis:
     image: redis/redis-stack:7.2.0-v13
-    container_name: dyvy_redis
+    container_name: wallstr_redis
     volumes:
       - ./.redis:/data/
     ports:

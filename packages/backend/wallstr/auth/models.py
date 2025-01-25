@@ -6,8 +6,8 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import PasswordType
 
-from dyvy.conf import settings
-from dyvy.models.base import RecordModel, string_column, utc_now
+from wallstr.conf import settings
+from wallstr.models.base import RecordModel, string_column, utc_now
 
 
 class UserModel(RecordModel):

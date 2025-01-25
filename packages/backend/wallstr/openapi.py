@@ -4,16 +4,16 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.routing import APIRoute
 
-from dyvy.conf import settings
+from wallstr.conf import settings
 
 
 def configure_openapi(app: FastAPI) -> dict[str, Any]:
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="Dyvy.AI",
+        title="WallStr.chat",
         version=settings.VERSION,
-        summary="Dyvy.AI OpenAPI schema",
+        summary="WallStr.chat OpenAPI schema",
         routes=app.routes,
     )
     app.openapi_schema = openapi_schema
