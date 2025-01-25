@@ -87,14 +87,8 @@ async def refresh_token(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid access token",
     )
-    auth_header = request.headers.get("Authorization", "")
-    try:
-        access_token = AccessToken.from_auth_header(auth_header)
-        if not access_token.can_renew:
-            raise exception
-        payload = access_token.decode()
-    except ValueError:
-        raise exception from None
+    if not auth.access_token.can_renew:
+        raise exception
 
     session = await user_svc.get_session_by_token(refresh_token)
     if not session:
@@ -103,9 +97,8 @@ async def refresh_token(
             detail="Invalid or expired refresh token",
         )
 
-    user_id = payload.get("sub")
-    if str(session.user_id) != user_id:
-        logger.critical(f"User {user_id} uses session for {session.user_id}")
+    if auth.user_id != session.user_id:
+        logger.critical(f"User {auth.user_id} uses session for {session.user_id}")
         raise exception
 
     # update refresh token if it's about to expire

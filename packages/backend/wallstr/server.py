@@ -6,11 +6,9 @@ from typing import TypedDict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
-from starlette.middleware.authentication import AuthenticationMiddleware
 
 from wallstr import worker
 from wallstr.auth.api import router as auth_router
-from wallstr.auth.backends import JWTAuthenticationBackend
 from wallstr.conf import settings
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from wallstr.logging import configure_logging
@@ -62,7 +60,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "OPTIONS"],
     allow_headers=["*"],
 )
-app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())
 app.include_router(auth_router)
 
 

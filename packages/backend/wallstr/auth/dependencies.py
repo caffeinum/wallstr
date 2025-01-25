@@ -39,8 +39,7 @@ class Authenticator:
             raise self._unauthorized_exception("Not authenticated")
 
         try:
-            auth_header = credentials.credentials
-            access_token = AccessToken.from_auth_header(auth_header)
+            access_token = AccessToken(token=credentials.credentials)
             payload = access_token.decode()
 
             if payload["exp"] < utc_now().timestamp() and not self.allow_expired:

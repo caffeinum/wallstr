@@ -128,7 +128,7 @@ async def test_refresh_token_with_missed_access_token(
     response = client.post("/auth/refresh-token")
 
     assert response.status_code == 401, response.json()
-    assert response.json() == {"detail": "Invalid access token"}
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 async def test_refresh_token_with_expired_access_token(
@@ -216,12 +216,12 @@ async def test_get_current_user_success(client: TestClient, alice: UserModel) ->
 
 async def test_get_current_user_no_auth(client: TestClient) -> None:
     response = client.get("/auth/me")
-    assert response.status_code == 403, response.json()
+    assert response.status_code == 401, response.json()
 
 
 async def test_get_current_user_invalid_token(client: TestClient) -> None:
     response = client.get("/auth/me", headers={"Authorization": "Bearer invalid_token"})
-    assert response.status_code == 403, response.json()
+    assert response.status_code == 401, response.json()
 
 
 async def test_get_current_user_expired_token(
@@ -229,7 +229,7 @@ async def test_get_current_user_expired_token(
 ) -> None:
     token = generate_jwt(alice.id, expires_in=timedelta(minutes=-5))
     response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 403, response.json()
+    assert response.status_code == 401, response.json()
 
 
 async def test_get_current_user_not_found(client: TestClient) -> None:
