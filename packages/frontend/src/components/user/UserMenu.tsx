@@ -1,72 +1,26 @@
 "use client";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 
-import {clearLocalStorage} from "@/hooks/useLocalStorage";
+import {useQuery} from "@tanstack/react-query";
 
-type TUser = {
-  username: string;
-  email: string;
-};
+import {api} from "@/api";
 
 export default function UserMenu() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const _token = localStorage.getItem("access_token");
-    if (!_token) {
-      router.push("/auth/signin");
-      return;
-    }
-    setToken(_token);
-  }, [router, setToken]);
-
-  const {isPending, isError, data, error} = useQuery<TUser>({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+  const {isPending, isError, data, error} = useQuery({
     queryKey: ["/auth/me"],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.["detail"] || JSON.stringify(data));
-      }
+      const {data} = await api.auth.getCurrentUser({throwOnError: true});
       return data;
-    },
-    enabled: !!token,
-  });
-
-  const {mutate: signOut} = useMutation({
-    mutationFn: async () => {
-      const token = sessionStorage.getItem("access_token");
-      if (token) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signout`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
-    },
-    onSettled: () => {
-      sessionStorage.removeItem("access_token");
-      clearLocalStorage();
-      queryClient.clear();
-      router.push("/auth/signin");
     },
   });
 
   const handleSignOut = useCallback(() => {
-    signOut();
-  }, [signOut]);
+    router.push("/auth/signout");
+  }, [router]);
 
   if (isPending) {
     return <div className="animate-pulse h-8 w-8 rounded-full bg-gray-200" />;
@@ -74,7 +28,6 @@ export default function UserMenu() {
 
   if (isError) {
     console.error("Error fetching user:", error);
-    router.push("/auth/signin");
   }
 
   return (

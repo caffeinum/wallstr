@@ -3,12 +3,14 @@ import {useCallback, useState} from "react";
 import {useForm} from "react-hook-form";
 import {useRouter} from "next/navigation";
 
-interface SignUpFormData {
+import {api} from "@/api";
+
+type SignUpFormData = {
   email: string;
   password: string;
   username: string;
   fullname: string;
-}
+};
 
 export default function SignUpForm({urls}: {urls: {signIn: string}}) {
   const router = useRouter();
@@ -23,21 +25,16 @@ export default function SignUpForm({urls}: {urls: {signIn: string}}) {
     async (data: SignUpFormData) => {
       try {
         setError(null);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+        const {response} = await api.auth.signup({
+          body: data,
         });
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          if (res.status === 409) {
+        if (!response.ok) {
+          if (response.status === 409) {
             setError("Email already registered");
-          } else {
-            setError(errorData.detail || "Something went wrong");
+            return;
           }
+          setError("Something went wrong");
           return;
         }
 
