@@ -83,15 +83,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm -F wallstr_frontend exec playwright --version)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Cache Playwright browsers
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
       - name: Install browsers
-        run: pnpm dlx playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm -F wallstr_frontend exec playwright install --with-deps
 
       - name: Run Playwright tests
         run: pnpm frontend:test
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: packages/frontend/playwright-report/
-          retention-days: 30
