@@ -13,10 +13,6 @@ export type HttpValidationError = {
   detail?: Array<ValidationError>;
 };
 
-export type RefreshToken = {
-  token: string;
-};
-
 export type SignInRequest = {
   email: string;
   password: string;
@@ -113,20 +109,11 @@ export type RefreshTokenResponses = {
 export type RefreshTokenResponse = RefreshTokenResponses[keyof RefreshTokenResponses];
 
 export type SignoutData = {
-  body: RefreshToken;
+  body?: never;
   path?: never;
   query?: never;
   url: "/auth/signout";
 };
-
-export type SignoutErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type SignoutError = SignoutErrors[keyof SignoutErrors];
 
 export type SignoutResponses = {
   /**

@@ -2,7 +2,6 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import JSONResponse
 
 from wallstr.auth.dependencies import Auth, AuthExp, AuthOrAnonym
 from wallstr.auth.errors import AuthError, EmailAlreadyRegisteredError
@@ -133,10 +132,19 @@ async def refresh_token(
 @router.post("/signout", status_code=status.HTTP_204_NO_CONTENT)
 async def signout(
     _: AuthOrAnonym,
-    token: RefreshToken,
+    request: Request,
+    response: Response,
     user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> Response:
-    await user_svc.revoke_session(token.token)
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    await user_svc.revoke_session(refresh_token)
+    response.delete_cookie(
+        "refresh_token",
+        httponly=True,
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

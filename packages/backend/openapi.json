@@ -131,29 +131,9 @@
                 ],
                 "summary": "Signout",
                 "operationId": "1::signout",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/RefreshToken"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "responses": {
                     "204": {
                         "description": "Successful Response"
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -287,19 +267,6 @@
                 },
                 "type": "object",
                 "title": "HTTPValidationError"
-            },
-            "RefreshToken": {
-                "properties": {
-                    "token": {
-                        "type": "string",
-                        "title": "Token"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "token"
-                ],
-                "title": "RefreshToken"
             },
             "SignInRequest": {
                 "properties": {

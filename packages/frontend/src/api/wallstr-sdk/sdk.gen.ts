@@ -12,7 +12,6 @@ import type {
   RefreshTokenResponse,
   SignoutData,
   SignoutResponse,
-  SignoutError,
   GetCurrentUserData,
   GetCurrentUserResponse,
   RootData,
@@ -70,8 +69,8 @@ export class AuthService {
   /**
    * Signout
    */
-  public static signout<ThrowOnError extends boolean = false>(options: Options<SignoutData, ThrowOnError>) {
-    return (options?.client ?? client).post<SignoutResponse, SignoutError, ThrowOnError>({
+  public static signout<ThrowOnError extends boolean = false>(options?: Options<SignoutData, ThrowOnError>) {
+    return (options?.client ?? client).post<SignoutResponse, unknown, ThrowOnError>({
       security: [
         {
           scheme: "bearer",
@@ -80,10 +79,6 @@ export class AuthService {
       ],
       url: "/auth/signout",
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
     });
   }
 
