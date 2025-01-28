@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Literal, cast
 
 import tomllib
-from pydantic import SecretStr
+from pydantic import HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     DATABASE_URL: SecretStr
     RABBITMQ_URL: SecretStr
     REDIS_URL: SecretStr
+    STORAGE_URL: HttpUrl
+    STORAGE_BUCKET: str
 
     CORS_ALLOW_ORIGINS: list[str] = []
 

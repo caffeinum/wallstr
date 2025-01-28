@@ -5,6 +5,7 @@ coverage.json
 
 __pycache__/
 .db/
+.minio/
 .rabbitmq/
 .redis/
 
