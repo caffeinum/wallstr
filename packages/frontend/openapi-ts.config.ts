@@ -5,9 +5,16 @@ export default defineConfig({
   client: "@hey-api/client-fetch",
   input: "../backend/openapi.json",
   output: {
-    path: "src/client/sdk",
+    path: "src/api/wallstr-sdk",
     format: "prettier",
     lint: "eslint",
   },
-  plugins: [...defaultPlugins, "@tanstack/react-query"],
+  plugins: [
+    ...defaultPlugins,
+    {
+      name: "@hey-api/sdk",
+      asClass: true,
+      operationId: true,
+    },
+  ],
 });

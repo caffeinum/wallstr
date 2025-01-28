@@ -5,6 +5,10 @@ export type AccessToken = {
   token_type?: string;
 };
 
+export type HttpUnauthorizedError = {
+  detail: string;
+};
+
 export type HttpValidationError = {
   detail?: Array<ValidationError>;
 };
@@ -38,112 +42,116 @@ export type ValidationError = {
   type: string;
 };
 
-export type AuthSignupData = {
+export type SignupData = {
   body: SignUpRequest;
   path?: never;
   query?: never;
   url: "/auth/signup";
 };
 
-export type AuthSignupErrors = {
+export type SignupErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type AuthSignupError = AuthSignupErrors[keyof AuthSignupErrors];
+export type SignupError = SignupErrors[keyof SignupErrors];
 
-export type AuthSignupResponses = {
+export type SignupResponses = {
   /**
    * Successful Response
    */
   201: User;
 };
 
-export type AuthSignupResponse = AuthSignupResponses[keyof AuthSignupResponses];
+export type SignupResponse = SignupResponses[keyof SignupResponses];
 
-export type AuthSigninData = {
+export type SigninData = {
   body: SignInRequest;
   path?: never;
   query?: never;
   url: "/auth/signin";
 };
 
-export type AuthSigninErrors = {
+export type SigninErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type AuthSigninError = AuthSigninErrors[keyof AuthSigninErrors];
+export type SigninError = SigninErrors[keyof SigninErrors];
 
-export type AuthSigninResponses = {
+export type SigninResponses = {
   /**
    * Successful Response
    */
   200: AccessToken;
 };
 
-export type AuthSigninResponse = AuthSigninResponses[keyof AuthSigninResponses];
+export type SigninResponse = SigninResponses[keyof SigninResponses];
 
-export type AuthRefreshTokenData = {
+export type RefreshTokenData = {
   body?: never;
   path?: never;
   query?: never;
   url: "/auth/refresh-token";
 };
 
-export type AuthRefreshTokenResponses = {
+export type RefreshTokenResponses = {
   /**
    * Successful Response
    */
   200: AccessToken;
 };
 
-export type AuthRefreshTokenResponse = AuthRefreshTokenResponses[keyof AuthRefreshTokenResponses];
+export type RefreshTokenResponse = RefreshTokenResponses[keyof RefreshTokenResponses];
 
-export type AuthSignoutData = {
+export type SignoutData = {
   body: RefreshToken;
   path?: never;
   query?: never;
   url: "/auth/signout";
 };
 
-export type AuthSignoutErrors = {
+export type SignoutErrors = {
   /**
    * Validation Error
    */
   422: HttpValidationError;
 };
 
-export type AuthSignoutError = AuthSignoutErrors[keyof AuthSignoutErrors];
+export type SignoutError = SignoutErrors[keyof SignoutErrors];
 
-export type AuthSignoutResponses = {
+export type SignoutResponses = {
   /**
    * Successful Response
    */
   204: void;
 };
 
-export type AuthSignoutResponse = AuthSignoutResponses[keyof AuthSignoutResponses];
+export type SignoutResponse = SignoutResponses[keyof SignoutResponses];
 
-export type AuthGetCurrentUserData = {
+export type GetCurrentUserData = {
   body?: never;
   path?: never;
   query?: never;
   url: "/auth/me";
 };
 
-export type AuthGetCurrentUserResponses = {
+export type GetCurrentUserResponses = {
   /**
    * Successful Response
    */
   200: User;
 };
 
-export type AuthGetCurrentUserResponse = AuthGetCurrentUserResponses[keyof AuthGetCurrentUserResponses];
+export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
 
 export type RootData = {
   body?: never;
