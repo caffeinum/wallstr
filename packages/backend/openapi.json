@@ -12,7 +12,7 @@
                     "auth"
                 ],
                 "summary": "Signup",
-                "operationId": "auth:signup",
+                "operationId": "1::signup",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -53,7 +53,7 @@
                     "auth"
                 ],
                 "summary": "Signin",
-                "operationId": "auth:signin",
+                "operationId": "1::signin",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -71,6 +71,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AccessToken"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPUnauthorizedError"
                                 }
                             }
                         }
@@ -94,7 +104,7 @@
                     "auth"
                 ],
                 "summary": "Refresh Token",
-                "operationId": "auth:refresh_token",
+                "operationId": "1::refresh_token",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -120,7 +130,7 @@
                     "auth"
                 ],
                 "summary": "Signout",
-                "operationId": "auth:signout",
+                "operationId": "1::signout",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -159,7 +169,7 @@
                     "auth"
                 ],
                 "summary": "Get Current User",
-                "operationId": "auth:get_current_user",
+                "operationId": "1::get_current_user",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -251,6 +261,19 @@
                     "token"
                 ],
                 "title": "AccessToken"
+            },
+            "HTTPUnauthorizedError": {
+                "properties": {
+                    "detail": {
+                        "type": "string",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "detail"
+                ],
+                "title": "HTTPUnauthorizedError"
             },
             "HTTPValidationError": {
                 "properties": {

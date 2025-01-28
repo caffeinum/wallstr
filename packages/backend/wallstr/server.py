@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
 app = FastAPI(
     version=settings.VERSION,
     lifespan=lifespan,
-    generate_unique_id_function=generate_unique_id_function,
+    generate_unique_id_function=generate_unique_id_function(),
 )
 app.add_middleware(
     CORSMiddleware,

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
@@ -24,5 +24,10 @@ def configure_openapi(app: FastAPI) -> dict[str, Any]:
     return app.openapi_schema
 
 
-def generate_unique_id_function(route: APIRoute) -> str:
-    return f"{route.tags[0]}:{route.name}" if len(route.tags) else str(route.name)
+def generate_unique_id_function(prefix: int | None = None) -> Callable[[APIRoute], str]:
+    def _generate_unique_id_function(route: APIRoute) -> str:
+        if not prefix:
+            return route.name
+        return f"{str(prefix)}::{route.name}"
+
+    return _generate_unique_id_function

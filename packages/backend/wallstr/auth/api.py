@@ -2,11 +2,13 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 
 from wallstr.auth.dependencies import Auth, AuthExp, AuthOrAnonym
 from wallstr.auth.errors import AuthError, EmailAlreadyRegisteredError
 from wallstr.auth.schemas import (
     AccessToken,
+    HTTPUnauthorizedError,
     RefreshToken,
     SignInRequest,
     SignUpRequest,
@@ -15,8 +17,13 @@ from wallstr.auth.schemas import (
 from wallstr.auth.services import AuthService, UserService
 from wallstr.auth.utils import generate_jwt
 from wallstr.conf import settings
+from wallstr.openapi import generate_unique_id_function
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth"],
+    generate_unique_id_function=generate_unique_id_function(1),
+)
 
 logger = structlog.get_logger()
 
@@ -37,7 +44,11 @@ async def signup(
     return User.model_validate(user)
 
 
-@router.post("/signin", response_model=AccessToken)
+@router.post(
+    "/signin",
+    response_model=AccessToken,
+    responses={401: {"model": HTTPUnauthorizedError}},
+)
 async def signin(
     data: SignInRequest,
     request: Request,

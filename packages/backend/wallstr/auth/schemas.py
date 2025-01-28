@@ -10,6 +10,10 @@ from wallstr.conf import settings
 from wallstr.models.base import utc_now
 
 
+class HTTPUnauthorizedError(BaseModel):
+    detail: str
+
+
 class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
