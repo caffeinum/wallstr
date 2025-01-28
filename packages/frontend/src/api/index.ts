@@ -58,7 +58,7 @@ client.setConfig({
 });
 
 // Authorization token
-client.interceptors.request.use(async (request: Request, options: Options) => {
+export const requestAuthInterceptor = async (request: Request, options: Options) => {
   if (!options.security) {
     return request;
   }
@@ -79,7 +79,9 @@ client.interceptors.request.use(async (request: Request, options: Options) => {
 
   request.headers.set("Authorization", `Bearer ${token}`);
   return request;
-});
+};
+
+client.interceptors.request.use(requestAuthInterceptor);
 
 class API {
   public readonly client = client;

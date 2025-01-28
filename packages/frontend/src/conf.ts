@@ -11,7 +11,7 @@ const SettingsSchema = z.object({
 });
 
 export const settings = SettingsSchema.parse({
-  API_URL: process.env.NEXT_PUBLIC_API_URL,
+  API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
   ENV: process.env.NODE_ENV,
 
   REDIRECT_NON_AUTH_URL: "/auth/signin",
