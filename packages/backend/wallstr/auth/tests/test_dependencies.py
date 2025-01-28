@@ -9,9 +9,9 @@ from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import SecretStr
 
 from wallstr.auth.dependencies import (
+    AnonymSession,
     Authenticator,
     AuthSession,
-    AnonymSession,
 )
 from wallstr.auth.utils import generate_jwt
 from wallstr.conf import settings
@@ -69,7 +69,9 @@ def test_invalid_token_anonym(auth_anonym: Authenticator) -> None:
     ):
         token = generate_jwt(uuid4())
 
-    result = auth_anonym(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
+    result = auth_anonym(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+    )
     assert isinstance(result, AnonymSession)
     assert result.user_id is None
     assert result.access_token is None
@@ -88,7 +90,9 @@ def test_expired_token_allow_expired(auth_expired: Authenticator) -> None:
     user_id = uuid4()
     token = generate_jwt(user_id, expires_in=timedelta(minutes=-5))
 
-    result = auth_expired(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
+    result = auth_expired(
+        HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+    )
     assert isinstance(result, AuthSession)
     assert result.user_id == user_id
 

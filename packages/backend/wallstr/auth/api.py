@@ -8,7 +8,6 @@ from wallstr.auth.errors import AuthError, EmailAlreadyRegisteredError
 from wallstr.auth.schemas import (
     AccessToken,
     HTTPUnauthorizedError,
-    RefreshToken,
     SignInRequest,
     SignUpRequest,
     User,
