@@ -3,6 +3,9 @@ import {useCallback, useState} from "react";
 import {useForm} from "react-hook-form";
 import {useRouter} from "next/navigation";
 
+import {api} from "@/api";
+import {setToken} from "@/utils/auth";
+
 interface SignInFormData {
   email: string;
   password: string;
@@ -19,33 +22,20 @@ export default function SignInForm({urls}: {urls: {forgotPassword: string; signU
 
   const onSubmit = useCallback(
     async (data: SignInFormData) => {
-      try {
-        setError(null);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signin`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
+      setError(null);
+      const {data: accessToken, response} = await api.auth.signin({body: data});
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            setError("Incorrect email or password");
-          } else {
-            const errorData = await res.json();
-            setError(errorData.detail || "Something went wrong");
-          }
+      if (!accessToken) {
+        if (response.status === 401) {
+          setError("Incorrect email or password");
           return;
         }
-
-        const {token} = await res.json();
-        localStorage.setItem("access_token", token);
-
-        router.push("/app");
-      } catch {
-        setError("Network error. Please try again.");
+        setError("Something went wrong");
+        return;
       }
+
+      setToken(accessToken.token);
+      router.push("/app");
     },
     [router],
   );
