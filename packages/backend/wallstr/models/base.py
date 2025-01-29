@@ -8,6 +8,7 @@ from pydantic import EmailStr, HttpUrl
 from sqlalchemy import LargeBinary, MetaData, String, TypeDecorator
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Dialect
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedColumn, mapped_column
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy_utils.types import EmailType
@@ -67,7 +68,7 @@ def string_column(
     return mapped_column(String(length), nullable=nullable, default=default, **kwargs)
 
 
-class BaseModel(DeclarativeBase):
+class BaseModel(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
     type_annotation_map = {
         datetime: TIMESTAMP(timezone=True),

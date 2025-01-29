@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 
 from wallstr import worker
 from wallstr.auth.api import router as auth_router
+from wallstr.chat.api import router as chat_router
 from wallstr.conf import settings
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from wallstr.logging import configure_logging
@@ -61,6 +62,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+app.include_router(chat_router)
 
 
 @app.get("/")
