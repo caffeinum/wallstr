@@ -41,6 +41,7 @@ async def create_chat(
     return Chat(
         id=chat.id,
         title=chat.title,
+        slug=chat.slug,
         messages=Paginated(
             items=[ChatMessage.model_validate(message) for message in messages],
             cursor=cursor,
@@ -62,6 +63,7 @@ async def get_chat(
     return Chat(
         id=chat.id,
         title=chat.title,
+        slug=chat.slug,
         messages=Paginated(
             items=[ChatMessage.model_validate(message) for message in messages],
             cursor=new_cursor,
