@@ -1,11 +1,11 @@
-import {Options} from "@hey-api/client-fetch";
-import {z} from "zod";
+import { Options } from "@hey-api/client-fetch";
+import { z } from "zod";
 
-import {settings} from "@/conf";
-import {decodeJwt, getToken, needsToRefreshToken, setToken} from "@/utils/auth";
-import {UnauthenticatedError} from "@/utils/errors";
+import { settings } from "@/conf";
+import { decodeJwt, getToken, needsToRefreshToken, setToken } from "@/utils/auth";
+import { UnauthenticatedError } from "@/utils/errors";
 
-import {AuthService, client, DefaultService} from "./wallstr-sdk";
+import { AuthService, ChatService, client, DefaultService } from "./wallstr-sdk";
 
 const tokenResponseSchema = z.object({
   token: z.string(),
@@ -86,6 +86,7 @@ client.interceptors.request.use(requestAuthInterceptor);
 class API {
   public readonly client = client;
   public readonly auth = AuthService;
+  public readonly chat = ChatService;
   public readonly default = DefaultService;
 }
 

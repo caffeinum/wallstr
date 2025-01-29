@@ -5,12 +5,37 @@ export type AccessToken = {
   token_type?: string;
 };
 
+export type Chat = {
+  id: string;
+  slug: string;
+  title: string | null;
+  messages: PaginatedChatMessage;
+};
+
+export type ChatMessage = {
+  id: string;
+  role: ChatMessageRole;
+  content: string;
+};
+
+export type ChatMessageRole = "user" | "assistant";
+
 export type HttpUnauthorizedError = {
   detail: string;
 };
 
 export type HttpValidationError = {
   detail?: Array<ValidationError>;
+};
+
+export type MessageRequest = {
+  message: string | null;
+  has_attachments?: boolean;
+};
+
+export type PaginatedChatMessage = {
+  items: Array<ChatMessage>;
+  cursor: number | null;
 };
 
 export type SignInRequest = {
@@ -139,6 +164,99 @@ export type GetCurrentUserResponses = {
 };
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type CreateChatData = {
+  body: MessageRequest;
+  path?: never;
+  query?: never;
+  url: "/chat";
+};
+
+export type CreateChatErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateChatError = CreateChatErrors[keyof CreateChatErrors];
+
+export type CreateChatResponses = {
+  /**
+   * Successful Response
+   */
+  201: Chat;
+};
+
+export type CreateChatResponse = CreateChatResponses[keyof CreateChatResponses];
+
+export type GetChatData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: "/chat/{slug}";
+};
+
+export type GetChatErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetChatError = GetChatErrors[keyof GetChatErrors];
+
+export type GetChatResponses = {
+  /**
+   * Successful Response
+   */
+  200: Chat;
+};
+
+export type GetChatResponse = GetChatResponses[keyof GetChatResponses];
+
+export type GetChatMessagesData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: {
+    cursor?: number;
+  };
+  url: "/chat/{slug}/messages";
+};
+
+export type GetChatMessagesErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetChatMessagesError = GetChatMessagesErrors[keyof GetChatMessagesErrors];
+
+export type GetChatMessagesResponses = {
+  /**
+   * Successful Response
+   */
+  200: PaginatedChatMessage;
+};
+
+export type GetChatMessagesResponse = GetChatMessagesResponses[keyof GetChatMessagesResponses];
 
 export type RootData = {
   body?: never;

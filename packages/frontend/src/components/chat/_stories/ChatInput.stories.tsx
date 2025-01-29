@@ -1,12 +1,18 @@
-import type {Meta, StoryObj} from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react";
 
-import {STORAGE_KEYS} from "@/hooks/useLocalStorage";
+import { STORAGE_KEYS } from "@/hooks/useLocalStorage";
 import ChatInput from "../ChatInput";
+import { fn } from "@storybook/test";
 
 const meta: Meta<typeof ChatInput> = {
   title: "components/chat/ChatInput",
   component: ChatInput,
   loaders: [() => localStorage.removeItem(STORAGE_KEYS.DRAFT_MESSAGE)],
+  parameters: {
+    args: {
+      onSubmit: fn(),
+    },
+  },
 };
 
 export default meta;

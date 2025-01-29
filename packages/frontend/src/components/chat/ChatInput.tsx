@@ -1,10 +1,17 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { STORAGE_KEYS } from "@/hooks/useLocalStorage";
 import { IoAttach } from "react-icons/io5";
 import { AiOutlineFile, AiOutlineClose } from "react-icons/ai";
 
-export default function ChatInput() {
+import { STORAGE_KEYS } from "@/hooks/useLocalStorage";
+
+export default function ChatInput({
+  onSubmit,
+  isPending,
+}: {
+  onSubmit: (message: string, attachedFiles: File[]) => void;
+  isPending?: boolean;
+}) {
   const [message, setMessage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem(STORAGE_KEYS.DRAFT_MESSAGE) || "";
@@ -47,12 +54,11 @@ export default function ChatInput() {
     setAttachedFiles((prev) => prev.filter((file) => file !== fileToRemove));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && attachedFiles.length === 0) return;
 
-    console.log("Sending message:", message);
-    console.log("Attached files:", attachedFiles);
+    onSubmit(message.trim(), attachedFiles);
     setMessage("");
     setAttachedFiles([]);
     localStorage.removeItem(STORAGE_KEYS.DRAFT_MESSAGE);
@@ -120,15 +126,16 @@ export default function ChatInput() {
             placeholder="Type your message... (Ctrl+Enter to send)"
             rows={1}
             className="textarea textarea-bordered w-full pl-12 pr-20 resize-none min-h-[2.5rem] max-h-[10rem] overflow-y-auto"
+            disabled={isPending}
           />
 
           <div className="absolute right-0 top-1/2 -translate-y-1/2">
             <button
               type="submit"
               className="btn btn-ghost cursor-pointer hover:bg-transparent hover:border-0 hover:shadow-none border-0 active:bg-transparent active:border-0"
-              disabled={!message.trim() && attachedFiles.length === 0}
+              disabled={(!message.trim() && attachedFiles.length === 0) || isPending}
             >
-              Send
+              {isPending ? "Sending..." : "Send"}
             </button>
           </div>
         </div>

@@ -14,6 +14,15 @@ import type {
   SignoutResponse,
   GetCurrentUserData,
   GetCurrentUserResponse,
+  CreateChatData,
+  CreateChatResponse,
+  CreateChatError,
+  GetChatData,
+  GetChatResponse,
+  GetChatError,
+  GetChatMessagesData,
+  GetChatMessagesResponse,
+  GetChatMessagesError,
   RootData,
   RootResponse,
   RootError,
@@ -96,6 +105,62 @@ export class AuthService {
         },
       ],
       url: "/auth/me",
+      ...options,
+    });
+  }
+}
+
+export class ChatService {
+  /**
+   * Create Chat
+   */
+  public static createChat<ThrowOnError extends boolean = false>(options: Options<CreateChatData, ThrowOnError>) {
+    return (options?.client ?? client).post<CreateChatResponse, CreateChatError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chat",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+  }
+
+  /**
+   * Get Chat
+   */
+  public static getChat<ThrowOnError extends boolean = false>(options: Options<GetChatData, ThrowOnError>) {
+    return (options?.client ?? client).get<GetChatResponse, GetChatError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chat/{slug}",
+      ...options,
+    });
+  }
+
+  /**
+   * Get Chat Messages
+   */
+  public static getChatMessages<ThrowOnError extends boolean = false>(
+    options: Options<GetChatMessagesData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).get<GetChatMessagesResponse, GetChatMessagesError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chat/{slug}/messages",
       ...options,
     });
   }
