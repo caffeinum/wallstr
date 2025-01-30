@@ -16,6 +16,7 @@ export type ChatMessage = {
   id: string;
   role: ChatMessageRole;
   content: string;
+  documents: Array<Document>;
 };
 
 export type ChatMessageRole = "user" | "assistant";
@@ -25,10 +26,18 @@ export type CreateChatResponse = {
   pending_documents: Array<PendingDocument>;
 };
 
+export type Document = {
+  id: string;
+  filename: string;
+  status: DocumentStatus;
+};
+
 export type DocumentPayload = {
   filename: string;
   doc_type: DocumentType;
 };
+
+export type DocumentStatus = "uploading" | "uploaded";
 
 export type DocumentType = "pdf" | "doc" | "docx" | "xls" | "xlsx";
 

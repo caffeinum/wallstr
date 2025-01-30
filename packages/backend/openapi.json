@@ -578,13 +578,21 @@
                     "content": {
                         "type": "string",
                         "title": "Content"
+                    },
+                    "documents": {
+                        "items": {
+                            "$ref": "#/components/schemas/Document"
+                        },
+                        "type": "array",
+                        "title": "Documents"
                     }
                 },
                 "type": "object",
                 "required": [
                     "id",
                     "role",
-                    "content"
+                    "content",
+                    "documents"
                 ],
                 "title": "ChatMessage"
             },
@@ -616,6 +624,29 @@
                 ],
                 "title": "CreateChatResponse"
             },
+            "Document": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "filename": {
+                        "type": "string",
+                        "title": "Filename"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/DocumentStatus"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "filename",
+                    "status"
+                ],
+                "title": "Document"
+            },
             "DocumentPayload": {
                 "properties": {
                     "filename": {
@@ -632,6 +663,14 @@
                     "doc_type"
                 ],
                 "title": "DocumentPayload"
+            },
+            "DocumentStatus": {
+                "type": "string",
+                "enum": [
+                    "uploading",
+                    "uploaded"
+                ],
+                "title": "DocumentStatus"
             },
             "DocumentType": {
                 "type": "string",

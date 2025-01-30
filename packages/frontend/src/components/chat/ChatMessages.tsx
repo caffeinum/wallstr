@@ -1,8 +1,35 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 
 import { api } from "@/api";
+
+interface DocumentIconProps {
+  filename: string;
+}
+
+function DocumentIcon({ filename }: DocumentIconProps) {
+  const ext = filename.split(".").pop()?.toLowerCase();
+
+  switch (ext) {
+    case "pdf":
+      return <FaFilePdf className="w-4 h-4" />;
+    case "doc":
+    case "docx":
+      return <FaFileWord className="w-4 h-4" />;
+    case "xls":
+    case "xlsx":
+      return <FaFileExcel className="w-4 h-4" />;
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+      return <FaFileImage className="w-4 h-4" />;
+    default:
+      return <FaFile className="w-4 h-4" />;
+  }
+}
 
 export default function ChatMessages({ slug }: { slug?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -61,11 +88,25 @@ export default function ChatMessages({ slug }: { slug?: string }) {
 
         {messages.map((message) => (
           <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
-            <div
-              className={`chat-bubble whitespace-pre ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
-            >
-              {message.content}
-            </div>
+            {message.documents && message.documents.length > 0 && (
+              <div className="chat-header">
+                <div>
+                  {message.documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-2 py-2">
+                      <DocumentIcon filename={doc.filename} />
+                      <span className="text-sm">{doc.filename}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {message.content && (
+              <div
+                className={`chat-bubble whitespace-pre ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
+              >
+                {message.content}
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
