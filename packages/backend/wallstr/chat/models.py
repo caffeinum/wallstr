@@ -5,6 +5,7 @@ from sqlalchemy import Enum, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, WriteOnlyMapped, mapped_column, relationship
 
 from wallstr.core.utils import generate_unique_slug
+from wallstr.documents.models import DocumentModel
 from wallstr.models.base import RecordModel, string_column
 
 
@@ -47,40 +48,18 @@ class ChatMessageModel(RecordModel):
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     chat: Mapped[ChatModel] = relationship(back_populates="messages")
-    documents: Mapped[list["ChatDocumentModel"]] = relationship(
-        secondary="chat_documents_x_messages",
+    documents: Mapped[list[DocumentModel]] = relationship(
+        secondary="chat_messages_x_documents",
         lazy="selectin",
     )
 
 
-class ChatDocumentType(str, enum.Enum):
-    PDF = "pdf"
-    DOC = "doc"
-    DOCX = "docx"
-    XLS = "xls"
-    XLSX = "xlsx"
+class ChatMessageXDocumentModel(RecordModel):
+    __tablename__ = "chat_messages_x_documents"
 
-
-class ChatDocumentModel(RecordModel):
-    __tablename__ = "chat_documents"
-
-    user_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
-
-    filename: Mapped[str] = string_column(length=255, nullable=False)
-    file_size: Mapped[int] = mapped_column(nullable=False)
-    doc_type: Mapped[ChatDocumentType] = mapped_column(
-        Enum(ChatDocumentType), nullable=False
-    )
-    storage_path: Mapped[str] = string_column(length=1024, nullable=False)
-    page_count: Mapped[int] = mapped_column(nullable=True)
-
-
-class ChatDocumentXMessageModel(RecordModel):
-    __tablename__ = "chat_documents_x_messages"
-
-    document_id: Mapped[UUID] = mapped_column(
-        ForeignKey("chat_documents.id", ondelete="CASCADE"), primary_key=True
-    )
     message_id: Mapped[UUID] = mapped_column(
         ForeignKey("chat_messages.id", ondelete="CASCADE"), primary_key=True
+    )
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
     )

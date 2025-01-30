@@ -34,6 +34,7 @@ sqlalchemy-utils = {extras = ["encrypted", "password"], version = "^0.41.2"}
 structlog = "^24.4.0"
 authlib = "^1.4.0"
 python-multipart = "^0.0.20"
+boto3 = "^1.36.9"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -48,6 +49,7 @@ pytest-asyncio = "^0.25.2"
 coverage = "^7.6.10"
 httpx = "^0.28.1"
 pytest-mock = "^3.14.0"
+types-boto3 = {extras = ["boto3", "s3"], version = "^1.36.9"}
 
 [tool.mypy]
 # https://mypy.readthedocs.io/en/latest/config_file.html

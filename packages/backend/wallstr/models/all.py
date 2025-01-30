@@ -1,10 +1,10 @@
 from wallstr.auth.models import SessionModel, UserModel
 from wallstr.chat.models import (
-    ChatDocumentModel,
-    ChatDocumentXMessageModel,
     ChatMessageModel,
+    ChatMessageXDocumentModel,
     ChatModel,
 )
+from wallstr.documents.models import DocumentModel
 
 __all__ = [
     # auth
@@ -13,6 +13,7 @@ __all__ = [
     # chat
     "ChatModel",
     "ChatMessageModel",
-    "ChatDocumentModel",
-    "ChatDocumentXMessageModel",
+    "ChatMessageXDocumentModel",
+    # docuemnts
+    "DocumentModel",
 ]

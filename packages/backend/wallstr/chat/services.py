@@ -7,24 +7,40 @@ from wallstr.chat.models import (
     ChatMessageRole,
     ChatModel,
 )
+from wallstr.chat.schemas import DocumentPayload
+from wallstr.documents.models import DocumentModel, DocumentStatus
 from wallstr.services import BaseService
 
 
 class ChatService(BaseService):
-    async def create_chat(self, user_id: UUID, user_message: str | None) -> ChatModel:
+    async def create_chat(
+        self,
+        user_id: UUID,
+        user_message: str | None,
+        documents: list[DocumentPayload] | None = None,
+    ) -> tuple[ChatModel, ChatMessageModel]:
+        documents = documents or []
         async with self.tx():
-            chat = ChatModel(
+            chat_message = ChatMessageModel(
                 user_id=user_id,
-                messages=[
-                    ChatMessageModel(
+                role=ChatMessageRole.USER,
+                content=user_message,
+                documents=[
+                    DocumentModel(
+                        **document.model_dump(),
                         user_id=user_id,
-                        role=ChatMessageRole.USER,
-                        content=user_message,
+                        storage_path=f"{user_id}/{document.filename}",
+                        status=DocumentStatus.UPLOADING,
                     )
+                    for document in documents
                 ],
             )
+            chat = ChatModel(
+                user_id=user_id,
+                messages=[chat_message],
+            )
             self.db.add(chat)
-        return chat
+        return chat, chat_message
 
     async def get_chat(self, chat_id: UUID, user_id: UUID) -> ChatModel | None:
         async with self.tx():

@@ -169,7 +169,7 @@
                 ]
             }
         },
-        "/chat": {
+        "/chats": {
             "post": {
                 "tags": [
                     "chat"
@@ -192,7 +192,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Chat"
+                                    "$ref": "#/components/schemas/CreateChatResponse"
                                 }
                             }
                         }
@@ -225,7 +225,7 @@
                 ]
             }
         },
-        "/chat/{slug}": {
+        "/chats/{slug}": {
             "get": {
                 "tags": [
                     "chat"
@@ -282,7 +282,7 @@
                 }
             }
         },
-        "/chat/{slug}/messages": {
+        "/chats/{slug}/messages": {
             "get": {
                 "tags": [
                     "chat"
@@ -488,6 +488,54 @@
                 ],
                 "title": "ChatMessageRole"
             },
+            "CreateChatResponse": {
+                "properties": {
+                    "chat": {
+                        "$ref": "#/components/schemas/Chat"
+                    },
+                    "pending_documents": {
+                        "items": {
+                            "$ref": "#/components/schemas/PendingDocument"
+                        },
+                        "type": "array",
+                        "title": "Pending Documents"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "chat",
+                    "pending_documents"
+                ],
+                "title": "CreateChatResponse"
+            },
+            "DocumentPayload": {
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "title": "Filename"
+                    },
+                    "doc_type": {
+                        "$ref": "#/components/schemas/DocumentType"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "filename",
+                    "doc_type"
+                ],
+                "title": "DocumentPayload"
+            },
+            "DocumentType": {
+                "type": "string",
+                "enum": [
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "xls",
+                    "xlsx"
+                ],
+                "title": "DocumentType"
+            },
             "HTTPUnauthorizedError": {
                 "properties": {
                     "detail": {
@@ -527,15 +575,18 @@
                         ],
                         "title": "Message"
                     },
-                    "has_attachments": {
-                        "type": "boolean",
-                        "title": "Has Attachments",
-                        "default": false
+                    "documents": {
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentPayload"
+                        },
+                        "type": "array",
+                        "title": "Documents"
                     }
                 },
                 "type": "object",
                 "required": [
-                    "message"
+                    "message",
+                    "documents"
                 ],
                 "title": "MessageRequest"
             },
@@ -566,6 +617,30 @@
                     "cursor"
                 ],
                 "title": "Paginated[ChatMessage]"
+            },
+            "PendingDocument": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "filename": {
+                        "type": "string",
+                        "title": "Filename"
+                    },
+                    "presigned_url": {
+                        "type": "string",
+                        "title": "Presigned Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "filename",
+                    "presigned_url"
+                ],
+                "title": "PendingDocument"
             },
             "SignInRequest": {
                 "properties": {

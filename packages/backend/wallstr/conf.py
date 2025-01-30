@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Literal, cast
 
 import tomllib
-from pydantic import HttpUrl, SecretStr
+from pydantic import Field, HttpUrl, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,11 +39,30 @@ class Settings(BaseSettings):
     REDIS_URL: SecretStr
     STORAGE_URL: HttpUrl
     STORAGE_BUCKET: str
+    STORAGE_ACCESS_KEY: SecretStr
+    STORAGE_SECRET_KEY: SecretStr
 
     CORS_ALLOW_ORIGINS: list[str] = []
 
     # JWT
     JWT: JWTSettings = JWTSettings()
+
+    @field_validator(
+        "SECRET_KEY",
+        "DATABASE_URL",
+        "RABBITMQ_URL",
+        "REDIS_URL",
+        "STORAGE_URL",
+        "STORAGE_BUCKET",
+        "STORAGE_ACCESS_KEY",
+        "STORAGE_SECRET_KEY",
+        mode="before",
+    )
+    @classmethod
+    def check_not_empty(cls, value: str, info: ValidationInfo) -> str:
+        if not value.strip():
+            raise ValueError(f"{info.field_name} cannot be empty")
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True, extra="ignore"

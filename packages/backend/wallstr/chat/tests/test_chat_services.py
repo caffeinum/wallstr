@@ -6,8 +6,14 @@ from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from wallstr.auth.models import UserModel
-from wallstr.chat.models import ChatMessageModel, ChatMessageRole, ChatModel
+from wallstr.chat.models import (
+    ChatMessageModel,
+    ChatMessageRole,
+    ChatModel,
+)
+from wallstr.chat.schemas import DocumentPayload
 from wallstr.chat.services import ChatService
+from wallstr.documents.models import DocumentType
 
 
 @pytest.fixture
@@ -82,16 +88,22 @@ async def chat_with_messages(
 async def test_create_chat(chat_svc: ChatService, alice: UserModel) -> None:
     user_message = "Hello, wallstr.chat!"
 
-    chat = await chat_svc.create_chat(user_id=alice.id, user_message=user_message)
+    chat, _ = await chat_svc.create_chat(user_id=alice.id, user_message=user_message)
 
     assert chat.user_id == alice.id
 
 
 @pytest.mark.asyncio
-async def test_create_chat_without_message(
+async def test_create_chat_with_documents(
     chat_svc: ChatService, alice: UserModel
 ) -> None:
-    chat = await chat_svc.create_chat(user_id=alice.id, user_message=None)
+    documents = [
+        DocumentPayload(filename="report.pdf", doc_type=DocumentType.PDF),
+        DocumentPayload(filename="summary.xlsx", doc_type=DocumentType.XLSX),
+    ]
+    chat, _ = await chat_svc.create_chat(
+        user_id=alice.id, user_message=None, documents=documents
+    )
 
     assert chat.user_id == alice.id
 
