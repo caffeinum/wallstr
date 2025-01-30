@@ -20,6 +20,18 @@ export type ChatMessage = {
 
 export type ChatMessageRole = "user" | "assistant";
 
+export type CreateChatResponse = {
+  chat: Chat;
+  pending_documents: Array<PendingDocument>;
+};
+
+export type DocumentPayload = {
+  filename: string;
+  doc_type: DocumentType;
+};
+
+export type DocumentType = "pdf" | "doc" | "docx" | "xls" | "xlsx";
+
 export type HttpUnauthorizedError = {
   detail: string;
 };
@@ -30,12 +42,18 @@ export type HttpValidationError = {
 
 export type MessageRequest = {
   message: string | null;
-  has_attachments?: boolean;
+  documents: Array<DocumentPayload>;
 };
 
 export type PaginatedChatMessage = {
   items: Array<ChatMessage>;
   cursor: number | null;
+};
+
+export type PendingDocument = {
+  id: string;
+  filename: string;
+  presigned_url: string;
 };
 
 export type SignInRequest = {
@@ -169,7 +187,7 @@ export type CreateChatData = {
   body: MessageRequest;
   path?: never;
   query?: never;
-  url: "/chat";
+  url: "/chats";
 };
 
 export type CreateChatErrors = {
@@ -189,10 +207,10 @@ export type CreateChatResponses = {
   /**
    * Successful Response
    */
-  201: Chat;
+  201: CreateChatResponse;
 };
 
-export type CreateChatResponse = CreateChatResponses[keyof CreateChatResponses];
+export type CreateChatResponse2 = CreateChatResponses[keyof CreateChatResponses];
 
 export type GetChatData = {
   body?: never;
@@ -200,7 +218,7 @@ export type GetChatData = {
     slug: string;
   };
   query?: never;
-  url: "/chat/{slug}";
+  url: "/chats/{slug}";
 };
 
 export type GetChatErrors = {
@@ -233,7 +251,7 @@ export type GetChatMessagesData = {
   query?: {
     cursor?: number;
   };
-  url: "/chat/{slug}/messages";
+  url: "/chats/{slug}/messages";
 };
 
 export type GetChatMessagesErrors = {
@@ -257,6 +275,37 @@ export type GetChatMessagesResponses = {
 };
 
 export type GetChatMessagesResponse = GetChatMessagesResponses[keyof GetChatMessagesResponses];
+
+export type MarkDocumentUploadedData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/documents/{id}/mark-uploaded";
+};
+
+export type MarkDocumentUploadedErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type MarkDocumentUploadedError = MarkDocumentUploadedErrors[keyof MarkDocumentUploadedErrors];
+
+export type MarkDocumentUploadedResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type MarkDocumentUploadedResponse = MarkDocumentUploadedResponses[keyof MarkDocumentUploadedResponses];
 
 export type RootData = {
   body?: never;

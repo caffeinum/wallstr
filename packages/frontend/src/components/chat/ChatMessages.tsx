@@ -8,7 +8,7 @@ export default function ChatMessages({ slug }: { slug?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: ["/chat/messages", slug],
+    queryKey: ["/chat", slug],
     queryFn: async ({ pageParam }) => {
       const { data } = await api.chat.getChatMessages({
         path: { slug: slug as string },

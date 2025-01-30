@@ -12,6 +12,7 @@ from wallstr.auth.api import router as auth_router
 from wallstr.chat.api import router as chat_router
 from wallstr.conf import settings
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
+from wallstr.documents.api import router as documents_router
 from wallstr.logging import configure_logging
 from wallstr.openapi import (
     configure_openapi,
@@ -63,6 +64,7 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(chat_router)
+app.include_router(documents_router)
 
 
 @app.get("/")

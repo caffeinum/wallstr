@@ -8,30 +8,53 @@ import ChatMessages from "@/components/chat/ChatMessages";
 import UserMenu from "@/components/user/UserMenu";
 import { api } from "@/api";
 
+import type { DocumentPayload, DocumentType } from "@/api/wallstr-sdk";
+
 export default function AppPage() {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async ({ message, hasAttachments }: { message: string | null; hasAttachments: boolean }) => {
+    mutationFn: async ({ message, attachedFiles }: { message: string; attachedFiles: File[] }) => {
       const { data } = await api.chat.createChat({
         body: {
-          message,
-          has_attachments: hasAttachments,
+          message: message.trim() || null,
+          documents: attachedFiles.map(
+            (f): DocumentPayload => ({
+              filename: f.name,
+              doc_type: getDocumentType(f),
+            }),
+          ),
         },
         throwOnError: true,
       });
+
+      Promise.all([
+        data.pending_documents.map(async (document) => {
+          const file = attachedFiles.find((file) => file.name === document.filename);
+          if (!file) return;
+
+          const response = await fetch(document.presigned_url, {
+            method: "PUT",
+            body: file,
+          });
+
+          if (response.ok) {
+            await api.documents.markDocumentUploaded({ path: { id: document.id } });
+          }
+        }),
+      ]);
       return data;
     },
     onSuccess: (data) => {
-      router.push(`/app/${data.slug}`);
+      router.push(`/app/${data.chat.slug}`);
     },
   });
 
   const createChat = useCallback(
     async (message: string, attachedFiles: File[]) => {
       mutate({
-        message: message.trim() || null,
-        hasAttachments: attachedFiles.length > 0,
+        message,
+        attachedFiles,
       });
     },
     [mutate],
@@ -55,3 +78,12 @@ export default function AppPage() {
     </div>
   );
 }
+
+const getDocumentType = (file: File): DocumentType => {
+  switch (file.type) {
+    case "application/pdf":
+      return "pdf";
+    default:
+      throw new Error("Unsupported file type");
+  }
+};

@@ -15,7 +15,7 @@ import type {
   GetCurrentUserData,
   GetCurrentUserResponse,
   CreateChatData,
-  CreateChatResponse,
+  CreateChatResponse2,
   CreateChatError,
   GetChatData,
   GetChatResponse,
@@ -23,6 +23,9 @@ import type {
   GetChatMessagesData,
   GetChatMessagesResponse,
   GetChatMessagesError,
+  MarkDocumentUploadedData,
+  MarkDocumentUploadedResponse,
+  MarkDocumentUploadedError,
   RootData,
   RootResponse,
   RootError,
@@ -115,14 +118,14 @@ export class ChatService {
    * Create Chat
    */
   public static createChat<ThrowOnError extends boolean = false>(options: Options<CreateChatData, ThrowOnError>) {
-    return (options?.client ?? client).post<CreateChatResponse, CreateChatError, ThrowOnError>({
+    return (options?.client ?? client).post<CreateChatResponse2, CreateChatError, ThrowOnError>({
       security: [
         {
           scheme: "bearer",
           type: "http",
         },
       ],
-      url: "/chat",
+      url: "/chats",
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -142,7 +145,7 @@ export class ChatService {
           type: "http",
         },
       ],
-      url: "/chat/{slug}",
+      url: "/chats/{slug}",
       ...options,
     });
   }
@@ -160,7 +163,28 @@ export class ChatService {
           type: "http",
         },
       ],
-      url: "/chat/{slug}/messages",
+      url: "/chats/{slug}/messages",
+      ...options,
+    });
+  }
+}
+
+export class DocumentsService {
+  /**
+   * Mark Document Uploaded
+   * Mark document as uploaded
+   */
+  public static markDocumentUploaded<ThrowOnError extends boolean = false>(
+    options: Options<MarkDocumentUploadedData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).put<MarkDocumentUploadedResponse, MarkDocumentUploadedError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/documents/{id}/mark-uploaded",
       ...options,
     });
   }

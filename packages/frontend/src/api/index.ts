@@ -5,7 +5,7 @@ import { settings } from "@/conf";
 import { decodeJwt, getToken, needsToRefreshToken, setToken } from "@/utils/auth";
 import { UnauthenticatedError } from "@/utils/errors";
 
-import { AuthService, ChatService, client, DefaultService } from "./wallstr-sdk";
+import { AuthService, ChatService, client, DefaultService, DocumentsService } from "./wallstr-sdk";
 
 const tokenResponseSchema = z.object({
   token: z.string(),
@@ -88,6 +88,7 @@ class API {
   public readonly auth = AuthService;
   public readonly chat = ChatService;
   public readonly default = DefaultService;
+  public readonly documents = DocumentsService;
 }
 
 export const api = new API();
