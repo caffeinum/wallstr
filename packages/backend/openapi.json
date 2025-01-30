@@ -176,15 +176,20 @@
                 ],
                 "summary": "Create Chat",
                 "operationId": "2::create_chat",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/MessageRequest"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "201": {
@@ -198,14 +203,14 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/HTTPUnauthorizedError"
                                 }
                             }
-                        }
+                        },
+                        "description": "Unauthorized"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -217,12 +222,63 @@
                             }
                         }
                     }
-                },
+                }
+            },
+            "get": {
+                "tags": [
+                    "chat"
+                ],
+                "summary": "List Chats",
+                "operationId": "2::list_chats",
                 "security": [
                     {
                         "HTTPBearer": []
                     }
-                ]
+                ],
+                "parameters": [
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Cursor"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Paginated_Chat_"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPUnauthorizedError"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/chats/{slug}": {
@@ -669,6 +725,34 @@
                     "cursor"
                 ],
                 "title": "Paginated[ChatMessage]"
+            },
+            "Paginated_Chat_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/Chat"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "cursor": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Cursor"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "cursor"
+                ],
+                "title": "Paginated[Chat]"
             },
             "PendingDocument": {
                 "properties": {

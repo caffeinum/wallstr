@@ -50,6 +50,11 @@ export type PaginatedChatMessage = {
   cursor: number | null;
 };
 
+export type PaginatedChat = {
+  items: Array<Chat>;
+  cursor: number | null;
+};
+
 export type PendingDocument = {
   id: string;
   filename: string;
@@ -182,6 +187,37 @@ export type GetCurrentUserResponses = {
 };
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type ListChatsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    cursor?: number;
+  };
+  url: "/chats";
+};
+
+export type ListChatsErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListChatsError = ListChatsErrors[keyof ListChatsErrors];
+
+export type ListChatsResponses = {
+  /**
+   * Successful Response
+   */
+  200: PaginatedChat;
+};
+
+export type ListChatsResponse = ListChatsResponses[keyof ListChatsResponses];
 
 export type CreateChatData = {
   body: MessageRequest;

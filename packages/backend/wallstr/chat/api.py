@@ -113,3 +113,27 @@ async def get_chat_messages(
         items=[ChatMessage.model_validate(message) for message in messages],
         cursor=new_cursor,
     )
+
+
+@router.get("")
+async def list_chats(
+    auth: Auth,
+    chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+    cursor: int = 0,
+) -> Paginated[Chat]:
+    chats, new_cursor = await chat_svc.get_user_chats(
+        user_id=auth.user_id,
+        offset=cursor,
+    )
+    return Paginated(
+        items=[
+            Chat(
+                id=chat.id,
+                title=chat.title,
+                slug=chat.slug,
+                messages=Paginated(items=[], cursor=None),
+            )
+            for chat in chats
+        ],
+        cursor=new_cursor,
+    )

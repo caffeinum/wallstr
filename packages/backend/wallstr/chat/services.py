@@ -76,3 +76,20 @@ class ChatService(BaseService):
             has_more = len(messages) > limit
             new_cursor = offset + limit if has_more else None
             return list(messages[:limit]), new_cursor
+
+    async def get_user_chats(
+        self, user_id: UUID, offset: int = 0, limit: int = 10
+    ) -> tuple[list[ChatModel], int | None]:
+        async with self.tx():
+            result = await self.db.execute(
+                select(ChatModel)
+                .filter_by(user_id=user_id, deleted_at=None)
+                .order_by(ChatModel.created_at.desc())
+                .offset(offset)
+                .limit(limit + 1)
+            )
+
+            chats = result.scalars().all()
+            has_more = len(chats) > limit
+            new_cursor = offset + limit if has_more else None
+            return list(chats[:limit]), new_cursor

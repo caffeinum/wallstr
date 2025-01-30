@@ -8,6 +8,7 @@ import ChatMessages from "@/components/chat/ChatMessages";
 import { api } from "@/api";
 
 import type { DocumentPayload, DocumentType } from "@/api/wallstr-sdk";
+import ChatsList from "@/components/chat/ChatsList";
 
 export default function AppPage() {
   const router = useRouter();
@@ -63,6 +64,7 @@ export default function AppPage() {
     <div className="flex flex-col grow">
       <main className="flex-1 overflow-hidden bg-base-200">
         <div className="flex h-full flex-col">
+          <ChatsList />
           <ChatMessages />
           <ChatInput onSubmit={createChat} isPending={isPending} />
         </div>

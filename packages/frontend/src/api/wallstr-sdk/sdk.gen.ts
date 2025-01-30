@@ -14,6 +14,9 @@ import type {
   SignoutResponse,
   GetCurrentUserData,
   GetCurrentUserResponse,
+  ListChatsData,
+  ListChatsResponse,
+  ListChatsError,
   CreateChatData,
   CreateChatResponse2,
   CreateChatError,
@@ -114,6 +117,22 @@ export class AuthService {
 }
 
 export class ChatService {
+  /**
+   * List Chats
+   */
+  public static listChats<ThrowOnError extends boolean = false>(options?: Options<ListChatsData, ThrowOnError>) {
+    return (options?.client ?? client).get<ListChatsResponse, ListChatsError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chats",
+      ...options,
+    });
+  }
+
   /**
    * Create Chat
    */
