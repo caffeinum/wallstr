@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from wallstr.chat.models import ChatMessageRole
 from wallstr.core.schemas import Paginated
 from wallstr.documents.models import DocumentType
-from wallstr.documents.schemas import PendingDocument
+from wallstr.documents.schemas import Document, PendingDocument
 
 
 class DocumentPayload(BaseModel):
@@ -24,6 +24,7 @@ class ChatMessage(BaseModel):
     id: UUID
     role: ChatMessageRole
     content: str
+    documents: list[Document]
 
 
 class Chat(BaseModel):

@@ -113,6 +113,7 @@ LOGGING_CONFIG = {
             "handlers": ["access"],
             "propagate": False,
         },
+        "botocore": {"level": "INFO"},
     },
 }
 
