@@ -1,0 +1,60 @@
+from typing import Any, TypeVar
+
+from dramatiq import Broker, Message, Worker
+from dramatiq.asyncio import get_event_loop_thread
+from dramatiq.middleware import AsyncIO
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+
+from wallstr.conf import settings
+from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
+
+T = TypeVar("T")
+
+
+class AsyncSessionMiddleware(AsyncIO):
+    """Middleware that provides an async session for each actor and manages the AsyncIO event loop."""
+
+    def __init__(self) -> None:
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.engine: AsyncEngine | None = None
+        self.session_maker: AsyncSessionMaker | None = None
+
+    def before_worker_boot(self, broker: Broker, worker: Worker) -> None:
+        super().before_worker_boot(broker, worker)  # type: ignore[no-untyped-call]
+        self.engine = create_async_engine(settings.DATABASE_URL, "dramatiq-worker")
+        self.session_maker = create_session_maker(self.engine)
+
+    def before_process_message(self, broker: Broker, message: Message[T]) -> None:
+        super().before_process_message(broker, message)  # type: ignore[no-untyped-call]
+        if not self.session_maker:
+            raise RuntimeError("Session maker not initialized")
+        message.options["session_maker"] = self.session_maker
+        message.options["session"] = self.session_maker()
+
+    def after_process_message(
+        self,
+        broker: Broker,
+        message: Message[T],
+        *,
+        result: Any | None = None,
+        exception: Exception | None = None,
+    ) -> None:
+        """Called after a message is processed. Closes the session."""
+        event_loop_thread = get_event_loop_thread()
+
+        session: AsyncSession | None = message.options.get("session")
+        if event_loop_thread and session:
+            event_loop_thread.run_coroutine(session.close())
+
+        super().after_process_message(
+            broker, message, result=result, exception=exception
+        )  # type: ignore[no-untyped-call]
+
+    def before_worker_shutdown(self, broker: Broker, worker: Worker) -> None:
+        """Called before the worker shuts down. Disposes of the engine."""
+        event_loop_thread = get_event_loop_thread()
+
+        if event_loop_thread and self.engine:
+            event_loop_thread.run_coroutine(self.engine.dispose())
+
+        super().before_worker_shutdown(broker, worker)  # type: ignore[no-untyped-call]

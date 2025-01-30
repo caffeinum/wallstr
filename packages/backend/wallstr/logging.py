@@ -114,6 +114,7 @@ LOGGING_CONFIG = {
             "propagate": False,
         },
         "botocore": {"level": "INFO"},
+        "pika": {"level": "WARNING"},
     },
 }
 

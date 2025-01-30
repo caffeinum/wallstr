@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
-from wallstr import worker
 from wallstr.auth.api import router as auth_router
 from wallstr.chat.api import router as chat_router
 from wallstr.conf import settings
@@ -68,9 +67,8 @@ app.include_router(documents_router)
 
 
 @app.get("/")
-async def root(a: int, b: int) -> dict[str, str]:
-    worker.add.send(a, b)
-    return {"message": f"Job triggered with {a} and {b}"}
+async def root() -> dict[str, str]:
+    return {"message": f"wallstr.chat v{settings.VERSION}"}
 
 
 configure_openapi(app)

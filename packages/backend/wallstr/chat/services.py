@@ -60,6 +60,15 @@ class ChatService(BaseService):
             )
         return result.scalar_one_or_none()
 
+    async def get_chat_message(self, message_id: UUID) -> ChatMessageModel | None:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.select(ChatMessageModel).filter_by(id=message_id)
+            )
+
+            message = result.scalar_one_or_none()
+        return message
+
     async def get_chat_messages(
         self, chat_id: UUID, offset: int = 0, limit: int = 10
     ) -> tuple[list[ChatMessageModel], int | None]:
@@ -75,7 +84,7 @@ class ChatService(BaseService):
             messages = result.scalars().all()
             has_more = len(messages) > limit
             new_cursor = offset + limit if has_more else None
-            return list(messages[:limit]), new_cursor
+        return list(messages[:limit]), new_cursor
 
     async def get_user_chats(
         self, user_id: UUID, offset: int = 0, limit: int = 10
@@ -92,4 +101,4 @@ class ChatService(BaseService):
             chats = result.scalars().all()
             has_more = len(chats) > limit
             new_cursor = offset + limit if has_more else None
-            return list(chats[:limit]), new_cursor
+        return list(chats[:limit]), new_cursor
