@@ -18,6 +18,7 @@ export type ChatMessage = {
   content: string;
   documents: Array<Document>;
   pending_documents?: Array<PendingDocument>;
+  created_at: string;
 };
 
 export type ChatMessageRole = "user" | "assistant";

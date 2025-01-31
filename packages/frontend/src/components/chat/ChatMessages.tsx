@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
+import { format } from "date-fns";
 
 import { api } from "@/api";
 import { settings } from "@/conf";
@@ -130,11 +131,15 @@ export default function ChatMessages({ slug }: { slug?: string }) {
               </div>
             )}
             {message.content && (
-              <div
-                className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
-              >
-                {message.content}
-              </div>
+              <>
+                <div
+                  className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
+                >
+                  {message.content}
+                </div>
+
+                <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
+              </>
             )}
           </div>
         ))}

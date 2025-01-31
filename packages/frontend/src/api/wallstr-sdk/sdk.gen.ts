@@ -220,12 +220,6 @@ export class ChatService {
     options: Options<GetChatMessagesStreamData, ThrowOnError>,
   ) {
     return (options?.client ?? client).get<unknown, GetChatMessagesStreamError, ThrowOnError>({
-      security: [
-        {
-          scheme: "bearer",
-          type: "http",
-        },
-      ],
       url: "/chats/{slug}/messages/stream",
       ...options,
     });

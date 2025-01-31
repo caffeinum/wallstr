@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -26,6 +27,8 @@ class ChatMessage(BaseModel):
     content: str
     documents: list[Document]
     pending_documents: list[PendingDocument] = []
+
+    created_at: datetime
 
 
 class Chat(BaseModel):
