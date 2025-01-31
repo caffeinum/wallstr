@@ -138,7 +138,9 @@ export default function ChatMessages({ slug }: { slug?: string }) {
                   {message.content}
                 </div>
 
-                <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
+                {message.created_at && (
+                  <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
+                )}
               </>
             )}
           </div>
