@@ -115,6 +115,8 @@ LOGGING_CONFIG = {
         },
         "botocore": {"level": "INFO"},
         "pika": {"level": "WARNING"},
+        "httpcore": {"level": "INFO"},
+        "opeanai": {"level": "INFO"},
     },
 }
 

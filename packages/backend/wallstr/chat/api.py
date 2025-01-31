@@ -112,6 +112,7 @@ async def create_chat(
         *[get_pending_document(document) for document in message.documents]
     )
 
+    process_chat_message.send(message_id=str(message.id))
     return Chat(
         id=chat.id,
         title=chat.title,
