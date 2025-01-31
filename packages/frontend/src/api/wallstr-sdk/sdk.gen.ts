@@ -26,12 +26,13 @@ import type {
   GetChatMessagesData,
   GetChatMessagesResponse,
   GetChatMessagesError,
+  GetChatMessagesStreamData,
+  GetChatMessagesStreamError,
   MarkDocumentUploadedData,
   MarkDocumentUploadedResponse,
   MarkDocumentUploadedError,
   RootData,
   RootResponse,
-  RootError,
 } from "./types.gen";
 
 export const client = createClient(createConfig());
@@ -186,6 +187,24 @@ export class ChatService {
       ...options,
     });
   }
+
+  /**
+   * Get Chat Messages Stream
+   */
+  public static getChatMessagesStream<ThrowOnError extends boolean = false>(
+    options: Options<GetChatMessagesStreamData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).get<unknown, GetChatMessagesStreamError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chats/{slug}/messages/stream",
+      ...options,
+    });
+  }
 }
 
 export class DocumentsService {
@@ -213,8 +232,8 @@ export class DefaultService {
   /**
    * Root
    */
-  public static root<ThrowOnError extends boolean = false>(options: Options<RootData, ThrowOnError>) {
-    return (options?.client ?? client).get<RootResponse, RootError, ThrowOnError>({
+  public static root<ThrowOnError extends boolean = false>(options?: Options<RootData, ThrowOnError>) {
+    return (options?.client ?? client).get<RootResponse, unknown, ThrowOnError>({
       url: "/",
       ...options,
     });

@@ -35,6 +35,9 @@ structlog = "^24.4.0"
 authlib = "^1.4.0"
 python-multipart = "^0.0.20"
 boto3 = "^1.36.9"
+sse-starlette = "^2.2.1"
+langchain = "^0.3.17"
+langchain-openai = "^0.3.3"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"

@@ -321,6 +321,35 @@ export type GetChatMessagesResponses = {
 
 export type GetChatMessagesResponse = GetChatMessagesResponses[keyof GetChatMessagesResponses];
 
+export type GetChatMessagesStreamData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: "/chats/{slug}/messages/stream";
+};
+
+export type GetChatMessagesStreamErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetChatMessagesStreamError = GetChatMessagesStreamErrors[keyof GetChatMessagesStreamErrors];
+
+export type GetChatMessagesStreamResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
 export type MarkDocumentUploadedData = {
   body?: never;
   path: {
@@ -355,21 +384,9 @@ export type MarkDocumentUploadedResponse = MarkDocumentUploadedResponses[keyof M
 export type RootData = {
   body?: never;
   path?: never;
-  query: {
-    a: number;
-    b: number;
-  };
+  query?: never;
   url: "/";
 };
-
-export type RootErrors = {
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type RootError = RootErrors[keyof RootErrors];
 
 export type RootResponses = {
   /**

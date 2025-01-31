@@ -1,23 +1,32 @@
 import asyncio
+from collections.abc import AsyncGenerator
+from functools import cache
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from redis.asyncio import Redis
+from sse_starlette.sse import EventSourceResponse
+from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from wallstr.auth.dependencies import Auth
 from wallstr.auth.schemas import HTTPUnauthorizedError
-from wallstr.chat.schemas import (
-    Chat,
-    ChatMessage,
-    CreateChatResponse,
-    MessageRequest,
-)
-from wallstr.chat.services import ChatService
 from wallstr.core.schemas import Paginated
+from wallstr.core.utils import uvicorn_should_exit
 from wallstr.documents.models import DocumentModel
 from wallstr.documents.schemas import PendingDocument
 from wallstr.documents.services import DocumentService
 from wallstr.openapi import generate_unique_id_function
 
+from .schemas import (
+    Chat,
+    ChatMessage,
+    CreateChatResponse,
+    MessageRequest,
+)
+from .services import ChatService
+
+logger = structlog.get_logger()
 router = APIRouter(
     prefix="/chats",
     tags=["chat"],
@@ -113,6 +122,51 @@ async def get_chat_messages(
         items=[ChatMessage.model_validate(message) for message in messages],
         cursor=new_cursor,
     )
+
+
+@cache
+@router.get("/{slug}/messages/stream")
+async def get_chat_messages_stream(
+    request: Request,
+    auth: Auth,
+    slug: str,
+    chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+) -> EventSourceResponse:
+    redis: Redis = request.state.redis
+
+    chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    clear_contextvars()
+    bind_contextvars(user_id=auth.user_id, chat_id=chat.id)
+
+    async def generator() -> AsyncGenerator[str, None]:
+        async with redis.pubsub() as pubsub:
+            await pubsub.psubscribe(f"{auth.user_id}:{chat.id}:*")
+
+            while not uvicorn_should_exit():
+                if await request.is_disconnected():
+                    await pubsub.close()
+                    break
+
+                try:
+                    message = await pubsub.get_message(
+                        ignore_subscribe_messages=True,
+                        timeout=5.0,
+                    )
+
+                    if message is not None:
+                        logger.trace("Received message chunk")
+                        yield message["data"]
+                except asyncio.CancelledError as e:
+                    await pubsub.close()
+                    raise e
+                except ConnectionError as e:
+                    await pubsub.close()
+                    raise e
+
+    return EventSourceResponse(generator())
 
 
 @router.get("")

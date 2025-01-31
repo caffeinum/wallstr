@@ -405,6 +405,61 @@
                 }
             }
         },
+        "/chats/{slug}/messages/stream": {
+            "get": {
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Get Chat Messages Stream",
+                "operationId": "2::get_chat_messages_stream",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Slug"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPUnauthorizedError"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/documents/{id}/mark-uploaded": {
             "put": {
                 "tags": [
@@ -461,47 +516,17 @@
             "get": {
                 "summary": "Root",
                 "operationId": "root",
-                "parameters": [
-                    {
-                        "name": "a",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "title": "A"
-                        }
-                    },
-                    {
-                        "name": "b",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "title": "B"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
                                     "additionalProperties": {
                                         "type": "string"
                                     },
+                                    "type": "object",
                                     "title": "Response Root"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }

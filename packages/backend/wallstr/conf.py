@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     STORAGE_ACCESS_KEY: SecretStr
     STORAGE_SECRET_KEY: SecretStr
 
+    OPENAI_API_KEY: SecretStr
+
     CORS_ALLOW_ORIGINS: list[str] = []
 
     # JWT

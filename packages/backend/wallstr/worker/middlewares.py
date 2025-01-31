@@ -3,6 +3,7 @@ from typing import Any, TypeVar
 from dramatiq import Broker, Message, Worker
 from dramatiq.asyncio import get_event_loop_thread
 from dramatiq.middleware import AsyncIO
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from wallstr.conf import settings
@@ -21,6 +22,7 @@ class AsyncSessionMiddleware(AsyncIO):
 
     def before_worker_boot(self, broker: Broker, worker: Worker) -> None:
         super().before_worker_boot(broker, worker)  # type: ignore[no-untyped-call]
+        self.redis = Redis.from_url(settings.REDIS_URL.get_secret_value())
         self.engine = create_async_engine(settings.DATABASE_URL, "dramatiq-worker")
         self.session_maker = create_session_maker(self.engine)
 
@@ -30,6 +32,7 @@ class AsyncSessionMiddleware(AsyncIO):
             raise RuntimeError("Session maker not initialized")
         message.options["session_maker"] = self.session_maker
         message.options["session"] = self.session_maker()
+        message.options["redis"] = self.redis
 
     def after_process_message(
         self,
@@ -51,10 +54,12 @@ class AsyncSessionMiddleware(AsyncIO):
         )  # type: ignore[no-untyped-call]
 
     def before_worker_shutdown(self, broker: Broker, worker: Worker) -> None:
-        """Called before the worker shuts down. Disposes of the engine."""
         event_loop_thread = get_event_loop_thread()
 
         if event_loop_thread and self.engine:
             event_loop_thread.run_coroutine(self.engine.dispose())
+
+        if event_loop_thread and self.redis:
+            event_loop_thread.run_coroutine(self.redis.aclose())
 
         super().before_worker_shutdown(broker, worker)  # type: ignore[no-untyped-call]
