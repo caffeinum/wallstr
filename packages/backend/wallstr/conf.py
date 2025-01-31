@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Literal, cast
 
 import tomllib
-from pydantic import Field, HttpUrl, SecretStr, ValidationInfo, field_validator
+from pydantic import HttpUrl, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

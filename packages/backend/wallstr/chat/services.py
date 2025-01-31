@@ -13,35 +13,6 @@ from wallstr.services import BaseService
 
 
 class ChatService(BaseService):
-    async def create_chat(
-        self,
-        user_id: UUID,
-        user_message: str | None,
-        documents: list[DocumentPayload] | None = None,
-    ) -> tuple[ChatModel, ChatMessageModel]:
-        documents = documents or []
-        async with self.tx():
-            chat_message = ChatMessageModel(
-                user_id=user_id,
-                role=ChatMessageRole.USER,
-                content=user_message,
-                documents=[
-                    DocumentModel(
-                        **document.model_dump(),
-                        user_id=user_id,
-                        storage_path=f"{user_id}/{document.filename}",
-                        status=DocumentStatus.UPLOADING,
-                    )
-                    for document in documents
-                ],
-            )
-            chat = ChatModel(
-                user_id=user_id,
-                messages=[chat_message],
-            )
-            self.db.add(chat)
-        return chat, chat_message
-
     async def get_chat(self, chat_id: UUID, user_id: UUID) -> ChatModel | None:
         async with self.tx():
             result = await self.db.execute(
@@ -102,3 +73,66 @@ class ChatService(BaseService):
             has_more = len(chats) > limit
             new_cursor = offset + limit if has_more else None
         return list(chats[:limit]), new_cursor
+
+    async def create_chat(
+        self,
+        user_id: UUID,
+        user_message: str | None,
+        documents: list[DocumentPayload] | None = None,
+    ) -> tuple[ChatModel, ChatMessageModel]:
+        documents = documents or []
+        async with self.tx():
+            chat_message = ChatMessageModel(
+                user_id=user_id,
+                role=ChatMessageRole.USER,
+                content=user_message,
+                documents=[
+                    DocumentModel(
+                        **document.model_dump(),
+                        user_id=user_id,
+                        storage_path=f"{user_id}/{document.filename}",
+                        status=DocumentStatus.UPLOADING,
+                    )
+                    for document in documents
+                ],
+            )
+            chat = ChatModel(
+                user_id=user_id,
+                messages=[chat_message],
+            )
+            self.db.add(chat)
+        return chat, chat_message
+
+    async def create_chat_message(
+        self,
+        chat_id: UUID,
+        message: str | None,
+        documents: list[DocumentPayload] | None = None,
+        role: ChatMessageRole = ChatMessageRole.USER,
+    ) -> ChatMessageModel:
+        documents = documents or []
+        async with self.tx():
+            result = await self.db.execute(
+                select(ChatModel).filter_by(id=chat_id, deleted_at=None)
+            )
+            chat = result.scalar_one_or_none()
+            if not chat:
+                raise ValueError("Chat not found")
+
+            chat_message = ChatMessageModel(
+                chat_id=chat_id,
+                user_id=chat.user_id,
+                role=role,
+                content=message,
+                documents=[
+                    DocumentModel(
+                        **document.model_dump(),
+                        user_id=chat.user_id,
+                        storage_path=f"{chat.user_id}/{document.filename}",
+                        status=DocumentStatus.UPLOADING,
+                    )
+                    for document in documents
+                ],
+            )
+            self.db.add(chat_message)
+        return chat_message

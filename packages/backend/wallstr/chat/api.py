@@ -35,6 +35,48 @@ router = APIRouter(
 )
 
 
+@router.get("/{slug}")
+async def get_chat(
+    auth: Auth,
+    chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+    slug: str,
+) -> Chat:
+    chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    messages, new_cursor = await chat_svc.get_chat_messages(chat_id=chat.id)
+    return Chat(
+        id=chat.id,
+        title=chat.title,
+        slug=chat.slug,
+        messages=Paginated(
+            items=[ChatMessage.model_validate(message) for message in messages],
+            cursor=new_cursor,
+        ),
+    )
+
+
+@router.get("/{slug}/messages")
+async def get_chat_messages(
+    auth: Auth,
+    chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+    slug: str,
+    cursor: int = 0,
+) -> Paginated[ChatMessage]:
+    chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    messages, new_cursor = await chat_svc.get_chat_messages(
+        chat_id=chat.id, offset=cursor
+    )
+    return Paginated(
+        items=[ChatMessage.model_validate(message) for message in messages],
+        cursor=new_cursor,
+    )
+
+
 @router.post(
     "",
     response_model=CreateChatResponse,
@@ -82,46 +124,37 @@ async def create_chat(
     )
 
 
-@router.get("/{slug}")
-async def get_chat(
+@router.post("/{slug}/messages")
+async def send_chat_message(
     auth: Auth,
+    data: MessageRequest,
     chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
     slug: str,
-) -> Chat:
+) -> ChatMessage:
+    if data.message is None and len(data.documents) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot send empty message",
+        )
+
     chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
     if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found"
+        )
 
-    messages, new_cursor = await chat_svc.get_chat_messages(chat_id=chat.id)
-    return Chat(
-        id=chat.id,
-        title=chat.title,
-        slug=chat.slug,
-        messages=Paginated(
-            items=[ChatMessage.model_validate(message) for message in messages],
-            cursor=new_cursor,
-        ),
-    )
+    try:
+        message = await chat_svc.create_chat_message(
+            chat_id=chat.id,
+            message=data.message,
+            documents=data.documents,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found"
+        ) from e
 
-
-@router.get("/{slug}/messages")
-async def get_chat_messages(
-    auth: Auth,
-    chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
-    slug: str,
-    cursor: int = 0,
-) -> Paginated[ChatMessage]:
-    chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
-    if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
-
-    messages, new_cursor = await chat_svc.get_chat_messages(
-        chat_id=chat.id, offset=cursor
-    )
-    return Paginated(
-        items=[ChatMessage.model_validate(message) for message in messages],
-        cursor=new_cursor,
-    )
+    return ChatMessage.model_validate(message)
 
 
 @cache
