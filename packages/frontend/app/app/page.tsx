@@ -64,10 +64,12 @@ export default function AppPage() {
   );
 
   return (
-    <div className="flex flex-col flex-1 bg-base-200">
+    <div className="flex flex-col md:flex-row flex-1 bg-base-200">
       <ChatsList />
-      <ChatMessages />
-      <ChatInput onSubmit={createChat} isPending={isPending} />
+      <div className="flex flex-1 flex-col overflow-y-scroll">
+        <ChatMessages className="flex-1 overflow-y-scroll" />
+        <ChatInput onSubmit={createChat} isPending={isPending} />
+      </div>
     </div>
   );
 }

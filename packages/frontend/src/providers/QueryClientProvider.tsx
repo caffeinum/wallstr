@@ -1,6 +1,6 @@
 "use client";
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   DefaultError,
@@ -9,13 +9,14 @@ import {
   QueryClient,
   QueryClientProvider as TanstackQueryClientProvider,
 } from "@tanstack/react-query";
-import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import {UnauthenticatedError} from "@/utils/errors";
+import { UnauthenticatedError } from "@/utils/errors";
+import { settings } from "@/conf";
 
 const RETRIES = 3;
 
-export default function QueryClientProvider({children}: {children: React.ReactNode}) {
+export default function QueryClientProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [queryClient] = useState(
     () =>
@@ -58,7 +59,7 @@ export default function QueryClientProvider({children}: {children: React.ReactNo
   return (
     <TanstackQueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools buttonPosition="bottom-left" />
+      {settings.DEBUG && <ReactQueryDevtools buttonPosition="bottom-left" />}
     </TanstackQueryClientProvider>
   );
 }

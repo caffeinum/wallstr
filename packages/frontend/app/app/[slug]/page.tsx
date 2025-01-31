@@ -86,10 +86,12 @@ export default function ChatPage() {
   });
 
   return (
-    <div className="flex flex-col flex-1 bg-base-200">
+    <div className="flex flex-col md:flex-row flex-1 bg-base-200">
       <ChatsList slug={slug} />
-      <ChatMessages slug={slug} />
-      <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
+      <div className="flex flex-1 flex-col overflow-y-scroll">
+        <ChatMessages slug={slug} className="flex-1 overflow-y-scroll" />
+        <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
+      </div>
     </div>
   );
 }

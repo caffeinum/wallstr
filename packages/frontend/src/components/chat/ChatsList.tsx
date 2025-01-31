@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { twMerge } from "tailwind-merge";
 
 import { api } from "@/api";
 
-export default function ChatsList({ slug }: { slug?: string }) {
+export default function ChatsList({ slug, className }: { slug?: string; className?: string }) {
   const { data: chats } = useQuery({
     queryKey: ["/chats"],
     queryFn: async () => {
@@ -15,8 +16,14 @@ export default function ChatsList({ slug }: { slug?: string }) {
   if (!chats) return null;
 
   return (
-    <div className="gap-2 p-4 overflow-x-auto">
-      <div className="mx-auto max-w-4xl">
+    <div className={twMerge("py-4 px-2", className)}>
+      <div className="md:flex md:flex-col gap-2 md:mt-10">
+        <Link
+          href="/app"
+          className={`badge badge-md ${!slug ? "badge-neutral" : "badge-ghost"} transition-colors cursor-pointer whitespace-nowrap`}
+        >
+          New chat...
+        </Link>
         {chats.items.map((chat) => (
           <Link
             key={chat.id}

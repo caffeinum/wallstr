@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 import { format } from "date-fns";
+import { twMerge } from "tailwind-merge";
 
 import { api } from "@/api";
 import { settings } from "@/conf";
@@ -33,7 +34,7 @@ function DocumentIcon({ filename }: DocumentIconProps) {
   }
 }
 
-export default function ChatMessages({ slug }: { slug?: string }) {
+export default function ChatMessages({ slug, className }: { slug?: string; className?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [streamingMessage, setStreamingMessage] = useState<string>("");
 
@@ -108,51 +109,57 @@ export default function ChatMessages({ slug }: { slug?: string }) {
   const messages = data?.pages.flatMap((page) => page?.items).reverse() ?? [];
 
   return (
-    <div className="flex-1 flex flex-col justify-end p-4 overflow-y-auto">
-      <div className="mx-auto max-w-4xl space-y-4 w-full px-4 overflow-y-scroll">
-        {hasNextPage && (
-          <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="btn btn-ghost btn-sm w-full">
-            {isFetchingNextPage ? "Loading more..." : "Load more"}
-          </button>
-        )}
+    <div className={twMerge("flex flex-col justify-end py-4", className)}>
+      <div className="overflow-y-scroll max-w-4xl w-full mx-auto">
+        <div className="space-y-4 w-full pr-4">
+          {hasNextPage && (
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="btn btn-ghost btn-sm w-full"
+            >
+              {isFetchingNextPage ? "Loading more..." : "Load more"}
+            </button>
+          )}
 
-        {messages.map((message) => (
-          <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
-            {message.documents && message.documents.length > 0 && (
-              <div className="chat-header">
-                <div>
-                  {message.documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center gap-2 py-2">
-                      <DocumentIcon filename={doc.filename} />
-                      <span className="text-sm">{doc.filename}</span>
-                    </div>
-                  ))}
+          {messages.map((message) => (
+            <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
+              {message.documents && message.documents.length > 0 && (
+                <div className="chat-header">
+                  <div>
+                    {message.documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-2 py-2">
+                        <DocumentIcon filename={doc.filename} />
+                        <span className="text-sm">{doc.filename}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {message.content && (
-              <>
-                <div
-                  className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
-                >
-                  {message.content}
-                </div>
+              )}
+              {message.content && (
+                <>
+                  <div
+                    className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
+                  >
+                    {message.content}
+                  </div>
 
-                {message.created_at && (
-                  <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
-                )}
-              </>
-            )}
-          </div>
-        ))}
+                  {message.created_at && (
+                    <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
 
-        {streamingMessage && (
-          <div className="chat chat-start">
-            <div className="chat-bubble">{streamingMessage}</div>
-          </div>
-        )}
+          {streamingMessage && (
+            <div className="chat chat-start">
+              <div className="chat-bubble">{streamingMessage}</div>
+            </div>
+          )}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
     </div>
   );
