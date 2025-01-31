@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, sql
+from sqlalchemy import sql
 
 from wallstr.chat.models import (
     ChatMessageModel,
@@ -16,7 +16,7 @@ class ChatService(BaseService):
     async def get_chat(self, chat_id: UUID, user_id: UUID) -> ChatModel | None:
         async with self.tx():
             result = await self.db.execute(
-                select(ChatModel).filter_by(
+                sql.select(ChatModel).filter_by(
                     id=chat_id, user_id=user_id, deleted_at=None
                 )
             )
@@ -25,7 +25,7 @@ class ChatService(BaseService):
     async def get_chat_by_slug(self, chat_slug: str, user_id: UUID) -> ChatModel | None:
         async with self.tx():
             result = await self.db.execute(
-                select(ChatModel).filter_by(
+                sql.select(ChatModel).filter_by(
                     slug=chat_slug, user_id=user_id, deleted_at=None
                 )
             )
@@ -62,7 +62,7 @@ class ChatService(BaseService):
     ) -> tuple[list[ChatModel], int | None]:
         async with self.tx():
             result = await self.db.execute(
-                select(ChatModel)
+                sql.select(ChatModel)
                 .filter_by(user_id=user_id, deleted_at=None)
                 .order_by(ChatModel.created_at.desc())
                 .offset(offset)
@@ -113,7 +113,7 @@ class ChatService(BaseService):
         documents = documents or []
         async with self.tx():
             result = await self.db.execute(
-                select(ChatModel).filter_by(id=chat_id, deleted_at=None)
+                sql.select(ChatModel).filter_by(id=chat_id, deleted_at=None)
             )
             chat = result.scalar_one_or_none()
             if not chat:

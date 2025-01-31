@@ -3,13 +3,14 @@ from uuid import UUID
 from dramatiq.middleware import CurrentMessage
 from langchain_openai import OpenAI
 
+from wallstr.chat.models import ChatMessageRole
 from wallstr.chat.services import ChatService
 from wallstr.conf import settings
 from wallstr.worker import dramatiq
 
 
 @dramatiq.actor  # type: ignore
-async def get_chat_message(message_id: str) -> None:
+async def process_chat_message(message_id: str) -> None:
     ctx = CurrentMessage.get_current_message()
     if not ctx:
         raise Exception("No ctx message")
@@ -28,6 +29,13 @@ async def get_chat_message(message_id: str) -> None:
         raise Exception("No redis")
 
     llm = OpenAI(api_key=settings.OPENAI_API_KEY)
+    chunks = []
     async for chunk in llm.astream(message.content):
-        output = chunk
-        await redis.publish(f"{message.user_id}:{message.chat_id}:{message.id}", output)
+        chunks.append(chunk)
+        await redis.publish(f"{message.user_id}:{message.chat_id}:{message.id}", chunk)
+
+    await chat_svc.create_chat_message(
+        chat_id=message.chat_id,
+        message="".join(chunks),
+        role=ChatMessageRole.ASSISTANT,
+    )

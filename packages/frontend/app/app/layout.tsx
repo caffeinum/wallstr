@@ -1,14 +1,14 @@
-import {ThemeProvider} from "next-themes";
+import { ThemeProvider } from "next-themes";
 
 import Footer from "@/components/footer/Footer";
 import Header from "@/components/header/Header";
 
-export default function AppLayout({children}: {children: React.ReactNode}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen max-h-screen flex flex-col">
         <Header />
-        <main className="grow flex">{children}</main>
+        <main className="flex-1 flex overflow-y-auto">{children}</main>
         <Footer />
       </div>
     </ThemeProvider>

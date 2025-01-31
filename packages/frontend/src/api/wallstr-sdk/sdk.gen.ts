@@ -14,18 +14,21 @@ import type {
   SignoutResponse,
   GetCurrentUserData,
   GetCurrentUserResponse,
-  ListChatsData,
-  ListChatsResponse,
-  ListChatsError,
-  CreateChatData,
-  CreateChatResponse2,
-  CreateChatError,
   GetChatData,
   GetChatResponse,
   GetChatError,
   GetChatMessagesData,
   GetChatMessagesResponse,
   GetChatMessagesError,
+  SendChatMessageData,
+  SendChatMessageResponse,
+  SendChatMessageError,
+  ListChatsData,
+  ListChatsResponse,
+  ListChatsError,
+  CreateChatData,
+  CreateChatResponse,
+  CreateChatError,
   GetChatMessagesStreamData,
   GetChatMessagesStreamError,
   MarkDocumentUploadedData,
@@ -119,42 +122,6 @@ export class AuthService {
 
 export class ChatService {
   /**
-   * List Chats
-   */
-  public static listChats<ThrowOnError extends boolean = false>(options?: Options<ListChatsData, ThrowOnError>) {
-    return (options?.client ?? client).get<ListChatsResponse, ListChatsError, ThrowOnError>({
-      security: [
-        {
-          scheme: "bearer",
-          type: "http",
-        },
-      ],
-      url: "/chats",
-      ...options,
-    });
-  }
-
-  /**
-   * Create Chat
-   */
-  public static createChat<ThrowOnError extends boolean = false>(options: Options<CreateChatData, ThrowOnError>) {
-    return (options?.client ?? client).post<CreateChatResponse2, CreateChatError, ThrowOnError>({
-      security: [
-        {
-          scheme: "bearer",
-          type: "http",
-        },
-      ],
-      url: "/chats",
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-    });
-  }
-
-  /**
    * Get Chat
    */
   public static getChat<ThrowOnError extends boolean = false>(options: Options<GetChatData, ThrowOnError>) {
@@ -185,6 +152,64 @@ export class ChatService {
       ],
       url: "/chats/{slug}/messages",
       ...options,
+    });
+  }
+
+  /**
+   * Send Chat Message
+   */
+  public static sendChatMessage<ThrowOnError extends boolean = false>(
+    options: Options<SendChatMessageData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).post<SendChatMessageResponse, SendChatMessageError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chats/{slug}/messages",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+  }
+
+  /**
+   * List Chats
+   */
+  public static listChats<ThrowOnError extends boolean = false>(options?: Options<ListChatsData, ThrowOnError>) {
+    return (options?.client ?? client).get<ListChatsResponse, ListChatsError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chats",
+      ...options,
+    });
+  }
+
+  /**
+   * Create Chat
+   */
+  public static createChat<ThrowOnError extends boolean = false>(options: Options<CreateChatData, ThrowOnError>) {
+    return (options?.client ?? client).post<CreateChatResponse, CreateChatError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/chats",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
     });
   }
 

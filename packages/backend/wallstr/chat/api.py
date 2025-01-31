@@ -11,6 +11,7 @@ from structlog.contextvars import bind_contextvars, clear_contextvars
 
 from wallstr.auth.dependencies import Auth
 from wallstr.auth.schemas import HTTPUnauthorizedError
+from wallstr.auth.services import UserService
 from wallstr.core.schemas import Paginated
 from wallstr.core.utils import uvicorn_should_exit
 from wallstr.documents.models import DocumentModel
@@ -24,6 +25,7 @@ from .schemas import (
     MessageRequest,
 )
 from .services import ChatService
+from .tasks import process_chat_message
 
 logger = structlog.get_logger()
 router = APIRouter(
@@ -173,6 +175,7 @@ async def send_chat_message(
     pending_documents = await asyncio.gather(
         *[get_pending_document(document) for document in message.documents]
     )
+    process_chat_message.send(message_id=str(message.id))
     return ChatMessage.model_validate(message).model_copy(
         update={"pending_documents": pending_documents}
     )
@@ -182,22 +185,37 @@ async def send_chat_message(
 @router.get("/{slug}/messages/stream")
 async def get_chat_messages_stream(
     request: Request,
-    auth: Auth,
     slug: str,
     chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+    user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
 ) -> EventSourceResponse:
     redis: Redis = request.state.redis
 
-    chat = await chat_svc.get_chat_by_slug(slug, auth.user_id)
+    # TODO: refresh_token is used for authentincation, needs to introduce additional cookie based auth
+    # for sse only
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+    auth_session = await user_svc.get_session_by_token(refresh_token)
+    if not auth_session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
+    chat = await chat_svc.get_chat_by_slug(slug, auth_session.user_id)
     if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found"
+        )
 
     clear_contextvars()
-    bind_contextvars(user_id=auth.user_id, chat_id=chat.id)
+    bind_contextvars(user_id=auth_session.user_id, chat_id=chat.id)
 
     async def generator() -> AsyncGenerator[str, None]:
         async with redis.pubsub() as pubsub:
-            await pubsub.psubscribe(f"{auth.user_id}:{chat.id}:*")
+            await pubsub.psubscribe(f"{auth_session.user_id}:{chat.id}:*")
 
             while not uvicorn_should_exit():
                 if await request.is_disconnected():
@@ -211,8 +229,7 @@ async def get_chat_messages_stream(
                     )
 
                     if message is not None:
-                        logger.trace("Received message chunk")
-                        yield message["data"]
+                        yield message["data"].decode("utf-8")
                 except asyncio.CancelledError as e:
                     await pubsub.close()
                     raise e

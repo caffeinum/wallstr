@@ -7,17 +7,19 @@ import ChatInput from "@/components/chat/ChatInput";
 import ChatMessages from "@/components/chat/ChatMessages";
 import { api } from "@/api";
 
-import type { DocumentPayload, DocumentType } from "@/api/wallstr-sdk";
+import type { DocumentPayload } from "@/api/wallstr-sdk";
 import ChatsList from "@/components/chat/ChatsList";
+import { getDocumentType } from "@/components/chat/utils";
 
 export default function AppPage() {
   const router = useRouter();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({ message, attachedFiles }: { message: string; attachedFiles: File[] }) => {
-      const { data } = await api.chat.createChat({
+      const { data: chat } = await api.chat.createChat({
         body: {
           message: message.trim() || null,
+          // TODO: generate sha-suffix for documents
           documents: attachedFiles.map(
             (f): DocumentPayload => ({
               filename: f.name,
@@ -28,8 +30,9 @@ export default function AppPage() {
         throwOnError: true,
       });
 
+      const pendingDocuments = chat.messages.items[0].pending_documents || [];
       Promise.all([
-        data.pending_documents.map(async (document) => {
+        pendingDocuments.map(async (document) => {
           const file = attachedFiles.find((file) => file.name === document.filename);
           if (!file) return;
 
@@ -43,10 +46,10 @@ export default function AppPage() {
           }
         }),
       ]);
-      return data;
+      return chat;
     },
-    onSuccess: (data) => {
-      router.push(`/app/${data.chat.slug}`);
+    onSuccess: (chat) => {
+      router.push(`/app/${chat.slug}`);
     },
   });
 
@@ -61,23 +64,10 @@ export default function AppPage() {
   );
 
   return (
-    <div className="flex flex-col grow">
-      <main className="flex-1 overflow-hidden bg-base-200">
-        <div className="flex h-full flex-col">
-          <ChatsList />
-          <ChatMessages />
-          <ChatInput onSubmit={createChat} isPending={isPending} />
-        </div>
-      </main>
+    <div className="flex flex-col flex-1 bg-base-200">
+      <ChatsList />
+      <ChatMessages />
+      <ChatInput onSubmit={createChat} isPending={isPending} />
     </div>
   );
 }
-
-const getDocumentType = (file: File): DocumentType => {
-  switch (file.type) {
-    case "application/pdf":
-      return "pdf";
-    default:
-      throw new Error("Unsupported file type");
-  }
-};

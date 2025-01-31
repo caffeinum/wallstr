@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 
 import { api } from "@/api";
+import { settings } from "@/conf";
 
 interface DocumentIconProps {
   filename: string;
@@ -33,6 +34,7 @@ function DocumentIcon({ filename }: DocumentIconProps) {
 
 export default function ChatMessages({ slug }: { slug?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [streamingMessage, setStreamingMessage] = useState<string>("");
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["/chat", slug],
@@ -49,13 +51,40 @@ export default function ChatMessages({ slug }: { slug?: string }) {
     enabled: !!slug,
   });
 
+  useEffect(() => {
+    if (!slug) return;
+    console.log("Connecting to SSE");
+
+    const eventSource = new EventSource(`${settings.API_URL}/chats/${slug}/messages/stream`, {
+      withCredentials: true,
+    });
+
+    eventSource.onmessage = (event) => {
+      console.log(event);
+      try {
+        setStreamingMessage((old) => old + event.data);
+      } catch (error) {
+        console.error("Error parsing SSE message:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("SSE Error:", error);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [slug]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, []);
+  }, [streamingMessage]);
 
   if (isLoading) {
     return (
@@ -75,11 +104,11 @@ export default function ChatMessages({ slug }: { slug?: string }) {
     );
   }
 
-  const messages = data?.pages.flatMap((page) => page?.items) ?? [];
+  const messages = data?.pages.flatMap((page) => page?.items).reverse() ?? [];
 
   return (
-    <div className="flex-1 flex flex-col justify-end overflow-y-auto p-4">
-      <div className="mx-auto max-w-4xl space-y-4 w-full">
+    <div className="flex-1 flex flex-col justify-end p-4 overflow-y-auto">
+      <div className="mx-auto max-w-4xl space-y-4 w-full px-4 overflow-y-scroll">
         {hasNextPage && (
           <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="btn btn-ghost btn-sm w-full">
             {isFetchingNextPage ? "Loading more..." : "Load more"}
@@ -102,13 +131,20 @@ export default function ChatMessages({ slug }: { slug?: string }) {
             )}
             {message.content && (
               <div
-                className={`chat-bubble whitespace-pre ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
+                className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
               >
                 {message.content}
               </div>
             )}
           </div>
         ))}
+
+        {streamingMessage && (
+          <div className="chat chat-start">
+            <div className="chat-bubble">{streamingMessage}</div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
     </div>

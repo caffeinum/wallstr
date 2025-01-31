@@ -17,14 +17,10 @@ export type ChatMessage = {
   role: ChatMessageRole;
   content: string;
   documents: Array<Document>;
+  pending_documents?: Array<PendingDocument>;
 };
 
 export type ChatMessageRole = "user" | "assistant";
-
-export type CreateChatResponse = {
-  chat: Chat;
-  pending_documents: Array<PendingDocument>;
-};
 
 export type Document = {
   id: string;
@@ -197,66 +193,6 @@ export type GetCurrentUserResponses = {
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
 
-export type ListChatsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    cursor?: number;
-  };
-  url: "/chats";
-};
-
-export type ListChatsErrors = {
-  /**
-   * Unauthorized
-   */
-  401: HttpUnauthorizedError;
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type ListChatsError = ListChatsErrors[keyof ListChatsErrors];
-
-export type ListChatsResponses = {
-  /**
-   * Successful Response
-   */
-  200: PaginatedChat;
-};
-
-export type ListChatsResponse = ListChatsResponses[keyof ListChatsResponses];
-
-export type CreateChatData = {
-  body: MessageRequest;
-  path?: never;
-  query?: never;
-  url: "/chats";
-};
-
-export type CreateChatErrors = {
-  /**
-   * Unauthorized
-   */
-  401: HttpUnauthorizedError;
-  /**
-   * Validation Error
-   */
-  422: HttpValidationError;
-};
-
-export type CreateChatError = CreateChatErrors[keyof CreateChatErrors];
-
-export type CreateChatResponses = {
-  /**
-   * Successful Response
-   */
-  201: CreateChatResponse;
-};
-
-export type CreateChatResponse2 = CreateChatResponses[keyof CreateChatResponses];
-
 export type GetChatData = {
   body?: never;
   path: {
@@ -320,6 +256,109 @@ export type GetChatMessagesResponses = {
 };
 
 export type GetChatMessagesResponse = GetChatMessagesResponses[keyof GetChatMessagesResponses];
+
+export type SendChatMessageData = {
+  body: MessageRequest;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: "/chats/{slug}/messages";
+};
+
+export type SendChatMessageErrors = {
+  /**
+   * Invalid request
+   */
+  400: unknown;
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Chat not found
+   */
+  404: unknown;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SendChatMessageError = SendChatMessageErrors[keyof SendChatMessageErrors];
+
+export type SendChatMessageResponses = {
+  /**
+   * Successful Response
+   */
+  200: ChatMessage;
+};
+
+export type SendChatMessageResponse = SendChatMessageResponses[keyof SendChatMessageResponses];
+
+export type ListChatsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    cursor?: number;
+  };
+  url: "/chats";
+};
+
+export type ListChatsErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ListChatsError = ListChatsErrors[keyof ListChatsErrors];
+
+export type ListChatsResponses = {
+  /**
+   * Successful Response
+   */
+  200: PaginatedChat;
+};
+
+export type ListChatsResponse = ListChatsResponses[keyof ListChatsResponses];
+
+export type CreateChatData = {
+  body: MessageRequest;
+  path?: never;
+  query?: never;
+  url: "/chats";
+};
+
+export type CreateChatErrors = {
+  /**
+   * Invalid request
+   */
+  400: unknown;
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type CreateChatError = CreateChatErrors[keyof CreateChatErrors];
+
+export type CreateChatResponses = {
+  /**
+   * Successful Response
+   */
+  201: Chat;
+};
+
+export type CreateChatResponse = CreateChatResponses[keyof CreateChatResponses];
 
 export type GetChatMessagesStreamData = {
   body?: never;
