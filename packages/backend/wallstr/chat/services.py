@@ -77,7 +77,7 @@ class ChatService(BaseService):
     async def create_chat(
         self,
         user_id: UUID,
-        user_message: str | None,
+        message: str | None,
         documents: list[DocumentPayload] | None = None,
     ) -> tuple[ChatModel, ChatMessageModel]:
         documents = documents or []
@@ -85,7 +85,7 @@ class ChatService(BaseService):
             chat_message = ChatMessageModel(
                 user_id=user_id,
                 role=ChatMessageRole.USER,
-                content=user_message,
+                content=message,
                 documents=[
                     DocumentModel(
                         **document.model_dump(),

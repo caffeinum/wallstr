@@ -23,7 +23,7 @@ def chat_svc(db_session: AsyncSession) -> ChatService:
 async def test_create_chat(chat_svc: ChatService, alice: UserModel) -> None:
     user_message = "Hello, wallstr.chat!"
 
-    chat, _ = await chat_svc.create_chat(user_id=alice.id, user_message=user_message)
+    chat, _ = await chat_svc.create_chat(user_id=alice.id, message=user_message)
 
     assert chat.user_id == alice.id
 
@@ -37,7 +37,7 @@ async def test_create_chat_with_documents(
         DocumentPayload(filename="summary.xlsx", doc_type=DocumentType.XLSX),
     ]
     chat, _ = await chat_svc.create_chat(
-        user_id=alice.id, user_message=None, documents=documents
+        user_id=alice.id, message=None, documents=documents
     )
 
     assert chat.user_id == alice.id

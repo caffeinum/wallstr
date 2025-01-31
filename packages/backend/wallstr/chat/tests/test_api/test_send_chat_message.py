@@ -29,6 +29,7 @@ async def test_send_chat_message_success(
     assert data["role"] == "user"
     assert len(data["documents"]) == 1
     assert data["documents"][0]["filename"] == "test.pdf"
+    assert data["pending_documents"][0]["filename"] == "test.pdf"
 
 
 @pytest.mark.asyncio
@@ -68,6 +69,7 @@ async def test_send_chat_message_with_only_document(
     assert data["content"] == ""
     assert len(data["documents"]) == 1
     assert data["documents"][0]["filename"] == "test.pdf"
+    assert data["pending_documents"][0]["filename"] == "test.pdf"
 
 
 @pytest.mark.asyncio

@@ -25,6 +25,7 @@ class ChatMessage(BaseModel):
     role: ChatMessageRole
     content: str
     documents: list[Document]
+    pending_documents: list[PendingDocument] = []
 
 
 class Chat(BaseModel):
@@ -34,8 +35,3 @@ class Chat(BaseModel):
     slug: str
     title: str | None
     messages: Paginated[ChatMessage]
-
-
-class CreateChatResponse(BaseModel):
-    chat: Chat
-    pending_documents: list[PendingDocument]

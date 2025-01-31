@@ -21,7 +21,6 @@ from wallstr.openapi import generate_unique_id_function
 from .schemas import (
     Chat,
     ChatMessage,
-    CreateChatResponse,
     MessageRequest,
 )
 from .services import ChatService
@@ -79,23 +78,24 @@ async def get_chat_messages(
 
 @router.post(
     "",
-    response_model=CreateChatResponse,
+    response_model=Chat,
     status_code=status.HTTP_201_CREATED,
+    responses={400: {"description": "Invalid request"}},
 )
 async def create_chat(
     data: MessageRequest,
     auth: Auth,
     chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
     document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
-) -> CreateChatResponse:
+) -> Chat:
     if data.message is None and len(data.documents) == 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cannot start chat without message",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot send empty message",
         )
     chat, message = await chat_svc.create_chat(
         user_id=auth.user_id,
-        user_message=data.message,
+        message=data.message,
         documents=data.documents,
     )
 
@@ -110,25 +110,34 @@ async def create_chat(
         *[get_pending_document(document) for document in message.documents]
     )
 
-    return CreateChatResponse(
-        chat=Chat(
-            id=chat.id,
-            title=chat.title,
-            slug=chat.slug,
-            messages=Paginated(
-                items=[ChatMessage.model_validate(message)],
-                cursor=None,
-            ),
+    return Chat(
+        id=chat.id,
+        title=chat.title,
+        slug=chat.slug,
+        messages=Paginated(
+            items=[
+                ChatMessage.model_validate(message).model_copy(
+                    update={"pending_documents": pending_documents}
+                )
+            ],
+            cursor=None,
         ),
-        pending_documents=pending_documents,
     )
 
 
-@router.post("/{slug}/messages")
+@router.post(
+    "/{slug}/messages",
+    response_model=ChatMessage,
+    responses={
+        400: {"description": "Invalid request"},
+        404: {"description": "Chat not found"},
+    },
+)
 async def send_chat_message(
     auth: Auth,
     data: MessageRequest,
     chat_svc: Annotated[ChatService, Depends(ChatService.inject_svc)],
+    document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
     slug: str,
 ) -> ChatMessage:
     if data.message is None and len(data.documents) == 0:
@@ -154,7 +163,19 @@ async def send_chat_message(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found"
         ) from e
 
-    return ChatMessage.model_validate(message)
+    async def get_pending_document(document: DocumentModel) -> PendingDocument:
+        return PendingDocument(
+            id=document.id,
+            filename=document.filename,
+            presigned_url=document_svc.generate_upload_url(auth.user_id, document),
+        )
+
+    pending_documents = await asyncio.gather(
+        *[get_pending_document(document) for document in message.documents]
+    )
+    return ChatMessage.model_validate(message).model_copy(
+        update={"pending_documents": pending_documents}
+    )
 
 
 @cache
