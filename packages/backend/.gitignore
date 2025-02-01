@@ -8,6 +8,7 @@ __pycache__/
 .minio/
 .rabbitmq/
 .redis/
+.weaviate/
 
 .sw?
 

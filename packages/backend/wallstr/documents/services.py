@@ -22,6 +22,13 @@ class DocumentService(BaseService):
             config=botocore.config.Config(signature_version="s3v4"),
         )
 
+    async def get_document(self, document_id: UUID) -> DocumentModel | None:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.select(DocumentModel).filter_by(id=document_id)
+            )
+        return result.scalar_one_or_none()
+
     def generate_upload_url(self, user_id: UUID, document: DocumentModel) -> str:
         if user_id != document.user_id:
             raise ValueError("User is not the owner of the document")

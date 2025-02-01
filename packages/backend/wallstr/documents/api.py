@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from wallstr.auth.dependencies import Auth
 from wallstr.auth.schemas import HTTPUnauthorizedError
 from wallstr.documents.services import DocumentService
+from wallstr.documents.tasks import process_document
 from wallstr.openapi import generate_unique_id_function
 
 router = APIRouter(
@@ -27,3 +28,4 @@ async def mark_document_uploaded(
     document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
 ) -> None:
     await document_svc.mark_document_uploaded(auth.user_id, id)
+    process_document.send(document_id=str(id))
