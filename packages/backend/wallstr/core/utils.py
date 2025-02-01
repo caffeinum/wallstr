@@ -1,5 +1,6 @@
 import asyncio
 import base64
+from functools import cache
 from typing import cast
 from uuid import uuid4
 
@@ -14,6 +15,7 @@ def generate_unique_slug(length: int = 12) -> str:
     return base64_slug[:length]
 
 
+@cache
 def uvicorn_server() -> Server:
     """
     Hack because sse-starlette cannot handle signals properly
