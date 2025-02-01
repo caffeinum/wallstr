@@ -17,6 +17,7 @@ test = "coverage run -m pytest && coverage report -m"
 alembic_print = "bash scripts/alembic.sh"
 makemigrations = "alembic revision --autogenerate -m"
 migrate = "alembic upgrade head"
+migrate_weaviate = "python -m scripts.migrate_weaviate"
 generate_openapi = "python -m scripts.generate_openapi_scheme"
 
 [tool.poetry.dependencies]

@@ -14,12 +14,12 @@
 
 1. Frontend
    ```bash
-   $ pnpm frontend:dev`
+   pnpm frontend:dev
    ```
 2. Backend, check [backend/README.md](packages/backend/README.md) for more information
    ```bash
-   $ pnpm docker-compose
-   $ pnpm backend:dev
-   $ pnpm backend:worker
+   pnpm docker-compose
+   pnpm backend:dev
+   pnpm backend:worker
    ```
 3. Open http://localhost:3000
