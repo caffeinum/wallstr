@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 import structlog
-import uvicorn
+import uvicorn.logging
 from structlog.dev import DIM, RESET_ALL, ConsoleRenderer, Styles, plain_traceback
 from structlog.stdlib import _FixedFindCallerLogger
 from structlog.typing import EventDict, Processor, WrappedLogger
@@ -106,6 +106,7 @@ LOGGING_CONFIG = {
             "handlers": ["default"],
             "level": "NOTSET",
         },
+        "wallstr": {"level": "NOTSET"},
         "authlib": {"level": "DEBUG"},
         "uvicorn": {"level": "DEBUG"},
         "uvicorn.access": {
@@ -113,10 +114,17 @@ LOGGING_CONFIG = {
             "handlers": ["access"],
             "propagate": False,
         },
+        # boto3
         "botocore": {"level": "INFO"},
         "pika": {"level": "WARNING"},
         "httpcore": {"level": "INFO"},
-        "opeanai": {"level": "INFO"},
+        "s3transfer": {"level": "INFO"},
+        # openai
+        "openai": {"level": "INFO"},
+        "urllib3": {"level": "INFO"},
+        # unstructured
+        "unstructured": {"level": "INFO"},
+        "pdfminer": {"level": "INFO"},
     },
 }
 
