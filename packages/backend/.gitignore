@@ -10,3 +10,6 @@ __pycache__/
 .redis/
 
 .sw?
+
+# temporary development files
+dev_*.py
