@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     DEBUG_SQL: bool = False
 
-    # required
+    # Required
     SECRET_KEY: SecretStr
     DATABASE_URL: SecretStr
     RABBITMQ_URL: SecretStr
@@ -41,8 +41,12 @@ class Settings(BaseSettings):
     STORAGE_BUCKET: str
     STORAGE_ACCESS_KEY: SecretStr
     STORAGE_SECRET_KEY: SecretStr
-
     OPENAI_API_KEY: SecretStr
+
+    # Optional
+    UNSTRUCTURED_API_KEY: SecretStr | None = None
+    WEAVIATE_API_URL: SecretStr | None = None
+    WEAVIATE_GRPC_URL: SecretStr | None = None
 
     CORS_ALLOW_ORIGINS: list[str] = []
 
@@ -58,6 +62,7 @@ class Settings(BaseSettings):
         "STORAGE_BUCKET",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
+        "OPENAI_API_KEY",
         mode="before",
     )
     @classmethod
