@@ -1,12 +1,12 @@
 "use client";
-import {useEffect} from "react";
-import {useRouter} from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-import {useQueryClient} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
-import {clearLocalStorage} from "@/hooks/useLocalStorage";
-import {settings} from "@/conf";
-import {api} from "@/api";
+import { clearLocalStorage } from "@/hooks/useLocalStorage";
+import { settings } from "@/conf";
+import { api } from "@/api";
 
 export default function SignOut() {
   const router = useRouter();

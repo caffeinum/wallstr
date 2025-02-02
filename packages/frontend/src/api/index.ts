@@ -35,6 +35,7 @@ class TokenService {
   private async doRefreshToken(token: string): Promise<string> {
     const response = await fetch(`${settings.API_URL}/auth/refresh-token`, {
       method: "POST",
+      credentials: "include",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
