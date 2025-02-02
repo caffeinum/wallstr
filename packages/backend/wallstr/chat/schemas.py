@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 
 from wallstr.chat.models import ChatMessageRole
 from wallstr.core.schemas import Paginated
@@ -38,3 +38,37 @@ class Chat(BaseModel):
     slug: str
     title: str | None
     messages: Paginated[ChatMessage]
+
+
+class SSE(BaseModel):
+    @computed_field
+    def type(self) -> str:
+        raise NotImplementedError("Subclasses must define a `type` field.")
+
+
+class ChatMessageSSE(SSE):
+    id: UUID
+    content: str
+
+    @computed_field
+    def type(self) -> str:
+        return "message"
+
+
+class ChatMessageStartSSE(SSE):
+    id: UUID
+
+    @computed_field
+    def type(self) -> str:
+        return "message_start"
+
+
+class ChatMessageEndSSE(SSE):
+    id: UUID
+    new_id: UUID
+    created_at: datetime
+    content: str
+
+    @computed_field
+    def type(self) -> str:
+        return "message_end"

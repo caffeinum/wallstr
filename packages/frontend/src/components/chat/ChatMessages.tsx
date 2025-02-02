@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 import { api } from "@/api";
 import { settings } from "@/conf";
+import type { ChatMessageRole, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
 
 interface DocumentIconProps {
   filename: string;
@@ -34,9 +35,16 @@ function DocumentIcon({ filename }: DocumentIconProps) {
   }
 }
 
+interface StreamingMessage {
+  id: string;
+  content: string;
+  loading?: boolean;
+}
+
 export default function ChatMessages({ slug, className }: { slug?: string; className?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [streamingMessage, setStreamingMessage] = useState<string>("");
+  const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
+  const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["/chat", slug],
@@ -62,11 +70,59 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
     });
 
     eventSource.onmessage = (event) => {
-      console.log(event);
-      try {
-        setStreamingMessage((old) => old + event.data);
-      } catch (error) {
-        console.error("Error parsing SSE message:", error);
+      const data = JSON.parse(event.data);
+      switch (data.type) {
+        case "message_start":
+          setStreamingMessages((streamingMessages) => [
+            ...streamingMessages,
+            { id: data.id, content: "", loading: true },
+          ]);
+          break;
+        case "message":
+          setStreamingMessages((streamingMessages) => {
+            const index = streamingMessages.findIndex((message) => message.id === data.id);
+            if (index === -1) return streamingMessages;
+
+            return [
+              ...streamingMessages.slice(0, index),
+              { id: data.id, content: streamingMessages[index].content + data.content },
+              ...streamingMessages.slice(index + 1),
+            ];
+          });
+          break;
+        case "message_end":
+          setStreamingMessages((streamingMessages) => {
+            const index = streamingMessages.findIndex((message) => message.id === data.id);
+            if (index === -1) return streamingMessages;
+
+            return [...streamingMessages.slice(0, index), ...streamingMessages.slice(index + 1)];
+          });
+
+          // Update the cache with the completed message using the new ID
+          queryClient.setQueryData<InfiniteData<GetChatMessagesResponse>>(["/chat", slug], (old) => {
+            if (!old) return old;
+
+            const completedMessage = {
+              id: data.new_id,
+              content: data.content,
+              role: "assistant" as ChatMessageRole,
+              created_at: data.created_at,
+              documents: [],
+            };
+
+            return {
+              pages: [
+                {
+                  items: [completedMessage, ...old.pages[0].items],
+                  cursor: old.pages[0].cursor,
+                },
+                ...old.pages.splice(1),
+              ],
+              pageParams: old.pageParams,
+            };
+          });
+
+          break;
       }
     };
 
@@ -78,7 +134,7 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
     return () => {
       eventSource.close();
     };
-  }, [slug]);
+  }, [slug, queryClient]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,7 +142,7 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
 
   useEffect(() => {
     scrollToBottom();
-  }, [streamingMessage]);
+  }, [streamingMessages, data?.pages]);
 
   if (isLoading) {
     return (
@@ -152,11 +208,11 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
             </div>
           ))}
 
-          {streamingMessage && (
-            <div className="chat chat-start">
-              <div className="chat-bubble">{streamingMessage}</div>
+          {streamingMessages.map((message) => (
+            <div className="chat chat-start" key={message.id}>
+              <div className="chat-bubble whitespace-pre-wrap">{message.loading ? "..." : message.content}</div>
             </div>
-          )}
+          ))}
 
           <div ref={messagesEndRef} />
         </div>

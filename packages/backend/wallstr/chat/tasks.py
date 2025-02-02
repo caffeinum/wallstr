@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from dramatiq.middleware import CurrentMessage
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -7,6 +7,7 @@ from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from wallstr.chat.models import ChatMessageModel, ChatMessageRole
+from wallstr.chat.schemas import ChatMessageEndSSE, ChatMessageSSE, ChatMessageStartSSE
 from wallstr.chat.services import ChatService
 from wallstr.conf import settings
 from wallstr.worker import dramatiq
@@ -31,19 +32,38 @@ async def process_chat_message(message_id: str) -> None:
     if not redis:
         raise Exception("No redis")
 
+    topic = f"{message.user_id}:{message.chat_id}:{message.id}"
+    new_message_id = uuid4()
+    await redis.publish(topic, ChatMessageStartSSE(id=new_message_id).model_dump_json())
+
     llm = OpenAI(api_key=settings.OPENAI_API_KEY)
     llm_context = await get_llm_context(db_session, message)
-    chunks = []
+    chunks: list[str] = []
     async for chunk in llm.astream(
         [*llm_context, HumanMessage(content=message.content)]
     ):
-        chunks.append(chunk)
-        await redis.publish(f"{message.user_id}:{message.chat_id}:{message.id}", chunk)
-
-    await chat_svc.create_chat_message(
+        if not chunk:
+            continue
+        # strip leading new line on the start of the message
+        chunks.append(chunk.lstrip()) if len(chunks) == 0 else chunks.append(chunk)
+        await redis.publish(
+            topic,
+            ChatMessageSSE(id=new_message_id, content=chunk).model_dump_json(),
+        )
+    new_message = await chat_svc.create_chat_message(
         chat_id=message.chat_id,
         message="".join(chunks),
         role=ChatMessageRole.ASSISTANT,
+    )
+
+    await redis.publish(
+        topic,
+        ChatMessageEndSSE(
+            id=new_message_id,
+            new_id=new_message.id,
+            created_at=new_message.created_at,
+            content=new_message.content,
+        ).model_dump_json(),
     )
 
 

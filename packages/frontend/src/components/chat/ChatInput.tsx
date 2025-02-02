@@ -100,14 +100,7 @@ export default function ChatInput({
 
         <div className="relative flex items-start">
           {/* File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
-          />
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept=".pdf" />
 
           {/* Attachment Button */}
           <button
