@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 
+from wallstr.core.schemas import SSE
 from wallstr.documents.models import DocumentStatus
 
 
@@ -17,3 +18,12 @@ class Document(BaseModel):
     id: UUID
     filename: str
     status: DocumentStatus
+
+
+class DocumentStatusSSE(SSE):
+    id: UUID
+    status: DocumentStatus
+
+    @computed_field
+    def type(self) -> str:
+        return "document_status"
