@@ -8,6 +8,8 @@ import { twMerge } from "tailwind-merge";
 import { api } from "@/api";
 import { settings } from "@/conf";
 import type { ChatMessageRole, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface DocumentIconProps {
   filename: string;
@@ -195,9 +197,9 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
               {message.content && (
                 <>
                   <div
-                    className={`chat-bubble whitespace-pre-wrap ${message.role === "user" ? "bg-neutral text-neutral-content" : ""}`}
+                    className={`chat-bubble prose prose-sm ${message.role === "user" ? "bg-neutral text-neutral-content whitespace-pre-wrap" : ""}`}
                   >
-                    {message.content}
+                    <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
                   </div>
 
                   {message.created_at && (
@@ -210,7 +212,9 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
 
           {streamingMessages.map((message) => (
             <div className="chat chat-start" key={message.id}>
-              <div className="chat-bubble whitespace-pre-wrap">{message.loading ? "..." : message.content}</div>
+              <div className="chat-bubble prose prose-sm">
+                <Markdown remarkPlugins={[remarkGfm]}>{message.loading ? "..." : message.content}</Markdown>
+              </div>
             </div>
           ))}
 
