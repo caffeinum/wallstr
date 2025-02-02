@@ -29,7 +29,9 @@ class DocumentService(BaseService):
             )
         return result.scalar_one_or_none()
 
-    def generate_upload_url(self, user_id: UUID, document: DocumentModel) -> str:
+    def generate_upload_url(
+        self, user_id: UUID, document: DocumentModel, error: str | None = None
+    ) -> str:
         if user_id != document.user_id:
             raise ValueError("User is not the owner of the document")
 
@@ -53,6 +55,34 @@ class DocumentService(BaseService):
                     id=document_id, user_id=user_id, status=DocumentStatus.UPLOADING
                 )
                 .values(status=DocumentStatus.UPLOADED)
+                .returning(DocumentModel)
+            )
+        return result.scalar_one()
+
+    async def mark_document_processing(
+        self, user_id: UUID, document_id: UUID
+    ) -> DocumentModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(DocumentModel)
+                .filter_by(
+                    id=document_id, user_id=user_id, status=DocumentStatus.UPLOADED
+                )
+                .values(status=DocumentStatus.PROCESSING)
+                .returning(DocumentModel)
+            )
+        return result.scalar_one()
+
+    async def mark_document_ready(
+        self, user_id: UUID, document_id: UUID
+    ) -> DocumentModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(DocumentModel)
+                .filter_by(
+                    id=document_id, user_id=user_id, status=DocumentStatus.PROCESSING
+                )
+                .values(status=DocumentStatus.READY)
                 .returning(DocumentModel)
             )
         return result.scalar_one()

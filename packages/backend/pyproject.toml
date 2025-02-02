@@ -9,7 +9,7 @@ package-mode = false
 
 [tool.taskipy.tasks]
 dev = "uvicorn wallstr.server:app --reload --reload-include .env"
-worker = "dramatiq wallstr.worker.tasks --watch . -p 1 -t 1"
+worker = "dramatiq wallstr.worker.tasks --watch . -p 4 -t 1"
 lint = "ruff format --check . && ruff check --diff"
 format = "ruff format"
 mypy = "mypy ."
@@ -35,10 +35,11 @@ sqlalchemy-utils = {extras = ["encrypted", "password"], version = "^0.41.2"}
 structlog = "^24.4.0"
 authlib = "~1.3.0"
 python-multipart = "^0.0.20"
-boto3 = "^1.36.9"
+boto3 = "<1.36.4"
 sse-starlette = "^2.2.1"
 langchain = "^0.3.17"
 langchain-openai = "^0.3.3"
+s3fs = "^2025.2.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -53,7 +54,8 @@ pytest-asyncio = "^0.25.2"
 coverage = "^7.6.10"
 httpx = "^0.28.1"
 pytest-mock = "^3.14.0"
-types-boto3 = {extras = ["boto3", "s3"], version = "^1.36.9"}
+types-boto3 = {version = "1.36.3", extras = ["boto3", "s3"]}
+rich = "^13.9.4"
 
 [tool.poetry.group.worker.dependencies]
 unstructured = {extras = ["pdf"], version = "^0.16.17"}

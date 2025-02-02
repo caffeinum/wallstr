@@ -18,6 +18,9 @@ class DocumentType(str, enum.Enum):
 class DocumentStatus(str, enum.Enum):
     UPLOADING = "uploading"
     UPLOADED = "uploaded"
+    PROCESSING = "processing"
+    READY = "ready"
+    FAILED = "failed"
 
 
 class DocumentModel(RecordModel):

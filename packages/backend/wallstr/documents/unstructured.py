@@ -31,9 +31,14 @@ async def upload_document_to_weaviate(remote_url: str, collection_name: str) -> 
 
     https://github.com/Unstructured-IO/unstructured-ingest/issues/365
     """
+    """
     wvc = get_weaviate_client()
+    await wvc.connect()
     if not await wvc.collections.exists(collection_name):
-        raise Exception(f"Collection {collection_name} does not exist")
+        await wvc.close()
+        raise Exception(f"Collection {collection_name} does not exist, run `task migrate_weaviate` first")
+    await wvc.close()
+    """
 
     with tempfile.TemporaryDirectory() as temp_dir:
         Pipeline.from_configs(
