@@ -6,9 +6,12 @@ from typing import Any, cast
 
 import structlog
 import uvicorn.logging
+from rich.pretty import pprint
 from structlog.dev import DIM, RESET_ALL, ConsoleRenderer, Styles, plain_traceback
 from structlog.stdlib import _FixedFindCallerLogger
 from structlog.typing import EventDict, Processor, WrappedLogger
+
+from wallstr.conf import settings
 
 TRACE = 5
 
@@ -125,6 +128,7 @@ LOGGING_CONFIG = {
         # unstructured
         "unstructured": {"level": "INFO"},
         "pdfminer": {"level": "INFO"},
+        "weaviate": {"level": "DEBUG"},
     },
 }
 
@@ -150,3 +154,14 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
     logging.setLoggerClass(CustomLogger)
+
+
+def debug(*args: Any) -> None:
+    """
+    Output to the console in debug mode
+    For development purposes only (may contain personal data)
+    Disabled in production mode
+    """
+    if settings.ENV == "production":
+        return
+    pprint(*args)

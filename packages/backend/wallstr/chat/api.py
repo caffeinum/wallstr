@@ -1,6 +1,5 @@
 import asyncio
 from collections.abc import AsyncGenerator
-from functools import cache
 from typing import Annotated
 
 import structlog
@@ -182,7 +181,6 @@ async def send_chat_message(
     )
 
 
-@cache
 @router.get("/{slug}/messages/stream")
 async def get_chat_messages_stream(
     request: Request,
