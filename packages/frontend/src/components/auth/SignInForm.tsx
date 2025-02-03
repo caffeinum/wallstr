@@ -1,29 +1,29 @@
 "use client";
-import {useCallback, useState} from "react";
-import {useForm} from "react-hook-form";
-import {useRouter} from "next/navigation";
+import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
-import {api} from "@/api";
-import {setToken} from "@/utils/auth";
+import { api } from "@/api";
+import { setToken } from "@/utils/auth";
 
 interface SignInFormData {
   email: string;
   password: string;
 }
 
-export default function SignInForm({urls}: {urls: {forgotPassword: string; signUp: string}}) {
+export default function SignInForm({ urls }: { urls: { forgotPassword: string; signUp: string } }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const {
     handleSubmit,
     register,
-    formState: {errors, isSubmitting},
+    formState: { errors, isSubmitting },
   } = useForm<SignInFormData>();
 
   const onSubmit = useCallback(
     async (data: SignInFormData) => {
       setError(null);
-      const {data: accessToken, response} = await api.auth.signin({body: data});
+      const { data: accessToken, response } = await api.auth.signin({ body: data, credentials: "include" });
 
       if (!accessToken) {
         if (response.status === 401) {
