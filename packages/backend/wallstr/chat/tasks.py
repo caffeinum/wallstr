@@ -1,20 +1,32 @@
 from uuid import UUID, uuid4
 
+import structlog
 from dramatiq.middleware import CurrentMessage
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
+from weaviate.classes.query import MetadataQuery
 
 from wallstr.chat.models import ChatMessageModel, ChatMessageRole
-from wallstr.chat.schemas import ChatMessageEndSSE, ChatMessageSSE, ChatMessageStartSSE
+from wallstr.chat.schemas import (
+    ChatMessageEndSSE,
+    ChatMessageSSE,
+    ChatMessageStartSSE,
+)
 from wallstr.chat.services import ChatService
 from wallstr.conf import settings
+from wallstr.documents.weaviate import get_weaviate_client
+from wallstr.logging import debug
 from wallstr.worker import dramatiq
+
+logger = structlog.get_logger()
 
 
 @dramatiq.actor  # type: ignore
-async def process_chat_message(message_id: str) -> None:
+async def process_chat_message(
+    message_id: str, openai_model: str = "chatgpt-4o-latest"
+) -> None:
     ctx = CurrentMessage.get_current_message()
     if not ctx:
         raise Exception("No ctx message")
@@ -36,19 +48,27 @@ async def process_chat_message(message_id: str) -> None:
     new_message_id = uuid4()
     await redis.publish(topic, ChatMessageStartSSE(id=new_message_id).model_dump_json())
 
-    llm = OpenAI(api_key=settings.OPENAI_API_KEY)
+    llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model=openai_model)
     llm_context = await get_llm_context(db_session, message)
     chunks: list[str] = []
     async for chunk in llm.astream(
         [*llm_context, HumanMessage(content=message.content)]
     ):
-        if not chunk:
+        if not chunk.content:
+            continue
+        chunk_content = chunk.content
+        if not isinstance(chunk_content, str):
+            # TODO: don't output dict content when type handled
+            logger.error(f"Chunk content is not a string {chunk_content}")
             continue
         # strip leading new line on the start of the message
-        chunks.append(chunk.lstrip()) if len(chunks) == 0 else chunks.append(chunk)
+        # TODO: use langchain BaseChunk merging
+        chunks.append(chunk_content.lstrip()) if len(chunks) == 0 else chunks.append(
+            chunk_content
+        )
         await redis.publish(
             topic,
-            ChatMessageSSE(id=new_message_id, content=chunk).model_dump_json(),
+            ChatMessageSSE(id=new_message_id, content=chunk_content).model_dump_json(),
         )
     new_message = await chat_svc.create_chat_message(
         chat_id=message.chat_id,
@@ -68,8 +88,22 @@ async def process_chat_message(message_id: str) -> None:
 
 
 async def get_llm_context(
-    db_session: AsyncSession, message: ChatMessageModel, limit: int = 15
+    db_session: AsyncSession, message: ChatMessageModel
 ) -> list[SystemMessage | HumanMessage | AIMessage]:
+    llm_context: list[SystemMessage | HumanMessage | AIMessage] = [
+        SystemMessage(SYSTEM_PROMPT),
+        *await get_prompts_examples(message),
+        *await get_rag(message),
+        HumanMessage(content=message.content),
+    ]
+
+    debug(llm_context)
+    return list(llm_context)
+
+
+async def get_history(
+    db_session: AsyncSession, message: ChatMessageModel, limit: int = 15
+) -> list[AIMessage]:
     """
     Retrieves last messages from the chat to provide context to the LLM.
     """
@@ -84,19 +118,48 @@ async def get_llm_context(
             .limit(limit)
         )
     messages = result.scalars().all()
+    return [AIMessage(content=message.content) for message in messages]
 
-    llm_context: list[SystemMessage | HumanMessage | AIMessage] = [
-        SystemMessage(SYSTEM_PROMPT)
-    ]
 
-    for message in messages:
-        match message.role:
-            case ChatMessageRole.USER:
-                llm_context.append(HumanMessage(content=message.content))
-            case ChatMessageRole.ASSISTANT:
-                llm_context.append(AIMessage(content=message.content))
+async def get_rag(message: ChatMessageModel) -> list[HumanMessage]:
+    wvc = get_weaviate_client(with_openai=True)
+    await wvc.connect()
+    try:
+        collection = wvc.collections.get("Documents")
+        response = await collection.query.near_text(
+            query=message.content,
+            certainty=0.5,
+            limit=50,
+            return_metadata=MetadataQuery(distance=True, certainty=True),
+        )
+        return [
+            HumanMessage(f"""
+        Context:
+        {"\n".join([f"- {prompt.properties["text"]}" for prompt in response.objects])}
+        """)
+        ]
+    finally:
+        await wvc.close()
 
-    return list(reversed(llm_context))
+
+async def get_prompts_examples(message: ChatMessageModel) -> list[SystemMessage]:
+    wvc = get_weaviate_client(with_openai=True)
+    await wvc.connect()
+    try:
+        collection = wvc.collections.get("Prompts")
+        response = await collection.query.near_text(
+            query=message.content,
+            certainty=0.5,
+            limit=10,
+        )
+        return [
+            SystemMessage(f"""
+        Example of response you provide:
+        {"\n".join([f"- {prompt.properties["reply"]}" for prompt in response.objects])}
+        """)
+        ]
+    finally:
+        await wvc.close()
 
 
 SYSTEM_PROMPT = """
