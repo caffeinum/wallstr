@@ -3,11 +3,14 @@ from uuid import UUID
 import structlog
 from dramatiq.middleware import CurrentMessage
 
-from wallstr.conf import settings
+from wallstr.conf import settings  # type: ignore
 from wallstr.documents.models import DocumentStatus
 from wallstr.documents.schemas import DocumentStatusSSE
 from wallstr.documents.services import DocumentService
-from wallstr.documents.unstructured import upload_document_to_weaviate
+from wallstr.documents.unstructured import (
+    upload_document_to_weaviate,  # type: ignore
+    upload_document_to_weaviate_v2,
+)
 from wallstr.worker import dramatiq
 
 logger = structlog.get_logger()
@@ -34,8 +37,8 @@ async def process_document(document_id: str) -> None:
     if not document:
         raise Exception("Document not found")
 
-    if document.status != DocumentStatus.UPLOADED:
-        raise Exception("Document is not uploaded")
+    if document.status == DocumentStatus.UPLOADING:
+        raise Exception("Document is uploading")
 
     document = await document_svc.mark_document_processing(
         document.user_id, document.id
@@ -47,9 +50,10 @@ async def process_document(document_id: str) -> None:
         DocumentStatusSSE(id=document.id, status=document.status).model_dump_json(),
     )
 
-    remote_url = f"s3://{settings.STORAGE_BUCKET}/{document.storage_path}"
     try:
-        await upload_document_to_weaviate(remote_url, collection_name="Documents")
+        # remote_url = f"s3://{settings.STORAGE_BUCKET}/{document.storage_path}"
+        # await upload_document_to_weaviate(remote_url, collection_name="Documents")
+        await upload_document_to_weaviate_v2(document, collection_name="Documents")
     except Exception:
         # TODO: handle error
         document = await document_svc.mark_document_uploaded(

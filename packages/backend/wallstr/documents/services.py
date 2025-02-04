@@ -3,7 +3,7 @@ from uuid import UUID
 
 import boto3
 import botocore.config
-from sqlalchemy import sql
+from sqlalchemy import or_, sql
 
 from wallstr.conf import settings
 from wallstr.documents.models import DocumentModel, DocumentStatus
@@ -65,8 +65,13 @@ class DocumentService(BaseService):
         async with self.tx():
             result = await self.db.execute(
                 sql.update(DocumentModel)
-                .filter_by(
-                    id=document_id, user_id=user_id, status=DocumentStatus.UPLOADED
+                .filter_by(id=document_id, user_id=user_id)
+                .where(
+                    or_(
+                        DocumentModel.status == DocumentStatus.UPLOADED,
+                        DocumentModel.status == DocumentStatus.PROCESSING,
+                        DocumentModel.status == DocumentStatus.READY,
+                    )
                 )
                 .values(status=DocumentStatus.PROCESSING)
                 .returning(DocumentModel)
