@@ -39,3 +39,13 @@ def uvicorn_server() -> Server:
 def uvicorn_should_exit() -> bool:
     server = uvicorn_server()
     return server.should_exit
+
+
+def debugger() -> None:
+    try:
+        from remote_pdb import RemotePdb  # type: ignore
+    except ImportError:
+        logger.warn("No remote_pdb, skipping debugger")
+        return
+
+    RemotePdb("127.0.0.1", 4444).set_trace()

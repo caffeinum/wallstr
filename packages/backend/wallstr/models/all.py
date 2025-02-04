@@ -14,6 +14,6 @@ __all__ = [
     "ChatModel",
     "ChatMessageModel",
     "ChatMessageXDocumentModel",
-    # docuemnts
+    # documents
     "DocumentModel",
 ]
