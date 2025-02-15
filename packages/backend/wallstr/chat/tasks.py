@@ -1,3 +1,4 @@
+from textwrap import indent
 from uuid import UUID, uuid4
 
 import structlog
@@ -7,6 +8,8 @@ from langchain_openai import ChatOpenAI
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 from weaviate.classes.query import MetadataQuery
+from weaviate.collections.classes.internal import Object
+from weaviate.collections.classes.types import WeaviateProperties
 
 from wallstr.chat.models import ChatMessageModel, ChatMessageRole
 from wallstr.chat.schemas import (
@@ -39,6 +42,10 @@ async def process_chat_message(
     message = await chat_svc.get_chat_message(UUID(message_id))
     if not message:
         raise Exception("Message not found")
+
+    if not message.content:
+        # Not reply on an empty message
+        return
 
     redis = ctx.options.get("redis")
     if not redis:
@@ -132,14 +139,23 @@ async def get_rag(message: ChatMessageModel) -> list[HumanMessage]:
             limit=50,
             return_metadata=MetadataQuery(distance=True, certainty=True),
         )
+
+        context = "\n".join([_get_rag_line(prompt) for prompt in response.objects])
+        if not context:
+            return []
         return [
-            HumanMessage(f"""
-        Context:
-        {"\n".join([f"- {prompt.properties["text"]}" for prompt in response.objects])}
-        """)
+            HumanMessage(f"# RAG Context\n{context}"),
         ]
     finally:
         await wvc.close()
+
+
+def _get_rag_line(chunk: Object[WeaviateProperties, None]) -> str:
+    text = str(chunk.properties["text"])
+    return f"""
+    ## id: {chunk.uuid}
+    {indent(text, " " * 4)}
+    """
 
 
 async def get_prompts_examples(message: ChatMessageModel) -> list[SystemMessage]:
@@ -184,4 +200,11 @@ Transparency: If a query requires assumptions, state them explicitly. If the dat
 Professional Tone: Maintain a formal, clear, and professional tone suitable for institutional finance professionals.
 No Speculation: Avoid unfounded predictions or speculative investment advice. Provide insights based on available data and financial models.
 Clean: Ensure that responses are free from grammatical errors, typos, or formatting issues.
+
+If there is no user data provide, you should tell the user that you need more information to provide a response.
+Output with markdown format.
+Mark meaningful data with bold link pointing to the list of ids of the RAG Context chunks it's based on.
+
+For example:
+Company X will continue [using its proprietary AI models under a licensing deal with Buyer](uuid1, uuid2, uuid3).
 """

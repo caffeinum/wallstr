@@ -13,8 +13,8 @@ logger = structlog.get_logger()
 
 
 class BaseService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+    def __init__(self, db_session: AsyncSession) -> None:
+        self.db = db_session
 
     @classmethod
     async def inject_svc(

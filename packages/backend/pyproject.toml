@@ -59,8 +59,9 @@ rich = "^13.9.4"
 
 [tool.poetry.group.worker.dependencies]
 unstructured = {extras = ["pdf"], version = "^0.16.17"}
-weaviate-client = "^4.10.4"
 unstructured-ingest = {extras = ["s3", "weaviate"], version = "^0.4.4"}
+unstructured-inference = "^0.8.7"
+weaviate-client = "^4.10.4"
 langchain-ollama = "^0.2.3"
 pdf2image = "^1.17.0"
 pillow = "^11.1.0"
@@ -88,7 +89,7 @@ strict_equality = true
 exclude = ["^examples/"]
 
 [[tool.mypy.overrides]]
-module = ["sqlalchemy_utils.*", "authlib.*", "unstructured_ingest.*"]
+module = ["sqlalchemy_utils.*", "authlib.*", "unstructured_ingest.*", "unstructured_inference.*"]
 ignore_missing_imports = true
 
 [tool.ruff]

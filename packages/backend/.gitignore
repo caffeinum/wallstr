@@ -9,6 +9,7 @@ __pycache__/
 .rabbitmq/
 .redis/
 .weaviate/
+.ollama/
 
 .sw?
 

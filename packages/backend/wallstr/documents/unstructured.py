@@ -43,15 +43,19 @@ async def upload_document_to_weaviate(remote_url: str, collection_name: str) -> 
     So this version works only with api=localhost:8080 grpc=localhost:50051
 
     https://github.com/Unstructured-IO/unstructured-ingest/issues/365
-    """
+
+    Usage:
+        remote_url = f"s3://{settings.STORAGE_BUCKET}/{document.storage_path}"
+        await upload_document_to_weaviate(remote_url, collection_name="Documents")
     """
     wvc = get_weaviate_client()
     await wvc.connect()
     if not await wvc.collections.exists(collection_name):
         await wvc.close()
-        raise Exception(f"Collection {collection_name} does not exist, run `task migrate_weaviate` first")
+        raise Exception(
+            f"Collection {collection_name} does not exist, run `task migrate_weaviate` first"
+        )
     await wvc.close()
-    """
 
     with tempfile.TemporaryDirectory() as temp_dir:
         Pipeline.from_configs(
@@ -94,6 +98,10 @@ async def upload_document_to_weaviate(remote_url: str, collection_name: str) -> 
 async def upload_document_to_weaviate_v2(
     document: DocumentModel, collection_name: str
 ) -> None:
+    """
+    Usage:
+        await upload_document_to_weaviate_v2(document, collection_name="Documents")
+    """
     clear_contextvars()
     bind_contextvars(user_id=document.user_id, document_id=document.id)
 
