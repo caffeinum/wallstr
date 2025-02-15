@@ -18,14 +18,19 @@ FastAPI, Dramatiq, PostgreSQL, Redis, Weaviate, RabbitMQ
 ## Running locally
 
 1. `docker-compose up`
-2. Copy `.env.example` to `.env` and set corresponding variables, check comments in `.env.example` for more information
-3. Do database migrations
+2. Download Ollama models (optional)
+   ```bash
+   docker exec -it wallstr_ollama /bin/ollama pull llama3.2
+   docker exec -it wallstr_ollama /bin/ollama pull nomic-embed-text
+   ```
+3. Copy `.env.example` to `.env` and set corresponding variables, check comments in `.env.example` for more information
+4. Do database migrations
    ```bash
    task migrate
    task migrate_weaviate
    ```
-4. `task dev` - api
-5. `task worker` - worker
+5. `task dev` - api
+6. `task worker` - worker
 
 ## Default endpoints
 

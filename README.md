@@ -17,9 +17,15 @@
    pnpm frontend:dev
    ```
 2. Backend, check [backend/README.md](packages/backend/README.md) for more information
+
    ```bash
    pnpm docker-compose
+   # once (optional)
+   docker exec -it wallstr_ollama /bin/ollama pull llama3.2
+   docker exec -it wallstr_ollama /bin/ollama pull nomic-embed-text
+
    pnpm backend:dev
    pnpm backend:worker
    ```
+
 3. Open http://localhost:3000
