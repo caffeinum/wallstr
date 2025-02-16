@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { AnchorHTMLAttributes, useCallback, useEffect, useRef, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 import { format } from "date-fns";
@@ -43,6 +43,14 @@ interface StreamingMessage {
   loading?: boolean;
 }
 
+type TReferenceMap = {
+  [key: string]: number;
+};
+
+type TReferenceState = {
+  [key: string]: boolean;
+};
+
 export default function ChatMessages({
   slug,
   className,
@@ -54,6 +62,8 @@ export default function ChatMessages({
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
+  const [referenceMap, setReferenceMap] = useState<TReferenceMap>({});
+  const [selectedRefs, setSelectedRefs] = useState<TReferenceState>({});
   const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -153,17 +163,57 @@ export default function ChatMessages({
   useEffect(() => {
     scrollToBottom();
   }, [streamingMessages, data?.pages]);
+  console.log(referenceMap);
 
   const MarkdownComponents = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    a: ({ children, href, ...props }: any) => {
-      if (!href) return null;
-      return (
-        <span onClick={() => onRefClick(href)} className="link" {...props}>
-          {children}
-        </span>
-      );
-    },
+    a: useCallback(
+      ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
+        if (!href) return null;
+
+        const ids = href.split(",").map((id: string) => id.trim());
+        if (ids.length === 0) return null;
+
+        const hasMissing = ids.some((id) => !referenceMap[id]);
+        if (hasMissing) {
+          setReferenceMap((prev) => {
+            const newMap = { ...prev };
+            let nextIndex = Object.keys(newMap).length + 1;
+            ids.forEach((id: string) => {
+              if (!newMap[id]) {
+                newMap[id] = nextIndex;
+                nextIndex++;
+              }
+            });
+            return newMap;
+          });
+        }
+
+        return (
+          <span className="inline-flex flex-wrap gap-1">
+            {ids.map((id: string, index: number) => (
+              <button
+                key={`${id}-${index}`}
+                onClick={() => {
+                  onRefClick(id);
+                  setSelectedRefs((prev) => ({
+                    [id]: !prev[id],
+                  }));
+                }}
+                className={twMerge(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
+                  "transition-colors duration-200",
+                  "cursor-pointer",
+                  selectedRefs[id] ? "bg-primary text-primary-content" : "bg-base-200 hover:bg-base-300",
+                )}
+              >
+                <span className="font-medium">{referenceMap[id]}.</span>
+              </button>
+            ))}
+          </span>
+        );
+      },
+      [onRefClick, selectedRefs, referenceMap, setReferenceMap],
+    ),
   };
 
   if (isLoading) {
