@@ -78,6 +78,7 @@ async def get_document_by_section(
     )
 
     section = DocumentSection(
+        document_title=document.filename,
         document_url=document_url,
         page_number=chunk.properties["metadata"]["page_number"],
         bbox=(1, 1, 1, 1),

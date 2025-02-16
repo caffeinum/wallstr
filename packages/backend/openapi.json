@@ -812,6 +812,10 @@
             },
             "DocumentSection": {
                 "properties": {
+                    "document_title": {
+                        "type": "string",
+                        "title": "Document Title"
+                    },
                     "document_url": {
                         "type": "string",
                         "title": "Document Url"
@@ -843,6 +847,7 @@
                 },
                 "type": "object",
                 "required": [
+                    "document_title",
                     "document_url",
                     "page_number",
                     "bbox"

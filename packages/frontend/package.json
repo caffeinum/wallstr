@@ -54,7 +54,7 @@
     "@storybook/nextjs": "^8.4.7",
     "@storybook/react": "^8.4.7",
     "@storybook/test": "^8.4.7",
-    "@tailwindcss/postcss": "4.0.0-beta.9",
+    "@tailwindcss/postcss": "4.0.6",
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/eslint-plugin-query": "^5.62.16",
     "@types/node": "^20",
@@ -71,7 +71,7 @@
     "postcss": "^8",
     "prettier": "^3.4.2",
     "storybook": "^8.4.7",
-    "tailwindcss": "4.0.0-beta.9",
+    "tailwindcss": "4.0.6",
     "typescript": "^5"
   },
   "eslintConfig": {

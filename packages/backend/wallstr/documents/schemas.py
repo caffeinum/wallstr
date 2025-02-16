@@ -30,6 +30,7 @@ class DocumentStatusSSE(SSE):
 
 
 class DocumentSection(BaseModel):
+    document_title: str
     document_url: str
     page_number: int
     bbox: tuple[float, float, float, float]

@@ -35,6 +35,7 @@ export type DocumentPayload = {
 };
 
 export type DocumentSection = {
+  document_title: string;
   document_url: string;
   page_number: number;
   bbox: [number, number, number, number];

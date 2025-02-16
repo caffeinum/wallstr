@@ -9,7 +9,7 @@ from wallstr.worker import dramatiq
 logger = structlog.get_logger()
 
 
-@dramatiq.actor  # type: ignore
+@dramatiq.actor(priority=10)
 async def process_document(document_id: str) -> None:
     logger.info("Processing document", document_id=document_id)
     ctx = CurrentMessage.get_current_message()

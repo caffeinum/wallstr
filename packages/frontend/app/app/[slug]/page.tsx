@@ -14,6 +14,7 @@ import { getDocumentType } from "@/components/chat/utils";
 import type { DocumentPayload, GetChatMessagesResponse } from "@/api/wallstr-sdk";
 
 type TDocument = {
+  title: string;
   documentUrl: string;
   page: number;
 };
@@ -28,7 +29,7 @@ export default function ChatPage() {
   const queryClient = useQueryClient();
   const [selectedDocument, setSelectedDocument] = useState<TDocument | null>(null);
   const [isMdScreen, setIsMdScreen] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(MIN_PANEL_WIDTH);
+  const [panelWidth, setPanelWidth] = useState(MAX_PANEL_WIDTH);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -40,8 +41,6 @@ export default function ChatPage() {
       // Reset panel width when switching to mobile
       if (window.innerWidth < MD_BREAKPOINT) {
         setPanelWidth(MIN_PANEL_WIDTH);
-      } else {
-        setPanelWidth(Math.min(Math.max(MIN_PANEL_WIDTH, window.innerWidth / 2), MAX_PANEL_WIDTH));
       }
     };
 
@@ -160,13 +159,18 @@ export default function ChatPage() {
     },
   });
 
-  const handleRefClick = async (href: string) => {
+  const handleRefClick = async (id: string | null) => {
+    if (!id) {
+      setSelectedDocument(null);
+      return;
+    }
     const { data } = await api.documents.getDocumentBySection({
-      path: { section_id: href },
+      path: { section_id: id },
     });
 
     if (!data) return;
     setSelectedDocument({
+      title: data.document_title,
       documentUrl: data.document_url,
       page: data.page_number,
     });

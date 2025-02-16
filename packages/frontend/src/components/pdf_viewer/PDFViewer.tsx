@@ -9,11 +9,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 export default function PDFViewer({
   documentUrl,
+  title,
   width,
   page,
   onClose,
 }: {
   documentUrl: string;
+  title: string;
   width: number;
   page: number;
   onClose: () => void;
@@ -38,7 +40,7 @@ export default function PDFViewer({
   return (
     <>
       <div className="flex justify-between items-center p-4 border-b border-base-300">
-        <h3 className="text-lg font-semibold truncate">Document</h3>
+        <h3 className="text-lg font-semibold truncate">{title}</h3>
         <div className="flex items-center gap-2">
           <button onClick={onClose} className="btn btn-ghost btn-sm btn-square">
             <FaTimes />

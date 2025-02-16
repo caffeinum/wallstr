@@ -1,5 +1,5 @@
 "use client";
-import { AnchorHTMLAttributes, useCallback, useEffect, useRef, useState } from "react";
+import { AnchorHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 import { format } from "date-fns";
@@ -43,12 +43,8 @@ interface StreamingMessage {
   loading?: boolean;
 }
 
-type TReferenceMap = {
+type TReferencesMap = {
   [key: string]: number;
-};
-
-type TReferenceState = {
-  [key: string]: boolean;
 };
 
 export default function ChatMessages({
@@ -58,12 +54,12 @@ export default function ChatMessages({
 }: {
   slug?: string;
   className?: string;
-  onRefClick: (href: string) => void;
+  onRefClick: (id: string | null) => void;
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
-  const [referenceMap, setReferenceMap] = useState<TReferenceMap>({});
-  const [selectedRefs, setSelectedRefs] = useState<TReferenceState>({});
+  const [referencesMap, setReferencesMap] = useState<TReferencesMap>({});
+  const [selectedRef, selectRef] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -156,63 +152,59 @@ export default function ChatMessages({
     };
   }, [slug, queryClient]);
 
+  const messages = useMemo(() => data?.pages.flatMap((page) => page?.items).reverse() ?? [], [data]);
+  // parse content and find references
+  useEffect(() => {
+    if (!messages.length) return;
+
+    const newRefs: TReferencesMap = { ...referencesMap };
+    let nextIndex = Object.keys(referencesMap).length + 1;
+    let hasChanges = false;
+
+    messages.forEach((message) => {
+      const matches = message.content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
+      if (!matches) return;
+
+      matches.forEach((match) => {
+        const href = match.match(/\(([^)]+)\)/)?.[1];
+        if (!href) return;
+
+        const ids = href.split(",").map((id) => id.trim());
+        ids.forEach((id) => {
+          if (!newRefs[id]) {
+            newRefs[id] = nextIndex++;
+            hasChanges = true;
+          }
+        });
+      });
+    });
+    if (hasChanges) {
+      setReferencesMap(newRefs);
+    }
+  }, [messages, referencesMap, setReferencesMap]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [streamingMessages, data?.pages]);
-  console.log(referenceMap);
+  }, [streamingMessages, messages]);
 
   const MarkdownComponents = {
-    a: useCallback(
-      ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => {
-        if (!href) return null;
-
-        const ids = href.split(",").map((id: string) => id.trim());
-        if (ids.length === 0) return null;
-
-        const hasMissing = ids.some((id) => !referenceMap[id]);
-        if (hasMissing) {
-          setReferenceMap((prev) => {
-            const newMap = { ...prev };
-            let nextIndex = Object.keys(newMap).length + 1;
-            ids.forEach((id: string) => {
-              if (!newMap[id]) {
-                newMap[id] = nextIndex;
-                nextIndex++;
-              }
-            });
-            return newMap;
-          });
-        }
-
-        return (
-          <span className="inline-flex flex-wrap gap-1">
-            {ids.map((id: string, index: number) => (
-              <button
-                key={`${id}-${index}`}
-                onClick={() => {
-                  onRefClick(id);
-                  setSelectedRefs((prev) => ({
-                    [id]: !prev[id],
-                  }));
-                }}
-                className={twMerge(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
-                  "transition-colors duration-200",
-                  "cursor-pointer",
-                  selectedRefs[id] ? "bg-primary text-primary-content" : "bg-base-200 hover:bg-base-300",
-                )}
-              >
-                <span className="font-medium">{referenceMap[id]}.</span>
-              </button>
-            ))}
-          </span>
-        );
-      },
-      [onRefClick, selectedRefs, referenceMap, setReferenceMap],
+    a: ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+      <ReferenceLink
+        href={href}
+        onRefClick={(id: string | null) => {
+          if (id === selectedRef) {
+            id = null;
+          }
+          onRefClick(id);
+          selectRef(id);
+        }}
+        referencesMap={referencesMap}
+        selectedId={selectedRef}
+      />
     ),
   };
 
@@ -233,8 +225,6 @@ export default function ChatMessages({
       </div>
     );
   }
-
-  const messages = data?.pages.flatMap((page) => page?.items).reverse() ?? [];
 
   return (
     <div className={twMerge("flex flex-col justify-end py-4", className)}>
@@ -302,5 +292,40 @@ export default function ChatMessages({
         </div>
       </div>
     </div>
+  );
+}
+
+function ReferenceLink({
+  href,
+  onRefClick,
+  referencesMap,
+  selectedId,
+}: {
+  href?: string;
+  onRefClick: (id: string) => void;
+  referencesMap: TReferencesMap;
+  selectedId: string | null;
+}) {
+  if (!href) return null;
+
+  const ids = href.split(",").map((id: string) => id.trim());
+  if (ids.length === 0) return null;
+
+  return (
+    <span className="inline-flex flex-wrap gap-1">
+      {ids.map((id, i) => (
+        <button
+          key={`${id}-${i}`}
+          onClick={() => onRefClick(id)}
+          className={twMerge(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
+            "transition-colors duration-200 cursor-pointer",
+            selectedId === id ? "bg-primary text-primary-content" : "bg-base-200 hover:bg-base-300",
+          )}
+        >
+          <span className="font-medium">{referencesMap[id]}.</span>
+        </button>
+      ))}
+    </span>
   );
 }
