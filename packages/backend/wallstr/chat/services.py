@@ -164,4 +164,3 @@ class ChatService(BaseService):
                 .order_by(ChatXDocumentModel.created_at.desc())
             )
             return [row[0] for row in result.all()]
-

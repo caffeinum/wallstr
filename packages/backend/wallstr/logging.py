@@ -4,8 +4,11 @@ import sys
 from collections.abc import Iterable
 from typing import Any, cast
 
+import rich
 import structlog
 import uvicorn.logging
+from langchain_core.messages import BaseMessage
+from rich.panel import Panel
 from rich.pretty import pprint
 from structlog.dev import DIM, RESET_ALL, ConsoleRenderer, Styles, plain_traceback
 from structlog.stdlib import _FixedFindCallerLogger
@@ -61,77 +64,6 @@ styles = {
     "trace": DIM,
 }
 
-LOGGING_CONFIG = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "console": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "foreign_pre_chain": processors,
-            "processors": [
-                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                structlog.dev.ConsoleRenderer(
-                    level_styles=cast(Styles, styles),  # structlog bug
-                    exception_formatter=plain_traceback,
-                ),
-            ],
-        },
-        "access1": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "foreign_pre_chain": [
-                uvicorn.logging.AccessFormatter.formatMessage,
-                *processors,
-            ],
-            "processors": [
-                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                structlog.dev.ConsoleRenderer(
-                    level_styles=cast(Styles, styles),  # structlog bug
-                    exception_formatter=plain_traceback,
-                ),
-            ],
-        },
-        "access": {"()": uvicorn.logging.AccessFormatter},
-    },
-    "handlers": {
-        "default": {
-            "level": "NOTSET",
-            "class": "logging.StreamHandler",
-            "formatter": "console",
-        },
-        "access": {
-            "level": "NOTSET",
-            "class": "logging.StreamHandler",
-            "formatter": "access",
-        },
-    },
-    "loggers": {
-        "root": {
-            "handlers": ["default"],
-            "level": "NOTSET",
-        },
-        "wallstr": {"level": "NOTSET"},
-        "authlib": {"level": "DEBUG"},
-        "uvicorn": {"level": "DEBUG"},
-        "uvicorn.access": {
-            "level": "DEBUG",
-            "handlers": ["access"],
-            "propagate": False,
-        },
-        # boto3
-        "botocore": {"level": "INFO"},
-        "pika": {"level": "WARNING"},
-        "httpcore": {"level": "INFO"},
-        "s3transfer": {"level": "INFO"},
-        # openai
-        "openai": {"level": "INFO"},
-        "urllib3": {"level": "INFO"},
-        # unstructured
-        "unstructured": {"level": "INFO"},
-        "pdfminer": {"level": "INFO"},
-        "weaviate": {"level": "DEBUG"},
-    },
-}
-
 
 class CustomLogger(_FixedFindCallerLogger):
     def trace(self: logging.Logger, message: str, *args: Any, **kwargs: Any) -> None:
@@ -139,10 +71,11 @@ class CustomLogger(_FixedFindCallerLogger):
             self._log(TRACE, message, args, **kwargs)
 
 
-def configure_logging() -> None:
+def configure_logging(is_worker: bool = False) -> None:
     logging.addLevelName(TRACE, "TRACE")
 
-    logging.config.dictConfig(LOGGING_CONFIG)
+    logging_config = _get_logging_config(is_worker)
+    logging.config.dictConfig(logging_config)
 
     structlog.configure(
         processors=[
@@ -164,4 +97,91 @@ def debug(*args: Any) -> None:
     """
     if settings.ENV == "production":
         return
-    pprint(*args)
+    if not settings.DEBUG:
+        return
+
+    # pretty print Langchain BaseMessages
+    if (
+        len(args) == 1
+        and isinstance(args[0], list)
+        and len(args[0]) > 0
+        and isinstance(args[0][0], BaseMessage)
+    ):
+        for msg in args[0]:
+            rich.print(Panel(msg.content, title=msg.__class__.__name__))
+        return
+
+    pprint(args)
+
+
+def _get_logging_config(is_worker: bool = False) -> dict[str, Any]:
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "console": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "foreign_pre_chain": processors,
+                "processors": [
+                    structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    structlog.dev.ConsoleRenderer(
+                        level_styles=cast(Styles, styles),  # structlog bug
+                        exception_formatter=plain_traceback,
+                    ),
+                ],
+            },
+            "access1": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "foreign_pre_chain": [
+                    uvicorn.logging.AccessFormatter.formatMessage,
+                    *processors,
+                ],
+                "processors": [
+                    structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    structlog.dev.ConsoleRenderer(
+                        level_styles=cast(Styles, styles),  # structlog bug
+                        exception_formatter=plain_traceback,
+                    ),
+                ],
+            },
+            "access": {"()": uvicorn.logging.AccessFormatter},
+        },
+        "handlers": {
+            "default": {
+                "level": "NOTSET",
+                "class": "logging.StreamHandler",
+                "formatter": "console",
+            },
+            "access": {
+                "level": "NOTSET",
+                "class": "logging.StreamHandler",
+                "formatter": "access",
+            },
+        },
+        "loggers": {
+            "root": {
+                "handlers": ["default"],
+                "level": "NOTSET",
+            },
+            "wallstr": {"level": "NOTSET"},
+            "authlib": {"level": "DEBUG"},
+            "uvicorn": {"level": "DEBUG"},
+            "uvicorn.access": {
+                "level": "DEBUG",
+                "handlers": ["access"],
+                "propagate": False,
+            },
+            # boto3
+            "botocore": {"level": "INFO"},
+            "pika": {"level": "WARNING"},
+            "httpcore": {"level": "INFO"},
+            "s3transfer": {"level": "INFO"},
+            # openai
+            "openai": {"level": "INFO"},
+            "urllib3": {"level": "INFO"},
+            # unstructured
+            "unstructured": {"level": "NOTSET"},
+            "pdfminer": {"level": "INFO"},
+            "weaviate": {"level": "DEBUG"},
+        },
+    }
