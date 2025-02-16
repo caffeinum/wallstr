@@ -24,7 +24,9 @@ async def migrate_weaviate() -> None:
                 model="text-embedding-3-small",
             ),
             properties=[
-                Property(name="record_id", data_type=DataType.TEXT),
+                Property(name="record_id", data_type=DataType.UUID),
+                Property(name="user_id", data_type=DataType.UUID),
+                Property(name="document_id", data_type=DataType.UUID),
             ],
         )
 

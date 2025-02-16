@@ -6,12 +6,15 @@ from typing import TypedDict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
+from weaviate import WeaviateAsyncClient
 
 from wallstr.auth.api import router as auth_router
 from wallstr.chat.api import router as chat_router
+from wallstr.chat.dev_api import router as dev_router
 from wallstr.conf import settings
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from wallstr.documents.api import router as documents_router
+from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import configure_logging
 from wallstr.openapi import (
     configure_openapi,
@@ -25,6 +28,7 @@ logger = logging.getLogger(__name__)
 class AppState(TypedDict):
     redis: Redis
     session_maker: AsyncSessionMaker
+    wvc: WeaviateAsyncClient
 
 
 @asynccontextmanager
@@ -33,10 +37,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
     session_maker = create_session_maker(engine)
 
     redis = Redis.from_url(settings.REDIS_URL.get_secret_value())
+    wvc = get_weaviate_client(with_openai=True)
+    await wvc.connect()
     try:
         yield {
             "redis": redis,
             "session_maker": session_maker,
+            "wvc": wvc,
         }
     finally:
         try:
@@ -45,6 +52,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
             logger.exception(e)
         try:
             await engine.dispose()
+        except Exception as e:
+            logger.exception(e)
+        try:
+            await wvc.close()
         except Exception as e:
             logger.exception(e)
 
@@ -64,6 +75,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
+
+app.include_router(dev_router)
 
 
 @app.get("/")

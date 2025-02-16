@@ -88,7 +88,7 @@ class PdfParser:
         )
         logger.info("Chunking the file...")
         chunked_elements = dispatch.chunk(
-            elements=elements, chunking_strategy="by_title"
+            elements=elements, chunking_strategy="basic", max_characters=1000
         )
 
         chunked_elements_dicts = [e.to_dict() for e in chunked_elements]
@@ -124,8 +124,11 @@ class PdfParser:
                 for element in table_elements:
                     tasks.append(extract_table_text(image, element))
 
-            # TODO: add rate limiting per user
-            await asyncio.gather(*tasks)
+            try:
+                # TODO: add rate limiting per user
+                await asyncio.gather(*tasks)
+            except Exception as e:
+                logger.exception(f"Failed to extract table text: {e}")
         return layout
 
     async def _extract_table_text(

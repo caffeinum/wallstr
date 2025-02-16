@@ -581,6 +581,64 @@
                 }
             }
         },
+        "/documents/section/{section_id}": {
+            "get": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Get Document By Section",
+                "operationId": "3::get_document_by_section",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentSection"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPUnauthorizedError"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/": {
             "get": {
                 "summary": "Root",
@@ -752,11 +810,53 @@
                 ],
                 "title": "DocumentPayload"
             },
+            "DocumentSection": {
+                "properties": {
+                    "document_url": {
+                        "type": "string",
+                        "title": "Document Url"
+                    },
+                    "page_number": {
+                        "type": "integer",
+                        "title": "Page Number"
+                    },
+                    "bbox": {
+                        "prefixItems": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ],
+                        "type": "array",
+                        "maxItems": 4,
+                        "minItems": 4,
+                        "title": "Bbox"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "document_url",
+                    "page_number",
+                    "bbox"
+                ],
+                "title": "DocumentSection"
+            },
             "DocumentStatus": {
                 "type": "string",
                 "enum": [
                     "uploading",
-                    "uploaded"
+                    "uploaded",
+                    "processing",
+                    "ready",
+                    "failed"
                 ],
                 "title": "DocumentStatus"
             },

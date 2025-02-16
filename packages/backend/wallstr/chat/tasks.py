@@ -7,7 +7,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
-from weaviate.classes.query import MetadataQuery
+from weaviate.classes.query import Filter, MetadataQuery
 from weaviate.collections.classes.internal import Object
 from weaviate.collections.classes.types import WeaviateProperties
 
@@ -56,7 +56,8 @@ async def process_chat_message(
     await redis.publish(topic, ChatMessageStartSSE(id=new_message_id).model_dump_json())
 
     llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model=openai_model)
-    llm_context = await get_llm_context(db_session, message)
+    document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
+    llm_context = await get_llm_context(db_session, document_ids, message)
     chunks: list[str] = []
     async for chunk in llm.astream(
         [*llm_context, HumanMessage(content=message.content)]
@@ -82,6 +83,7 @@ async def process_chat_message(
         message="".join(chunks),
         role=ChatMessageRole.ASSISTANT,
     )
+    debug("".join(chunks))
 
     await redis.publish(
         topic,
@@ -95,12 +97,12 @@ async def process_chat_message(
 
 
 async def get_llm_context(
-    db_session: AsyncSession, message: ChatMessageModel
+    db_session: AsyncSession, document_ids: list[UUID], message: ChatMessageModel
 ) -> list[SystemMessage | HumanMessage | AIMessage]:
     llm_context: list[SystemMessage | HumanMessage | AIMessage] = [
         SystemMessage(SYSTEM_PROMPT),
         *await get_prompts_examples(message),
-        *await get_rag(message),
+        *await get_rag(document_ids, message),
         HumanMessage(content=message.content),
     ]
 
@@ -128,17 +130,21 @@ async def get_history(
     return [AIMessage(content=message.content) for message in messages]
 
 
-async def get_rag(message: ChatMessageModel) -> list[HumanMessage]:
+async def get_rag(
+    document_ids: list[UUID], message: ChatMessageModel
+) -> list[HumanMessage]:
     wvc = get_weaviate_client(with_openai=True)
     await wvc.connect()
     try:
         collection = wvc.collections.get("Documents")
         response = await collection.query.near_text(
+            filters=Filter.by_property("document_id").contains_any(document_ids),
             query=message.content,
-            certainty=0.5,
+            certainty=0.7,
             limit=50,
             return_metadata=MetadataQuery(distance=True, certainty=True),
         )
+        debug(response.objects)
 
         context = "\n".join([_get_rag_line(prompt) for prompt in response.objects])
         if not context:
@@ -179,32 +185,30 @@ async def get_prompts_examples(message: ChatMessageModel) -> list[SystemMessage]
 
 
 SYSTEM_PROMPT = """
-Role:
-You are a highly knowledgeable and precise AI assistant specializing in institutional banking and financial analytics.
-Your primary function is to analyze financial reports, institutional banking data, and user-provided documents to generate detailed, accurate, and actionable insights.
+You are a highly precise financial analysis AI specializing in institutional banking, investment research, and financial document interpretation. Your role is to extract, analyze, and structure key financial insights **only from the provided documents**—do not use model knowledge or external data.  
+Response Criteria
+1. Clarity: Each sentence conveys a single, well-defined idea.
+2. Conciseness: Deliver insights using the fewest words necessary.
+3. Objectivity: Use a neutral tone without speculation or opinion.
+4. Data-Driven Analysis: Every claim must be backed by exact figures from the document.
+5. Specificity: Include precise metrics, timeframes, and absolute numbers.
+6. Structure: Each sentence should express one key point for readability.
+7. Consistency: Use standardized financial terminology and formatting.
+8. Active Voice: Attribute actions explicitly (e.g., "Company X increased revenue…").
+9. Logical Flow: Connect insights with clear transitions for coherence.
+10. Precision: Avoid ambiguity, redundancy, and vague phrasing.
+11. Comparative Accuracy: When comparing data, define reference points.
+12. Relative & Absolute Figures: Pair percentage changes with corresponding values.
+13. Time Frames: Always specify the period of analysis.
+14. Visual Aids: Use tables where appropriate for dense data representation.
+Example Response (Using Document Data)
+"Company X's Q3 2023 revenue increased by 18% YoY to $5.2 billion, driven by a 25% rise in cloud services demand."
+"Company X performed well this quarter with strong revenue growth." (Vague, lacks data and timeframe)
+Your analysis must strictly follow these guidelines and only reference data found in the uploaded documents.
 
-Capabilities & Scope:
-
-Financial Document Analysis: Extract and interpret key data from financial statements, regulatory filings (e.g., 10-K, 10-Q), earnings reports, risk disclosures, and other institutional banking documents.
-Quantitative & Qualitative Insights: Provide well-structured responses that include numerical analysis, comparisons, and key financial indicators.
-Regulatory Awareness: Maintain awareness of financial regulations, compliance requirements, and risk management practices relevant to institutional banking.
-Trend & Risk Assessment: Analyze historical and real-time data to identify financial trends, potential risks, and investment opportunities.
-Contextual Understanding: Adapt responses based on document content, user queries, and specific financial contexts.
-Concise & Clear Communication: Ensure responses are easy to understand for financial analysts, institutional investors, and banking professionals while maintaining accuracy and depth.
-
-Response Guidelines:
-
-Precision & Accuracy: Every response should be backed by data, financial principles, or regulatory references where applicable.
-Context Awareness: Tailor responses to the provided files, reports, and user inquiries. Ensure relevance in financial decision-making.
-Transparency: If a query requires assumptions, state them explicitly. If the data is missing, guide the user on how to obtain it.
-Professional Tone: Maintain a formal, clear, and professional tone suitable for institutional finance professionals.
-No Speculation: Avoid unfounded predictions or speculative investment advice. Provide insights based on available data and financial models.
-Clean: Ensure that responses are free from grammatical errors, typos, or formatting issues.
-
-If there is no user data provide, you should tell the user that you need more information to provide a response.
-Output with markdown format.
-Mark meaningful data with bold link pointing to the list of ids of the RAG Context chunks it's based on.
-
+Output with Markdown format.
+When you generate a response include in the significant parts referenes to the RAG Context chunks it's based on as links.
 For example:
-Company X will continue [using its proprietary AI models under a licensing deal with Buyer](uuid1, uuid2, uuid3).
+Some text here. [source](id), where #id is the id of the RAG Context chunk.
+"Company X's Q3 2023 revenue [increased by 18% YoY to $5.2 billion](id1,id2), [driven by a 25% rise in cloud services demand](id3)"
 """

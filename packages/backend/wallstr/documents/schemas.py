@@ -27,3 +27,9 @@ class DocumentStatusSSE(SSE):
     @computed_field
     def type(self) -> str:
         return "document_status"
+
+
+class DocumentSection(BaseModel):
+    document_url: str
+    page_number: int
+    bbox: tuple[float, float, float, float]

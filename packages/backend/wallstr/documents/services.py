@@ -154,6 +154,7 @@ class DocumentService(BaseService):
             for chunk in chunks:
                 chunk["record_id"] = record_id
                 chunk["user_id"] = document.user_id
+                chunk["document_id"] = document.id
 
             # Put data to weaviate
             collection_name = "Documents"

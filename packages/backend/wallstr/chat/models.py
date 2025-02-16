@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, WriteOnlyMapped, mapped_column, relationship
 
 from wallstr.core.utils import generate_unique_slug
 from wallstr.documents.models import DocumentModel
-from wallstr.models.base import RecordModel, string_column
+from wallstr.models.base import RecordModel, TimestampModel, string_column
 
 
 class ChatModel(RecordModel):
@@ -21,6 +21,10 @@ class ChatModel(RecordModel):
     title: Mapped[str] = string_column(length=255)
     messages: WriteOnlyMapped[list["ChatMessageModel"]] = relationship(
         back_populates="chat", cascade="all, delete-orphan"
+    )
+    documents: Mapped[list[DocumentModel]] = relationship(
+        secondary="chats_x_documents",
+        lazy="selectin",
     )
 
 
@@ -54,11 +58,22 @@ class ChatMessageModel(RecordModel):
     )
 
 
-class ChatMessageXDocumentModel(RecordModel):
+class ChatMessageXDocumentModel(TimestampModel):
     __tablename__ = "chat_messages_x_documents"
 
     message_id: Mapped[UUID] = mapped_column(
         ForeignKey("chat_messages.id", ondelete="CASCADE"), primary_key=True
+    )
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
+class ChatXDocumentModel(TimestampModel):
+    __tablename__ = "chats_x_documents"
+
+    chat_id: Mapped[UUID] = mapped_column(
+        ForeignKey("chats.id", ondelete="CASCADE"), primary_key=True
     )
     document_id: Mapped[UUID] = mapped_column(
         ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
