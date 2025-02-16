@@ -21,6 +21,7 @@ type TDocument = {
 const MIN_PANEL_WIDTH = 576; // w-xl
 const MAX_PANEL_WIDTH = 896; // max-w-4xl
 const MD_BREAKPOINT = 768; // md breakpoint in pixels
+const CHATS_LIST_COLLAPSE_WIDTH = 700;
 
 export default function ChatPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -173,7 +174,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col md:flex-row flex-1 bg-base-200 w-full">
-      <ChatsList slug={slug} />
+      <ChatsList slug={slug} forceCollapse={!!selectedDocument && panelWidth > CHATS_LIST_COLLAPSE_WIDTH} />
       <div className="flex flex-1 flex-col overflow-y-scroll">
         <ChatMessages slug={slug} className="flex-1 overflow-y-scroll" onRefClick={handleRefClick} />
         <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />

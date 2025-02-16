@@ -1,10 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
+import { useState, useEffect } from "react";
+import { RiMenuUnfoldFill } from "react-icons/ri";
+import { RiMenuUnfold2Fill } from "react-icons/ri";
 
 import { api } from "@/api";
 
-export default function ChatsList({ slug, className }: { slug?: string; className?: string }) {
+export default function ChatsList({
+  slug,
+  className,
+  forceCollapse,
+}: {
+  slug?: string;
+  className?: string;
+  forceCollapse?: boolean;
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: chats } = useQuery({
     queryKey: ["/chats"],
     queryFn: async () => {
@@ -13,11 +25,30 @@ export default function ChatsList({ slug, className }: { slug?: string; classNam
     },
   });
 
+  useEffect(() => {
+    if (forceCollapse) {
+      setIsCollapsed(forceCollapse);
+    }
+  }, [forceCollapse]);
+
   if (!chats) return null;
 
   return (
-    <div className={twMerge("py-4 px-2", className)}>
-      <div className="md:flex md:flex-col gap-2 md:mt-10">
+    <div
+      className={twMerge(
+        "relative py-4 px-2 transition-all duration-300",
+        className,
+        isCollapsed ? "md:w-12" : "md:w-48",
+      )}
+    >
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="cursor-pointer md:absolute left-3 top-4 p-2 hover:bg-base-300 rounded-lg transition-colors"
+        aria-label={isCollapsed ? "Expand chat list" : "Collapse chat list"}
+      >
+        {isCollapsed ? <RiMenuUnfoldFill size={18} /> : <RiMenuUnfold2Fill size={18} />}
+      </button>
+      <div className={`md:flex md:flex-col gap-2 md:mt-10 ${isCollapsed ? "hidden md:hidden" : ""}`}>
         <Link
           href="/app"
           className={`badge badge-md ${!slug ? "badge-neutral" : "badge-ghost"} transition-colors cursor-pointer whitespace-nowrap`}
