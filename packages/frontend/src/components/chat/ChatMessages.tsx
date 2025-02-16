@@ -57,6 +57,7 @@ export default function ChatMessages({
   onRefClick: (id: string | null) => void;
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const firstLoadRef = useRef(true);
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
   const [referencesMap, setReferencesMap] = useState<TReferencesMap>({});
   const [selectedRef, selectRef] = useState<string | null>(null);
@@ -183,12 +184,18 @@ export default function ChatMessages({
     }
   }, [messages, referencesMap, setReferencesMap]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (mode: "smooth" | "instant") => {
+    messagesEndRef.current?.scrollIntoView({ behavior: mode });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll on first load of messages or when there are streaming messages
+    if (firstLoadRef.current && messages.length > 0) {
+      scrollToBottom("instant");
+      firstLoadRef.current = false;
+    } else {
+      scrollToBottom("smooth");
+    }
   }, [streamingMessages, messages]);
 
   const MarkdownComponents = {
@@ -211,15 +218,14 @@ export default function ChatMessages({
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-4xl flex flex-col justify-end items-stretch h-full">
           <div className="animate-pulse space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-4">
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 rounded bg-base-300"></div>
-                </div>
-              </div>
-            ))}
+            <div className="chat chat-end">
+              <div className="chat-bubble bg-neutral/20 text-neutral-content w-2/3 md:w-1/2 h-20"></div>
+            </div>
+            <div className="chat chat-start">
+              <div className="chat-bubble w-full md:w-2/3 h-56"></div>
+            </div>
           </div>
         </div>
       </div>
