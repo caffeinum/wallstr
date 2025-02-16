@@ -203,8 +203,8 @@ export default function ChatMessages({
           {messages.map((message) => (
             <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
               {message.documents && message.documents.length > 0 && (
-                <div className="chat-header">
-                  <div>
+                <div className="chat-header max-w-full truncate">
+                  <div className="w-full">
                     {message.documents.map((doc) => (
                       <button
                         key={doc.id}
@@ -212,7 +212,7 @@ export default function ChatMessages({
                         className="flex items-center gap-2 py-2 hover:bg-base-200 px-2 rounded w-full text-left"
                       >
                         <DocumentIcon filename={doc.filename} />
-                        <span className="text-sm">{doc.filename}</span>
+                        <span className="text-sm truncate">{doc.filename}</span>
                       </button>
                     ))}
                   </div>

@@ -79,7 +79,6 @@ export default function ChatInput({
   return (
     <div className="p-4">
       <form onSubmit={handleSubmit} className="mx-auto max-w-4xl relative">
-        {/* Attached Files Display */}
         {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {attachedFiles.map((file, index) => (
@@ -99,10 +98,8 @@ export default function ChatInput({
         )}
 
         <div className="relative flex items-start">
-          {/* File Input */}
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept=".pdf" />
 
-          {/* Attachment Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

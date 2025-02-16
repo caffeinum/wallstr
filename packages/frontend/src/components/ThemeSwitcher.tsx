@@ -1,10 +1,10 @@
 "use client";
 
-import {useTheme} from "next-themes";
-import {useEffect, useState} from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
-export default function ThemeSwitcher({className}: {className: string}) {
-  const {setTheme, resolvedTheme} = useTheme();
+export default function ThemeSwitcher({ className }: { className?: string }) {
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const isDarkMode = resolvedTheme === "dark";
 
@@ -23,7 +23,7 @@ export default function ThemeSwitcher({className}: {className: string}) {
   };
 
   return (
-    <label className={`${className} swap swap-rotate absolute bottom-4 right-4`}>
+    <label className={`${className || ""} swap swap-rotate absolute bottom-4 left-4`}>
       <input
         onChange={handleToggle}
         checked={isDarkMode}

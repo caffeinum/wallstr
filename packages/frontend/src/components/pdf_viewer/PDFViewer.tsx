@@ -1,26 +1,34 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FaTimes } from "react-icons/fa";
 import { Document, Page, pdfjs } from "react-pdf";
+import { debounce } from "es-toolkit";
 
 // Initialize PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function PDFViewer({
   documentUrl,
+  width,
   page,
   onClose,
 }: {
   documentUrl: string;
+  width: number;
   page: number;
   onClose: () => void;
 }) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.0);
+  const [debouncedWidth, setDebouncedWidth] = useState(width);
 
-  const zoomIn = () => setScale((prev) => Math.min(prev + 0.1, 2.0));
-  const zoomOut = () => setScale((prev) => Math.max(prev - 0.1, 0.5));
+  const debouncedSetWidth = useMemo(() => debounce((value: number) => setDebouncedWidth(value), 100), []);
+  useEffect(() => {
+    debouncedSetWidth(width);
+    return () => {
+      debouncedSetWidth.cancel();
+    };
+  }, [width, debouncedSetWidth]);
 
   const onLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -32,27 +40,14 @@ export default function PDFViewer({
       <div className="flex justify-between items-center p-4 border-b border-base-300">
         <h3 className="text-lg font-semibold truncate">Document</h3>
         <div className="flex items-center gap-2">
-          <button onClick={zoomOut} className="btn btn-ghost btn-sm">
-            -
-          </button>
-          <span className="text-sm">{Math.round(scale * 100)}%</span>
-          <button onClick={zoomIn} className="btn btn-ghost btn-sm">
-            +
-          </button>
           <button onClick={onClose} className="btn btn-ghost btn-sm btn-square">
             <FaTimes />
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4" style={{ width: width + 2 }}>
         <Document file={documentUrl} onLoadSuccess={onLoadSuccess} className="flex flex-col items-center">
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            className="mb-4"
-            renderTextLayer={true}
-            renderAnnotationLayer={true}
-          />
+          <Page pageNumber={pageNumber} width={debouncedWidth} renderTextLayer={true} renderAnnotationLayer={true} />
         </Document>
       </div>
       <div className="p-4 border-t border-base-300 flex justify-between items-center">
