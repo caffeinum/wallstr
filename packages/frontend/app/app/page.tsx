@@ -67,7 +67,7 @@ export default function AppPage() {
     <div className="flex flex-col md:flex-row flex-1 bg-base-200">
       <ChatsList />
       <div className="flex flex-1 flex-col overflow-y-scroll">
-        <ChatMessages className="flex-1 overflow-y-scroll" />
+        <ChatMessages className="flex-1 overflow-y-scroll" onRefClick={() => {}} />
         <ChatInput onSubmit={createChat} isPending={isPending} />
       </div>
     </div>

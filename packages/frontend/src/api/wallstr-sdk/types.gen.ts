@@ -34,7 +34,13 @@ export type DocumentPayload = {
   doc_type: DocumentType;
 };
 
-export type DocumentStatus = "uploading" | "uploaded";
+export type DocumentSection = {
+  document_url: string;
+  page_number: number;
+  bbox: [number, number, number, number];
+};
+
+export type DocumentStatus = "uploading" | "uploaded" | "processing" | "ready" | "failed";
 
 export type DocumentType = "pdf" | "doc" | "docx" | "xls" | "xlsx";
 
@@ -420,6 +426,37 @@ export type MarkDocumentUploadedResponses = {
 };
 
 export type MarkDocumentUploadedResponse = MarkDocumentUploadedResponses[keyof MarkDocumentUploadedResponses];
+
+export type GetDocumentBySectionData = {
+  body?: never;
+  path: {
+    section_id: string;
+  };
+  query?: never;
+  url: "/documents/section/{section_id}";
+};
+
+export type GetDocumentBySectionErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetDocumentBySectionError = GetDocumentBySectionErrors[keyof GetDocumentBySectionErrors];
+
+export type GetDocumentBySectionResponses = {
+  /**
+   * Successful Response
+   */
+  200: DocumentSection;
+};
+
+export type GetDocumentBySectionResponse = GetDocumentBySectionResponses[keyof GetDocumentBySectionResponses];
 
 export type RootData = {
   body?: never;

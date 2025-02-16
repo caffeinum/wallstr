@@ -34,6 +34,9 @@ import type {
   MarkDocumentUploadedData,
   MarkDocumentUploadedResponse,
   MarkDocumentUploadedError,
+  GetDocumentBySectionData,
+  GetDocumentBySectionResponse,
+  GetDocumentBySectionError,
   RootData,
   RootResponse,
 } from "./types.gen";
@@ -242,6 +245,24 @@ export class DocumentsService {
         },
       ],
       url: "/documents/{id}/mark-uploaded",
+      ...options,
+    });
+  }
+
+  /**
+   * Get Document By Section
+   */
+  public static getDocumentBySection<ThrowOnError extends boolean = false>(
+    options: Options<GetDocumentBySectionData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).get<GetDocumentBySectionResponse, GetDocumentBySectionError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/documents/section/{section_id}",
       ...options,
     });
   }

@@ -43,7 +43,15 @@ interface StreamingMessage {
   loading?: boolean;
 }
 
-export default function ChatMessages({ slug, className }: { slug?: string; className?: string }) {
+export default function ChatMessages({
+  slug,
+  className,
+  onRefClick,
+}: {
+  slug?: string;
+  className?: string;
+  onRefClick: (href: string) => void;
+}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
   const queryClient = useQueryClient();
@@ -146,6 +154,18 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
     scrollToBottom();
   }, [streamingMessages, data?.pages]);
 
+  const MarkdownComponents = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    a: ({ children, href, ...props }: any) => {
+      if (!href) return null;
+      return (
+        <span onClick={() => onRefClick(href)} className="link" {...props}>
+          {children}
+        </span>
+      );
+    },
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
@@ -186,10 +206,14 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
                 <div className="chat-header">
                   <div>
                     {message.documents.map((doc) => (
-                      <div key={doc.id} className="flex items-center gap-2 py-2">
+                      <button
+                        key={doc.id}
+                        onClick={() => console.log(doc)}
+                        className="flex items-center gap-2 py-2 hover:bg-base-200 px-2 rounded w-full text-left"
+                      >
                         <DocumentIcon filename={doc.filename} />
                         <span className="text-sm">{doc.filename}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -197,9 +221,13 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
               {message.content && (
                 <>
                   <div
-                    className={`chat-bubble prose prose-sm ${message.role === "user" ? "bg-neutral text-neutral-content whitespace-pre-wrap" : ""}`}
+                    className={`chat-bubble prose prose-sm ${
+                      message.role === "user" ? "bg-neutral text-neutral-content whitespace-pre-wrap" : ""
+                    }`}
                   >
-                    <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+                    <Markdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                      {message.content}
+                    </Markdown>
                   </div>
 
                   {message.created_at && (
@@ -213,7 +241,9 @@ export default function ChatMessages({ slug, className }: { slug?: string; class
           {streamingMessages.map((message) => (
             <div className="chat chat-start" key={message.id}>
               <div className="chat-bubble prose prose-sm">
-                <Markdown remarkPlugins={[remarkGfm]}>{message.loading ? "..." : message.content}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                  {message.loading ? "..." : message.content}
+                </Markdown>
               </div>
             </div>
           ))}

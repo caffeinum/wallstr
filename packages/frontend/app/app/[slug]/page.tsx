@@ -1,7 +1,11 @@
 "use client";
 import { useParams } from "next/navigation";
 import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 
+import PDFViewer from "@/components/pdf_viewer/PDFViewer";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatMessages from "@/components/chat/ChatMessages";
 import ChatsList from "@/components/chat/ChatsList";
@@ -9,9 +13,15 @@ import { api } from "@/api";
 import { getDocumentType } from "@/components/chat/utils";
 import type { DocumentPayload, GetChatMessagesResponse } from "@/api/wallstr-sdk";
 
+type TDocument = {
+  documentUrl: string;
+  page: number;
+};
+
 export default function ChatPage() {
   const { slug } = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
+  const [selectedDocument, setSelectedDocument] = useState<TDocument | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async ({ message, attachedFiles }: { message: string; attachedFiles: File[] }) => {
@@ -85,13 +95,30 @@ export default function ChatPage() {
     },
   });
 
+  const handleRefClick = async (href: string) => {
+    const { data } = await api.documents.getDocumentBySection({
+      path: { section_id: href },
+    });
+
+    if (!data) return;
+    setSelectedDocument({
+      documentUrl: data.document_url,
+      page: data.page_number,
+    });
+  };
+
   return (
     <div className="flex flex-col md:flex-row flex-1 bg-base-200">
       <ChatsList slug={slug} />
       <div className="flex flex-1 flex-col overflow-y-scroll">
-        <ChatMessages slug={slug} className="flex-1 overflow-y-scroll" />
+        <ChatMessages slug={slug} className="flex-1 overflow-y-scroll" onRefClick={handleRefClick} />
         <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
       </div>
+      {selectedDocument && (
+        <div className="min-w-96 max-w-2xl bg-base-100 border-l border-base-300 flex flex-col">
+          <PDFViewer {...selectedDocument} onClose={() => setSelectedDocument(null)} />
+        </div>
+      )}
     </div>
   );
 }
