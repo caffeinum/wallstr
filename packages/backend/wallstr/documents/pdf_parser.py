@@ -58,10 +58,14 @@ class PdfParser:
         model_name = DETECTION_MODEL
         logger.info(f"Infer the layout with {model_name} model")
         file_buffer.seek(0)
-        inferred_document_layout = process_data_with_model(
-            file_buffer,
-            model_name=model_name,
-            pdf_image_dpi=200,
+        loop = asyncio.get_event_loop()
+        inferred_document_layout = await loop.run_in_executor(
+            None,
+            lambda: process_data_with_model(
+                file_buffer,
+                model_name=model_name,
+                pdf_image_dpi=200,
+            )
         )
 
         logger.info("Extract the layout with pdfminer")
