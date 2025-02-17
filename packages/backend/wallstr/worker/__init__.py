@@ -30,6 +30,9 @@ redis_backend = RedisBackend(url=settings.REDIS_URL.get_secret_value())
 # middlewares
 rabbitmq_broker.add_middleware(Results(backend=redis_backend, store_results=True))  # type: ignore[no-untyped-call]
 
+# create queues
+rabbitmq_broker.declare_queue("parse", ensure=True)  # type: ignore[no-untyped-call]
+
 dramatiq.set_broker(rabbitmq_broker)
 
 __all__ = ["dramatiq"]
