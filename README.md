@@ -25,7 +25,8 @@
    docker exec -it wallstr_ollama /bin/ollama pull nomic-embed-text
 
    pnpm backend:dev
-   pnpm backend:worker
+   pnpm backend:worker -p 1
+   pnpm backend:worker:heavy -p 1
    ```
 
 3. Open http://localhost:3000

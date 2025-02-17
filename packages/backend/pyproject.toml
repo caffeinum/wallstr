@@ -9,7 +9,8 @@ package-mode = false
 
 [tool.taskipy.tasks]
 dev = "uvicorn wallstr.server:app --reload --reload-include .env"
-worker = "dramatiq wallstr.worker.tasks --watch . -t 1"
+worker = "dramatiq wallstr.worker.main --watch . -t 5"
+"worker:heavy" = "dramatiq wallstr.worker.heavy --watch . -t 15"
 lint = "ruff format --check . && ruff check --diff"
 format = "ruff format"
 mypy = "mypy ."

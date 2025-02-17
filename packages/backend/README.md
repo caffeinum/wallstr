@@ -30,7 +30,8 @@ FastAPI, Dramatiq, PostgreSQL, Redis, Weaviate, RabbitMQ
    task migrate_weaviate
    ```
 5. `task dev` - api
-6. `task worker` - worker
+6. `task worker -p 1` - main worker
+7. `task worker:heavy -p 1` - heavy load worker
 
 ## Default endpoints
 
