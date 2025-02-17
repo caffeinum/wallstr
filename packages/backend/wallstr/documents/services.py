@@ -1,4 +1,5 @@
 import io
+from datetime import timedelta
 from uuid import NAMESPACE_DNS, UUID, uuid5
 
 import boto3
@@ -135,6 +136,15 @@ class DocumentService(BaseService):
 
             if document.status == DocumentStatus.UPLOADING:
                 raise Exception("Document is uploading")
+
+            # TODO: move to the SQLAlchemy model field
+            if (
+                document.status == DocumentStatus.PROCESSING
+                and document.error is None
+                and document.updated_at
+                and utc_now() - document.updated_at <= timedelta(minutes=10)
+            ):
+                raise Exception("Document is already being processed")
 
             await self.mark_document_processing(document.user_id, document.id)
 

@@ -159,11 +159,12 @@ async def trigger_processing(
             status_code=status.HTTP_403_FORBIDDEN, detail="Document is not uploaded yet"
         )
 
-    # TODO: needs not allowing to process document in PROCESSING state
-    # to avoid multiple processing tasks for one document at the same time
-    # create check job to move from PROCESSING state and add distirbuted lock in worker
-    if document.status == DocumentStatus.PROCESSING and (
-        document.updated_at and utc_now() - document.updated_at < timedelta(minutes=10)
+    # TODO: move to the SQLAlchemy model field
+    if (
+        document.status == DocumentStatus.PROCESSING
+        and document.error is None
+        and document.updated_at
+        and utc_now() - document.updated_at <= timedelta(minutes=10)
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

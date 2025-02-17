@@ -18,7 +18,9 @@ rabbitmq_broker = RabbitmqBroker(
     url=settings.RABBITMQ_URL.get_secret_value(),
     middleware=[
         AgeLimit(),  # type: ignore[no-untyped-call]
-        TimeLimit(),  # type: ignore[no-untyped-call]
+        # hard limit of 20 minutes
+        # use `async with time_limit()` inside the task for graceful shutdown
+        TimeLimit(time_limit=20 * 60 * 1000),  # type: ignore[no-untyped-call]
         ShutdownNotifications(),  # type: ignore[no-untyped-call]
         Callbacks(),
         AsyncSessionMiddleware(),

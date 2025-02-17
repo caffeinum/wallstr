@@ -6,6 +6,7 @@ from structlog.contextvars import bind_contextvars
 
 from wallstr.documents.services import DocumentService
 from wallstr.worker import dramatiq
+from wallstr.worker.time_limit import TimeLimitException, time_limit
 
 logger = structlog.get_logger()
 
@@ -27,4 +28,11 @@ async def process_document(document_id: str) -> None:
         raise Exception("No redis")
 
     document_svc = DocumentService(db_session, redis)
-    await document_svc.parse_document(UUID(document_id))
+    try:
+        async with time_limit(minutes=10):
+            await document_svc.parse_document(UUID(document_id))
+    except TimeLimitException:
+        await document_svc.mark_document_errored(
+            UUID(document_id), {"message": "Time limit exceeded", "code": "time_limit"}
+        )
+        raise
