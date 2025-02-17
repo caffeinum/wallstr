@@ -19,6 +19,7 @@ from wallstr.openapi import (
     configure_openapi,
     generate_unique_id_function,
 )
+from wallstr.sse.api import router as sse_router
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -74,6 +75,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
+app.include_router(sse_router)
 
 
 @app.get("/")

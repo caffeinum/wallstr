@@ -29,14 +29,14 @@ import type {
   CreateChatData,
   CreateChatResponse,
   CreateChatError,
-  GetChatMessagesStreamData,
-  GetChatMessagesStreamError,
   MarkDocumentUploadedData,
   MarkDocumentUploadedResponse,
   MarkDocumentUploadedError,
   GetDocumentBySectionData,
   GetDocumentBySectionResponse,
   GetDocumentBySectionError,
+  ConnectData,
+  ConnectError,
   RootData,
   RootResponse,
 } from "./types.gen";
@@ -215,18 +215,6 @@ export class ChatService {
       },
     });
   }
-
-  /**
-   * Get Chat Messages Stream
-   */
-  public static getChatMessagesStream<ThrowOnError extends boolean = false>(
-    options: Options<GetChatMessagesStreamData, ThrowOnError>,
-  ) {
-    return (options?.client ?? client).get<unknown, GetChatMessagesStreamError, ThrowOnError>({
-      url: "/chats/{slug}/messages/stream",
-      ...options,
-    });
-  }
 }
 
 export class DocumentsService {
@@ -269,6 +257,16 @@ export class DocumentsService {
 }
 
 export class DefaultService {
+  /**
+   * Connect
+   */
+  public static connect<ThrowOnError extends boolean = false>(options?: Options<ConnectData, ThrowOnError>) {
+    return (options?.client ?? client).get<unknown, ConnectError, ThrowOnError>({
+      url: "/sse/",
+      ...options,
+    });
+  }
+
   /**
    * Root
    */

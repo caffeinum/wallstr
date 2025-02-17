@@ -6,10 +6,10 @@ import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 import { api } from "@/api";
-import { settings } from "@/conf";
 import type { ChatMessageRole, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useSSE } from "@/hooks/useSSE";
 
 interface DocumentIconProps {
   filename: string;
@@ -78,80 +78,77 @@ export default function ChatMessages({
     enabled: !!slug,
   });
 
+  const sse = useSSE();
+
   useEffect(() => {
-    if (!slug) return;
-    console.log("Connecting to SSE");
+    if (!sse) return;
 
-    const eventSource = new EventSource(`${settings.API_URL}/chats/${slug}/messages/stream`, {
-      withCredentials: true,
-    });
+    // TODO: Add types for SSE events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function onMessageStart(data: any) {
+      setStreamingMessages((streamingMessages) => [...streamingMessages, { id: data.id, content: "", loading: true }]);
+    }
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      switch (data.type) {
-        case "message_start":
-          setStreamingMessages((streamingMessages) => [
-            ...streamingMessages,
-            { id: data.id, content: "", loading: true },
-          ]);
-          break;
-        case "message":
-          setStreamingMessages((streamingMessages) => {
-            const index = streamingMessages.findIndex((message) => message.id === data.id);
-            if (index === -1) return streamingMessages;
+    // TODO: Add types for SSE events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function onMessage(data: any) {
+      setStreamingMessages((streamingMessages) => {
+        const index = streamingMessages.findIndex((message) => message.id === data.id);
+        if (index === -1) return streamingMessages;
 
-            return [
-              ...streamingMessages.slice(0, index),
-              { id: data.id, content: streamingMessages[index].content + data.content },
-              ...streamingMessages.slice(index + 1),
-            ];
-          });
-          break;
-        case "message_end":
-          setStreamingMessages((streamingMessages) => {
-            const index = streamingMessages.findIndex((message) => message.id === data.id);
-            if (index === -1) return streamingMessages;
+        return [
+          ...streamingMessages.slice(0, index),
+          { id: data.id, content: streamingMessages[index].content + data.content },
+          ...streamingMessages.slice(index + 1),
+        ];
+      });
+    }
 
-            return [...streamingMessages.slice(0, index), ...streamingMessages.slice(index + 1)];
-          });
+    // TODO: Add types for SSE events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function onMessageEnd(data: any) {
+      setStreamingMessages((streamingMessages) => {
+        const index = streamingMessages.findIndex((message) => message.id === data.id);
+        if (index === -1) return streamingMessages;
 
-          // Update the cache with the completed message using the new ID
-          queryClient.setQueryData<InfiniteData<GetChatMessagesResponse>>(["/chat", slug], (old) => {
-            if (!old) return old;
+        return [...streamingMessages.slice(0, index), ...streamingMessages.slice(index + 1)];
+      });
 
-            const completedMessage = {
-              id: data.new_id,
-              content: data.content,
-              role: "assistant" as ChatMessageRole,
-              created_at: data.created_at,
-              documents: [],
-            };
+      // Update the cache with the completed message using the new ID
+      queryClient.setQueryData<InfiniteData<GetChatMessagesResponse>>(["/chat", slug], (old) => {
+        if (!old) return old;
 
-            return {
-              pages: [
-                {
-                  items: [completedMessage, ...old.pages[0].items],
-                  cursor: old.pages[0].cursor,
-                },
-                ...old.pages.splice(1),
-              ],
-              pageParams: old.pageParams,
-            };
-          });
+        const completedMessage = {
+          id: data.new_id,
+          content: data.content,
+          role: "assistant" as ChatMessageRole,
+          created_at: data.created_at,
+          documents: [],
+        };
 
-          break;
-      }
-    };
+        return {
+          pages: [
+            {
+              items: [completedMessage, ...old.pages[0].items],
+              cursor: old.pages[0].cursor,
+            },
+            ...old.pages.splice(1),
+          ],
+          pageParams: old.pageParams,
+        };
+      });
+    }
 
-    eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      eventSource.close();
-    };
+    sse.on("message_start", onMessageStart);
+    sse.on("message", onMessage);
+    sse.on("message_end", onMessageEnd);
 
     return () => {
-      eventSource.close();
+      sse.off("message_start", onMessageStart);
+      sse.off("message", onMessage);
+      sse.off("message_end", onMessageEnd);
     };
-  }, [slug, queryClient]);
+  }, [sse, setStreamingMessages, queryClient, slug]);
 
   const messages = useMemo(() => data?.pages.flatMap((page) => page?.items).reverse() ?? [], [data]);
   // parse content and find references
@@ -184,7 +181,7 @@ export default function ChatMessages({
     }
   }, [messages, referencesMap, setReferencesMap]);
 
-  const scrollToBottom = (mode: "smooth" | "instant") => {
+  const scrollToBottom = (mode: ScrollBehavior) => {
     messagesEndRef.current?.scrollIntoView({ behavior: mode });
   };
 
