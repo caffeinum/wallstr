@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, computed_field
@@ -23,6 +24,7 @@ class Document(BaseModel):
 class DocumentStatusSSE(SSE):
     id: UUID
     status: DocumentStatus
+    updated_at: datetime
 
     @computed_field
     def type(self) -> str:

@@ -46,7 +46,11 @@ export default function ChatsList({
         className="cursor-pointer md:absolute left-3 top-4 p-2 hover:bg-base-300 rounded-lg transition-colors"
         aria-label={isCollapsed ? "Expand chat list" : "Collapse chat list"}
       >
-        {isCollapsed ? <RiMenuUnfoldFill size={18} /> : <RiMenuUnfold2Fill size={18} />}
+        {isCollapsed ? (
+          <RiMenuUnfoldFill size={18} className="text-base-content/60" />
+        ) : (
+          <RiMenuUnfold2Fill size={18} className="text-base-content/60" />
+        )}
       </button>
       <div className={`md:flex md:flex-col gap-2 md:mt-10 ${isCollapsed ? "hidden md:hidden" : ""}`}>
         <Link

@@ -14,6 +14,7 @@ from wallstr.documents.models import DocumentModel, DocumentStatus, DocumentType
 from wallstr.documents.pdf_parser import PdfParser
 from wallstr.documents.schemas import DocumentStatusSSE
 from wallstr.documents.weaviate import get_weaviate_client
+from wallstr.models.base import utc_now
 from wallstr.services import BaseService
 
 
@@ -91,7 +92,7 @@ class DocumentService(BaseService):
             await self.redis.publish(
                 topic,
                 DocumentStatusSSE(
-                    id=document.id, status=document.status
+                    id=document.id, status=document.status, updated_at=utc_now()
                 ).model_dump_json(),
             )
         return document
@@ -116,7 +117,7 @@ class DocumentService(BaseService):
             await self.redis.publish(
                 topic,
                 DocumentStatusSSE(
-                    id=document.id, status=document.status
+                    id=document.id, status=document.status, updated_at=utc_now()
                 ).model_dump_json(),
             )
         return document

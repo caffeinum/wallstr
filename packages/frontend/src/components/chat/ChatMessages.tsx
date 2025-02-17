@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 import { api } from "@/api";
-import type { ChatMessageRole, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
+import type { ChatMessageRole, DocumentStatus, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useSSE } from "@/hooks/useSSE";
@@ -139,14 +139,33 @@ export default function ChatMessages({
       });
     }
 
+    function onDocumentStatus(data: { id: string; status: DocumentStatus }) {
+      queryClient.setQueryData<InfiniteData<GetChatMessagesResponse>>(["/chat", slug], (old) => {
+        if (!old) return old;
+
+        return {
+          pages: old.pages.map((page) => ({
+            ...page,
+            items: page.items.map((message) => ({
+              ...message,
+              documents: message.documents?.map((doc) => (doc.id === data.id ? { ...doc, status: data.status } : doc)),
+            })),
+          })),
+          pageParams: old.pageParams,
+        };
+      });
+    }
+
     sse.on("message_start", onMessageStart);
     sse.on("message", onMessage);
     sse.on("message_end", onMessageEnd);
+    sse.on("document_status", onDocumentStatus);
 
     return () => {
       sse.off("message_start", onMessageStart);
       sse.off("message", onMessage);
       sse.off("message_end", onMessageEnd);
+      sse.off("document_status", onDocumentStatus);
     };
   }, [sse, setStreamingMessages, queryClient, slug]);
 
@@ -246,17 +265,10 @@ export default function ChatMessages({
           {messages.map((message) => (
             <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
               {message.documents && message.documents.length > 0 && (
-                <div className="chat-header max-w-full truncate">
+                <div className="chat-header max-w-full">
                   <div className="w-full">
                     {message.documents.map((doc) => (
-                      <button
-                        key={doc.id}
-                        onClick={() => console.log(doc)}
-                        className="flex items-center gap-2 py-2 hover:bg-base-200 px-2 rounded w-full text-left"
-                      >
-                        <DocumentIcon filename={doc.filename} />
-                        <span className="text-sm truncate">{doc.filename}</span>
-                      </button>
+                      <InlineDocument key={doc.id} {...doc} />
                     ))}
                   </div>
                 </div>
@@ -331,4 +343,49 @@ function ReferenceLink({
       ))}
     </span>
   );
+}
+
+function InlineDocument({ status, filename }: { status: DocumentStatus; filename: string }) {
+  return (
+    <button
+      onClick={() => console.log(filename)}
+      className="flex items-center justify-end gap-2 py-2 hover:bg-base-200 px-2 rounded w-full"
+    >
+      <DocumentStatusIcon status={status} />
+      <DocumentIcon filename={filename} />
+      <span className="text-sm truncate">{filename}</span>
+    </button>
+  );
+}
+
+function DocumentStatusIcon({ status }: { status: DocumentStatus }) {
+  switch (status) {
+    case "uploading":
+      return (
+        <span className="tooltip" data-tip="Uploading">
+          <span className="status status-neutral"></span>
+        </span>
+      );
+    case "uploaded":
+      return (
+        <span className="tooltip" data-tip="In queue">
+          <span className="status"></span>
+        </span>
+      );
+    case "processing":
+      return (
+        <span className="tooltip" data-tip="Processing">
+          <span className="status status-warning"></span>
+        </span>
+      );
+    case "failed":
+      return (
+        <span className="tooltip" data-tip="Failed. Click to restart">
+          <span className="status status-error cursor-pointer animate-bounce"></span>
+        </span>
+      );
+    case "ready":
+    default:
+      return null;
+  }
 }

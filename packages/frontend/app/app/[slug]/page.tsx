@@ -157,6 +157,31 @@ export default function ChatPage() {
         queryClient.setQueryData(["/chat", slug], context.previousMessages);
       }
     },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/chat", slug], (old: InfiniteData<GetChatMessagesResponse>) => {
+        if (!old?.pages) return old;
+
+        const updatedPages = old.pages.map((page, index) => {
+          if (index === 0) {
+            return {
+              ...page,
+              items: page.items.map((message) => {
+                if (message.id.toString().startsWith("temp-") && data.content == message.content) {
+                  return data;
+                }
+                return message;
+              }),
+            };
+          }
+          return page;
+        });
+
+        return {
+          ...old,
+          pages: updatedPages,
+        };
+      });
+    },
   });
 
   const handleRefClick = async (id: string | null) => {
