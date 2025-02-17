@@ -2,6 +2,7 @@
 import { AnchorHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
+import { HiMiniExclamationCircle } from "react-icons/hi2";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
@@ -345,43 +346,51 @@ function ReferenceLink({
   );
 }
 
-function InlineDocument({ status, filename }: { status: DocumentStatus; filename: string }) {
+function InlineDocument({
+  status,
+  filename,
+  error,
+}: {
+  status: DocumentStatus;
+  filename: string;
+  error?: string | null;
+}) {
   return (
-    <button
-      onClick={() => console.log(filename)}
-      className="flex items-center justify-end gap-2 py-2 hover:bg-base-200 px-2 rounded w-full"
-    >
-      <DocumentStatusIcon status={status} />
+    <span className="flex items-center justify-end gap-2 py-2 hover:bg-base-200 px-2 rounded w-full">
+      <DocumentStatusIcon status={status} hasError={!!error} />
       <DocumentIcon filename={filename} />
-      <span className="text-sm truncate">{filename}</span>
-    </button>
+      <span className="text-sm truncate" onClick={() => console.log(filename)}>
+        {filename}
+      </span>
+    </span>
   );
 }
 
-function DocumentStatusIcon({ status }: { status: DocumentStatus }) {
+function DocumentStatusIcon({ status, hasError }: { status: DocumentStatus; hasError?: boolean }) {
+  if (hasError) {
+    return (
+      <span className="tooltip" data-tip="Failed. Click to restart">
+        <HiMiniExclamationCircle className="text-error w-4 h-4 cursor-pointer" />
+      </span>
+    );
+  }
   switch (status) {
     case "uploading":
       return (
         <span className="tooltip" data-tip="Uploading">
-          <span className="status status-neutral"></span>
+          <span className="loading loading-spinner loading-xs text-base-content/30"></span>
         </span>
       );
     case "uploaded":
       return (
         <span className="tooltip" data-tip="In queue">
-          <span className="status"></span>
+          <span className="loading loading-spinner loading-xs text-base-content/30"></span>
         </span>
       );
     case "processing":
       return (
         <span className="tooltip" data-tip="Processing">
-          <span className="status status-warning"></span>
-        </span>
-      );
-    case "failed":
-      return (
-        <span className="tooltip" data-tip="Failed. Click to restart">
-          <span className="status status-error cursor-pointer animate-bounce"></span>
+          <span className="loading loading-bars loading-xs text-base-content/30"></span>
         </span>
       );
     case "ready":

@@ -61,12 +61,16 @@ class DocumentService(BaseService):
             result = await self.db.execute(
                 sql.update(DocumentModel)
                 .filter_by(
-                    id=document_id, user_id=user_id, status=DocumentStatus.UPLOADING
+                    id=document_id,
+                    user_id=user_id,
+                    status=DocumentStatus.UPLOADING,
                 )
-                .values(status=DocumentStatus.UPLOADED)
+                .values(status=DocumentStatus.UPLOADED, error=None, errored_at=None)
                 .returning(DocumentModel)
             )
-        return result.scalar_one()
+        document = result.scalar_one()
+        await self._notify_document_status(document)
+        return document
 
     async def mark_document_processing(
         self, user_id: UUID, document_id: UUID
@@ -82,19 +86,11 @@ class DocumentService(BaseService):
                         DocumentModel.status == DocumentStatus.READY,
                     )
                 )
-                .values(status=DocumentStatus.PROCESSING)
+                .values(status=DocumentStatus.PROCESSING, error=None, errored_at=None)
                 .returning(DocumentModel)
             )
         document = result.scalar_one()
-
-        if self.redis is not None:
-            topic = f"{document.user_id}:documents:{document.id}"
-            await self.redis.publish(
-                topic,
-                DocumentStatusSSE(
-                    id=document.id, status=document.status, updated_at=utc_now()
-                ).model_dump_json(),
-            )
+        await self._notify_document_status(document)
         return document
 
     async def mark_document_ready(
@@ -106,20 +102,25 @@ class DocumentService(BaseService):
                 .filter_by(
                     id=document_id, user_id=user_id, status=DocumentStatus.PROCESSING
                 )
-                .values(status=DocumentStatus.READY)
+                .values(status=DocumentStatus.READY, error=None, errored_at=None)
                 .returning(DocumentModel)
             )
-
         document = result.scalar_one()
+        await self._notify_document_status(document)
+        return document
 
-        topic = f"{document.user_id}:documents:{document.id}"
-        if self.redis is not None:
-            await self.redis.publish(
-                topic,
-                DocumentStatusSSE(
-                    id=document.id, status=document.status, updated_at=utc_now()
-                ).model_dump_json(),
+    async def mark_document_errored(
+        self, document_id: UUID, error: dict[str, str]
+    ) -> DocumentModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(DocumentModel)
+                .filter_by(id=document_id)
+                .values(error=error, errored_at=utc_now())
+                .returning(DocumentModel)
             )
+        document = result.scalar_one()
+        await self._notify_document_status(document)
         return document
 
     async def parse_document(self, document_id: UUID) -> DocumentModel:
@@ -173,12 +174,27 @@ class DocumentService(BaseService):
                 raise
             finally:
                 await wvc.close()
-        except Exception:
-            # TODO: handle error
-            document = await self.mark_document_uploaded(document.user_id, document.id)
+        except Exception as e:
+            document = await self.mark_document_errored(
+                document.id, {"message": str(e), "code": "parse_error"}
+            )
         else:
             document = await self.mark_document_ready(document.user_id, document.id)
         return document
+
+    async def _notify_document_status(self, document: DocumentModel) -> None:
+        topic = f"{document.user_id}:documents:{document.id}"
+        if self.redis is not None:
+            await self.redis.publish(
+                topic,
+                DocumentStatusSSE(
+                    id=document.id,
+                    status=document.status,
+                    updated_at=utc_now(),
+                    error="Processing error" if document.error else None,
+                    errored_at=document.errored_at,
+                ).model_dump_json(),
+            )
 
 
 def get_parser_cls(doc_type: DocumentType) -> type[PdfParser]:

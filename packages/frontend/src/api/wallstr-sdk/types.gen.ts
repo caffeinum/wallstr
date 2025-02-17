@@ -27,6 +27,8 @@ export type Document = {
   id: string;
   filename: string;
   status: DocumentStatus;
+  error?: string | null;
+  errored_at: string | null;
 };
 
 export type DocumentPayload = {
@@ -41,7 +43,7 @@ export type DocumentSection = {
   bbox: [number, number, number, number];
 };
 
-export type DocumentStatus = "uploading" | "uploaded" | "processing" | "ready" | "failed";
+export type DocumentStatus = "uploading" | "uploaded" | "processing" | "ready";
 
 export type DocumentType = "pdf" | "doc" | "docx" | "xls" | "xlsx";
 

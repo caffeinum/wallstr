@@ -759,13 +759,37 @@
                     },
                     "status": {
                         "$ref": "#/components/schemas/DocumentStatus"
+                    },
+                    "error": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error"
+                    },
+                    "errored_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Errored At"
                     }
                 },
                 "type": "object",
                 "required": [
                     "id",
                     "filename",
-                    "status"
+                    "status",
+                    "errored_at"
                 ],
                 "title": "Document"
             },
@@ -836,8 +860,7 @@
                     "uploading",
                     "uploaded",
                     "processing",
-                    "ready",
-                    "failed"
+                    "ready"
                 ],
                 "title": "DocumentStatus"
             },
