@@ -138,7 +138,9 @@ async def get_rag(
     try:
         collection = wvc.collections.get("Documents")
         response = await collection.query.near_text(
-            filters=Filter.by_property("document_id").contains_any(document_ids),
+            filters=Filter.by_property("document_id").contains_any(document_ids)
+            if document_ids
+            else None,
             query=message.content,
             certainty=0.7,
             limit=50,
