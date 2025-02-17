@@ -267,7 +267,7 @@ export default function ChatMessages({
             <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
               {message.documents && message.documents.length > 0 && (
                 <div className="chat-header max-w-full">
-                  <div className="w-full">
+                  <div>
                     {message.documents.map((doc) => (
                       <InlineDocument key={doc.id} {...doc} />
                     ))}
@@ -356,11 +356,14 @@ function InlineDocument({
   error?: string | null;
 }) {
   return (
-    <span className="flex items-center justify-end gap-2 py-2 hover:bg-base-200 px-2 rounded w-full">
+    <span className="flex items-center justify-end gap-2 p-2">
       <DocumentStatusIcon status={status} hasError={!!error} />
       <DocumentIcon filename={filename} />
-      <span className="text-sm truncate" onClick={() => console.log(filename)}>
-        {filename}
+      <span
+        className="text-sm min-w-0 truncate max-w-42 sm:max-w-92 md:max-w-full"
+        onClick={() => console.log(filename)}
+      >
+        <span>{filename}</span>
       </span>
     </span>
   );
