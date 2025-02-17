@@ -1,5 +1,5 @@
 "use client";
-import { AnchorHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
+import { AnchorHTMLAttributes, useEffect, useMemo, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
@@ -33,8 +33,6 @@ export default function ChatMessages({
   onRefClick?: (id: string | null) => void;
   onDocumentOpen?: (id: string) => void;
 }) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const firstLoadRef = useRef(true);
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
   const [referencesMap, setReferencesMap] = useState<TReferencesMap>({});
   const [selectedRef, selectRef] = useState<string | null>(null);
@@ -177,20 +175,6 @@ export default function ChatMessages({
     }
   }, [messages, referencesMap, setReferencesMap]);
 
-  const scrollToBottom = (mode: ScrollBehavior) => {
-    messagesEndRef.current?.scrollIntoView({ behavior: mode });
-  };
-
-  useEffect(() => {
-    // Only scroll on first load of messages or when there are streaming messages
-    if (firstLoadRef.current && messages.length > 0) {
-      scrollToBottom("instant");
-      firstLoadRef.current = false;
-    } else {
-      scrollToBottom("smooth");
-    }
-  }, [streamingMessages, messages]);
-
   const MarkdownComponents = {
     a: ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
       <ReferenceLink
@@ -199,7 +183,9 @@ export default function ChatMessages({
           if (id === selectedRef) {
             id = null;
           }
-          onRefClick && onRefClick(id);
+          if (onRefClick) {
+            onRefClick(id);
+          }
           selectRef(id);
         }}
         referencesMap={referencesMap}
@@ -227,7 +213,7 @@ export default function ChatMessages({
 
   return (
     <div className={twMerge("flex flex-col justify-end py-4", className)}>
-      <div className="overflow-y-scroll max-w-4xl w-full mx-auto">
+      <div className="overflow-y-scroll max-w-4xl w-full mx-auto flex flex-col-reverse">
         <div className="space-y-4 w-full pr-4">
           {hasNextPage && (
             <button
@@ -273,8 +259,6 @@ export default function ChatMessages({
               </div>
             </div>
           ))}
-
-          <div ref={messagesEndRef} />
         </div>
       </div>
     </div>
