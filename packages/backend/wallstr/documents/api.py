@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -9,9 +10,11 @@ from weaviate.classes.query import Filter
 from wallstr.auth.dependencies import Auth
 from wallstr.auth.schemas import HTTPUnauthorizedError
 from wallstr.conf import settings
+from wallstr.documents.models import DocumentStatus
 from wallstr.documents.schemas import DocumentSection
 from wallstr.documents.services import DocumentService
 from wallstr.documents.tasks import process_document
+from wallstr.models.base import utc_now
 from wallstr.openapi import generate_unique_id_function
 
 router = APIRouter(
@@ -85,3 +88,86 @@ async def get_document_by_section(
     )
 
     return section
+
+
+@router.get(
+    "/{document_id}/url",
+    responses={
+        404: {"description": "Document not found"},
+        403: {"description": "Forbidden"},
+    },
+)
+async def get_document_url(
+    auth: Auth,
+    document_id: UUID,
+    document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
+) -> str:
+    document = await document_svc.get_document(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if document.user_id != auth.user_id:
+        raise HTTPException(
+            status_code=403, detail="User is not the owner of the document"
+        )
+
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=str(settings.STORAGE_URL),
+        aws_access_key_id=settings.STORAGE_ACCESS_KEY.get_secret_value(),
+        aws_secret_access_key=settings.STORAGE_SECRET_KEY.get_secret_value(),
+        config=botocore.config.Config(signature_version="s3v4"),
+    )
+    document_url = s3_client.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={
+            "Bucket": settings.STORAGE_BUCKET,
+            "Key": document.storage_path,
+        },
+        ExpiresIn=60 * 5,
+    )
+    return document_url
+
+
+@router.post(
+    "/{document_id}/process",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Trigger document processing manually",
+    responses={
+        404: {"description": "Document not found"},
+        403: {"description": "Forbidden"},
+    },
+)
+async def trigger_processing(
+    auth: Auth,
+    document_id: UUID,
+    document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
+) -> None:
+    document = await document_svc.get_document(document_id)
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
+
+    if document.user_id != auth.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not the owner of the document",
+        )
+    if document.status == DocumentStatus.UPLOADING:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Document is not uploaded yet"
+        )
+
+    # TODO: needs not allowing to process document in PROCESSING state
+    # to avoid multiple processing tasks for one document at the same time
+    # create check job to move from PROCESSING state and add distirbuted lock in worker
+    if document.status == DocumentStatus.PROCESSING and (
+        document.updated_at and utc_now() - document.updated_at < timedelta(minutes=10)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Document is already being processed",
+        )
+
+    process_document.send(document_id=str(document_id))

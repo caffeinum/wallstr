@@ -65,7 +65,7 @@ class PdfParser:
                 file_buffer,
                 model_name=model_name,
                 pdf_image_dpi=200,
-            )
+            ),
         )
 
         logger.info("Extract the layout with pdfminer")

@@ -28,7 +28,7 @@ export type Document = {
   filename: string;
   status: DocumentStatus;
   error?: string | null;
-  errored_at: string | null;
+  errored_at?: string | null;
 };
 
 export type DocumentPayload = {
@@ -431,6 +431,84 @@ export type GetDocumentBySectionResponses = {
 };
 
 export type GetDocumentBySectionResponse = GetDocumentBySectionResponses[keyof GetDocumentBySectionResponses];
+
+export type GetDocumentUrlData = {
+  body?: never;
+  path: {
+    document_id: string;
+  };
+  query?: never;
+  url: "/documents/{document_id}/url";
+};
+
+export type GetDocumentUrlErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Forbidden
+   */
+  403: unknown;
+  /**
+   * Document not found
+   */
+  404: unknown;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type GetDocumentUrlError = GetDocumentUrlErrors[keyof GetDocumentUrlErrors];
+
+export type GetDocumentUrlResponses = {
+  /**
+   * Successful Response
+   */
+  200: string;
+};
+
+export type GetDocumentUrlResponse = GetDocumentUrlResponses[keyof GetDocumentUrlResponses];
+
+export type TriggerProcessingData = {
+  body?: never;
+  path: {
+    document_id: string;
+  };
+  query?: never;
+  url: "/documents/{document_id}/process";
+};
+
+export type TriggerProcessingErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Forbidden
+   */
+  403: unknown;
+  /**
+   * Document not found
+   */
+  404: unknown;
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type TriggerProcessingError = TriggerProcessingErrors[keyof TriggerProcessingErrors];
+
+export type TriggerProcessingResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type TriggerProcessingResponse = TriggerProcessingResponses[keyof TriggerProcessingResponses];
 
 export type ConnectData = {
   body?: never;

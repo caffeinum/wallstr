@@ -21,7 +21,7 @@ class Document(BaseModel):
     status: DocumentStatus
 
     error: str | None = None
-    errored_at: datetime | None
+    errored_at: datetime | None = None
 
     @field_validator("error", mode="before")
     def sanitize_error(cls, value: str | dict[str, str] | None) -> str | None:

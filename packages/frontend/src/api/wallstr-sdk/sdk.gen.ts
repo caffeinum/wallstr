@@ -35,6 +35,12 @@ import type {
   GetDocumentBySectionData,
   GetDocumentBySectionResponse,
   GetDocumentBySectionError,
+  GetDocumentUrlData,
+  GetDocumentUrlResponse,
+  GetDocumentUrlError,
+  TriggerProcessingData,
+  TriggerProcessingResponse,
+  TriggerProcessingError,
   ConnectData,
   ConnectError,
   RootData,
@@ -251,6 +257,43 @@ export class DocumentsService {
         },
       ],
       url: "/documents/section/{section_id}",
+      ...options,
+    });
+  }
+
+  /**
+   * Get Document Url
+   */
+  public static getDocumentUrl<ThrowOnError extends boolean = false>(
+    options: Options<GetDocumentUrlData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).get<GetDocumentUrlResponse, GetDocumentUrlError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/documents/{document_id}/url",
+      ...options,
+    });
+  }
+
+  /**
+   * Trigger Processing
+   * Trigger document processing manually
+   */
+  public static triggerProcessing<ThrowOnError extends boolean = false>(
+    options: Options<TriggerProcessingData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).post<TriggerProcessingResponse, TriggerProcessingError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/documents/{document_id}/process",
       ...options,
     });
   }

@@ -1,42 +1,16 @@
 "use client";
 import { AnchorHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
-import { HiMiniExclamationCircle } from "react-icons/hi2";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { api } from "@/api";
 import type { ChatMessageRole, DocumentStatus, GetChatMessagesResponse } from "@/api/wallstr-sdk/types.gen";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useSSE } from "@/hooks/useSSE";
 
-interface DocumentIconProps {
-  filename: string;
-}
-
-function DocumentIcon({ filename }: DocumentIconProps) {
-  const ext = filename.split(".").pop()?.toLowerCase();
-
-  switch (ext) {
-    case "pdf":
-      return <FaFilePdf className="w-4 h-4" />;
-    case "doc":
-    case "docx":
-      return <FaFileWord className="w-4 h-4" />;
-    case "xls":
-    case "xlsx":
-      return <FaFileExcel className="w-4 h-4" />;
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-      return <FaFileImage className="w-4 h-4" />;
-    default:
-      return <FaFile className="w-4 h-4" />;
-  }
-}
+import DocumentsInlineBlock from "./blocks/DocumentsInlineBlock";
 
 interface StreamingMessage {
   id: string;
@@ -265,15 +239,7 @@ export default function ChatMessages({
 
           {messages.map((message) => (
             <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
-              {message.documents && message.documents.length > 0 && (
-                <div className="chat-header max-w-full">
-                  <div>
-                    {message.documents.map((doc) => (
-                      <InlineDocument key={doc.id} {...doc} />
-                    ))}
-                  </div>
-                </div>
-              )}
+              {message.documents.length > 0 && <DocumentsInlineBlock documents={message.documents} />}
               {message.content && (
                 <>
                   <div
@@ -344,60 +310,4 @@ function ReferenceLink({
       ))}
     </span>
   );
-}
-
-function InlineDocument({
-  status,
-  filename,
-  error,
-}: {
-  status: DocumentStatus;
-  filename: string;
-  error?: string | null;
-}) {
-  return (
-    <span className="flex items-center justify-end gap-2 p-2">
-      <DocumentStatusIcon status={status} hasError={!!error} />
-      <DocumentIcon filename={filename} />
-      <span
-        className="text-sm min-w-0 truncate max-w-42 sm:max-w-92 md:max-w-full"
-        onClick={() => console.log(filename)}
-      >
-        <span>{filename}</span>
-      </span>
-    </span>
-  );
-}
-
-function DocumentStatusIcon({ status, hasError }: { status: DocumentStatus; hasError?: boolean }) {
-  if (hasError) {
-    return (
-      <span className="tooltip" data-tip="Failed. Click to restart">
-        <HiMiniExclamationCircle className="text-error w-4 h-4 cursor-pointer" />
-      </span>
-    );
-  }
-  switch (status) {
-    case "uploading":
-      return (
-        <span className="tooltip" data-tip="Uploading">
-          <span className="loading loading-spinner loading-xs text-base-content/30"></span>
-        </span>
-      );
-    case "uploaded":
-      return (
-        <span className="tooltip" data-tip="In queue">
-          <span className="loading loading-spinner loading-xs text-base-content/30"></span>
-        </span>
-      );
-    case "processing":
-      return (
-        <span className="tooltip" data-tip="Processing">
-          <span className="loading loading-bars loading-xs text-base-content/30"></span>
-        </span>
-      );
-    case "ready":
-    default:
-      return null;
-  }
 }
