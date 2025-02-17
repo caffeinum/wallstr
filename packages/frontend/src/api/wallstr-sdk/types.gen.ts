@@ -36,6 +36,11 @@ export type DocumentPayload = {
   doc_type: DocumentType;
 };
 
+export type DocumentPreview = {
+  document_title: string;
+  document_url: string;
+};
+
 export type DocumentSection = {
   document_title: string;
   document_url: string;
@@ -466,7 +471,7 @@ export type GetDocumentUrlResponses = {
   /**
    * Successful Response
    */
-  200: string;
+  200: DocumentPreview;
 };
 
 export type GetDocumentUrlResponse = GetDocumentUrlResponses[keyof GetDocumentUrlResponses];

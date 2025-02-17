@@ -56,3 +56,8 @@ class DocumentSection(BaseModel):
     document_url: str
     page_number: int
     bbox: tuple[float, float, float, float]
+
+
+class DocumentPreview(BaseModel):
+    document_title: str
+    document_url: str

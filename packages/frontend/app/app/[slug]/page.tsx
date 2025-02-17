@@ -201,11 +201,29 @@ export default function ChatPage() {
     });
   };
 
+  const handleDocumentOpen = useCallback(async (id: string) => {
+    const { data } = await api.documents.getDocumentUrl({
+      path: { document_id: id },
+    });
+
+    if (!data) return;
+    setSelectedDocument({
+      title: data.document_title,
+      documentUrl: data.document_url,
+      page: 1,
+    });
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row flex-1 bg-base-200 w-full">
       <ChatsList slug={slug} forceCollapse={!!selectedDocument && panelWidth > CHATS_LIST_COLLAPSE_WIDTH} />
       <div className="flex flex-1 flex-col overflow-y-scroll">
-        <ChatMessages slug={slug} className="flex-1 overflow-y-scroll" onRefClick={handleRefClick} />
+        <ChatMessages
+          slug={slug}
+          className="flex-1 overflow-y-scroll"
+          onRefClick={handleRefClick}
+          onDocumentOpen={handleDocumentOpen}
+        />
         <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
       </div>
       {selectedDocument && (

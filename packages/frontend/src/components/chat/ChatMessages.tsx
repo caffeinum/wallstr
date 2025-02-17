@@ -26,10 +26,12 @@ export default function ChatMessages({
   slug,
   className,
   onRefClick,
+  onDocumentOpen,
 }: {
   slug?: string;
   className?: string;
-  onRefClick: (id: string | null) => void;
+  onRefClick?: (id: string | null) => void;
+  onDocumentOpen?: (id: string) => void;
 }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstLoadRef = useRef(true);
@@ -197,7 +199,7 @@ export default function ChatMessages({
           if (id === selectedRef) {
             id = null;
           }
-          onRefClick(id);
+          onRefClick && onRefClick(id);
           selectRef(id);
         }}
         referencesMap={referencesMap}
@@ -239,7 +241,9 @@ export default function ChatMessages({
 
           {messages.map((message) => (
             <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
-              {message.documents.length > 0 && <DocumentsInlineBlock documents={message.documents} />}
+              {message.documents.length > 0 && (
+                <DocumentsInlineBlock documents={message.documents} onDocumentOpen={onDocumentOpen} />
+              )}
               {message.content && (
                 <>
                   <div

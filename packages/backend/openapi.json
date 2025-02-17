@@ -619,8 +619,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string",
-                                    "title": "Response 3::Get Document Url"
+                                    "$ref": "#/components/schemas/DocumentPreview"
                                 }
                             }
                         }
@@ -931,6 +930,24 @@
                     "doc_type"
                 ],
                 "title": "DocumentPayload"
+            },
+            "DocumentPreview": {
+                "properties": {
+                    "document_title": {
+                        "type": "string",
+                        "title": "Document Title"
+                    },
+                    "document_url": {
+                        "type": "string",
+                        "title": "Document Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "document_title",
+                    "document_url"
+                ],
+                "title": "DocumentPreview"
             },
             "DocumentSection": {
                 "properties": {

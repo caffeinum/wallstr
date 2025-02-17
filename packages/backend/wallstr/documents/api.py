@@ -11,7 +11,7 @@ from wallstr.auth.dependencies import Auth
 from wallstr.auth.schemas import HTTPUnauthorizedError
 from wallstr.conf import settings
 from wallstr.documents.models import DocumentStatus
-from wallstr.documents.schemas import DocumentSection
+from wallstr.documents.schemas import DocumentPreview, DocumentSection
 from wallstr.documents.services import DocumentService
 from wallstr.documents.tasks import process_document
 from wallstr.models.base import utc_now
@@ -92,6 +92,7 @@ async def get_document_by_section(
 
 @router.get(
     "/{document_id}/url",
+    response_model=DocumentPreview,
     responses={
         404: {"description": "Document not found"},
         403: {"description": "Forbidden"},
@@ -101,7 +102,7 @@ async def get_document_url(
     auth: Auth,
     document_id: UUID,
     document_svc: Annotated[DocumentService, Depends(DocumentService.inject_svc)],
-) -> str:
+) -> DocumentPreview:
     document = await document_svc.get_document(document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -126,7 +127,7 @@ async def get_document_url(
         },
         ExpiresIn=60 * 5,
     )
-    return document_url
+    return DocumentPreview(document_title=document.filename, document_url=document_url)
 
 
 @router.post(
