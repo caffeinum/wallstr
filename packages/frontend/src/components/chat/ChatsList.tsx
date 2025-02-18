@@ -54,7 +54,7 @@ export default function ChatsList({
       </button>
       <div className={`md:flex md:flex-col gap-2 md:mt-10 ${isCollapsed ? "hidden md:hidden" : ""}`}>
         <Link
-          href="/app"
+          href="/chat"
           className={`badge badge-md ${!slug ? "badge-neutral" : "badge-ghost"} transition-colors cursor-pointer whitespace-nowrap`}
         >
           New chat...
@@ -62,7 +62,7 @@ export default function ChatsList({
         {chats.items.map((chat) => (
           <Link
             key={chat.id}
-            href={`/app/${chat.slug}`}
+            href={`/chat/${chat.slug}`}
             className={`badge badge-md ${
               chat.slug === slug ? "badge-neutral" : "badge-ghost"
             } transition-colors cursor-pointer whitespace-nowrap`}

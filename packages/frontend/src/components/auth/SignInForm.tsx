@@ -35,7 +35,7 @@ export default function SignInForm({ urls }: { urls: { forgotPassword: string; s
       }
 
       setToken(accessToken.token);
-      router.push("/app");
+      router.push("/chat");
     },
     [router],
   );

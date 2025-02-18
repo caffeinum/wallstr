@@ -2,16 +2,17 @@
 import { useParams } from "next/navigation";
 import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback, useRef, useEffect } from "react";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
 
-import PDFViewer from "@/components/pdf_viewer/PDFViewer";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatMessages from "@/components/chat/ChatMessages";
 import ChatsList from "@/components/chat/ChatsList";
 import { api } from "@/api";
 import { getDocumentType } from "@/components/chat/utils";
 import type { DocumentPayload, GetChatMessagesResponse } from "@/api/wallstr-sdk";
+import dynamic from "next/dynamic";
+
+// https://github.com/wojtekmaj/react-pdf/issues/1811#issuecomment-2284891560
+const PDFViewer = dynamic(() => import("@/components/pdf_viewer/PDFViewer"), { ssr: false });
 
 type TDocument = {
   title: string;

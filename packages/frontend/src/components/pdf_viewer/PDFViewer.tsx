@@ -1,4 +1,7 @@
 "use client";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
 import { useState, useEffect, useMemo } from "react";
 import { FaTimes } from "react-icons/fa";
 import { Document, Page, pdfjs } from "react-pdf";
