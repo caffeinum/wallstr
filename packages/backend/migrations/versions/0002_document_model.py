@@ -43,7 +43,11 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("error", postgresql.JSONB(astext_type=sa.Text()), nullable=True),  # type: ignore[no-untyped-call]
+        sa.Column(
+            "error",
+            postgresql.JSONB(astext_type=sa.Text(), none_as_null=True),  # type: ignore[no-untyped-call]
+            nullable=True,
+        ),
         sa.Column("errored_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("filename", sa.String(length=255), nullable=False),
         sa.Column("file_size", sa.Integer(), nullable=True),

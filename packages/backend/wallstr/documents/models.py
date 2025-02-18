@@ -37,7 +37,10 @@ class DocumentModel(RecordModel):
         ),
         nullable=False,
     )
-    error: Mapped[dict[str, str]] = mapped_column(JSONB, nullable=True)
+    error: Mapped[dict[str, str] | None] = mapped_column(
+        JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+        nullable=True,
+    )
     errored_at: Mapped[datetime | None] = mapped_column(default=None)
 
     filename: Mapped[str] = string_column(length=255)
