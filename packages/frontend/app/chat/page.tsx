@@ -49,7 +49,7 @@ export default function AppPage() {
       return chat;
     },
     onSuccess: (chat) => {
-      router.push(`/app/${chat.slug}`);
+      router.push(`/chat/${chat.slug}`);
     },
   });
 
