@@ -49,7 +49,8 @@ async def get_document_by_section(
     wvc = request.state.wvc
 
     collection = wvc.collections.get("Documents")
-    response = await collection.query.fetch_objects(
+    tenant_id = str(auth.user_id)
+    response = await collection.with_tenant(tenant_id).query.fetch_objects(
         filters=(
             Filter.by_id().equal(section_id)
             & Filter.by_property("user_id").equal(auth.user_id)
