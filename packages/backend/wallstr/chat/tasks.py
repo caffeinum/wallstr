@@ -138,11 +138,12 @@ async def get_rag(
     try:
         # Check if user's tenant exists
         tenant_id = str(message.user_id)
-        if not await wvc.collections.get("Documents").tenants.get_by_names([tenant_id]):
+        collection = wvc.collections.get("Documents")
+        if not await collection.tenants.get_by_names([tenant_id]):
+            logger.info(f"Tenant {tenant_id} not found")
             return []
 
-        collection = wvc.collections.get("Documents").with_tenant(tenant_id)
-        response = await collection.query.near_text(
+        response = await collection.with_tenant(tenant_id).query.near_text(
             filters=Filter.by_property("document_id").contains_any(document_ids)
             if document_ids
             else None,

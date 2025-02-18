@@ -173,15 +173,15 @@ class DocumentService(BaseService):
             wvc = get_weaviate_client(with_openai=True)
             await wvc.connect()
             try:
-                collection = wvc.collections.get(collection_name).with_tenant(
-                    str(document.user_id)
-                )
-                await collection.data.delete_many(
-                    where=Filter.by_property("record_id").equal(str(record_id))
-                )
+                tenant_id = str(document.user_id)
+                collection = wvc.collections.get(collection_name)
+                if await collection.tenants.get_by_names([tenant_id]):
+                    await collection.with_tenant(tenant_id).data.delete_many(
+                        where=Filter.by_property("record_id").equal(str(record_id))
+                    )
                 for batch in range(0, len(chunks), 100):
                     objects = chunks[batch : batch + 100]
-                    await collection.data.insert_many(objects)
+                    await collection.with_tenant(tenant_id).data.insert_many(objects)
             except Exception:
                 raise
             finally:
@@ -190,6 +190,7 @@ class DocumentService(BaseService):
             document = await self.mark_document_errored(
                 document.id, {"message": str(e), "code": "parse_error"}
             )
+            raise
         else:
             document = await self.mark_document_ready(document.user_id, document.id)
         return document
