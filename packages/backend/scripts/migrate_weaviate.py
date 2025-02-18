@@ -20,6 +20,9 @@ async def migrate_weaviate() -> None:
         logger.info("Creating collection [Documents]")
         await wvc.collections.create(
             "Documents",
+            multi_tenancy_config=Configure.multi_tenancy(
+                enabled=True, auto_tenant_creation=True
+            ),
             vectorizer_config=Configure.Vectorizer.text2vec_openai(
                 model="text-embedding-3-small",
             ),

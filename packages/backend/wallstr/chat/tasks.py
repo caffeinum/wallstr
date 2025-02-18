@@ -136,7 +136,12 @@ async def get_rag(
     wvc = get_weaviate_client(with_openai=True)
     await wvc.connect()
     try:
-        collection = wvc.collections.get("Documents")
+        # Check if user's tenant exists
+        tenant_id = str(message.user_id)
+        if not await wvc.collections.get("Documents").tenants.get_by_names([tenant_id]):
+            return []
+
+        collection = wvc.collections.get("Documents").with_tenant(tenant_id)
         response = await collection.query.near_text(
             filters=Filter.by_property("document_id").contains_any(document_ids)
             if document_ids

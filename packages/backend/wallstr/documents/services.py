@@ -173,7 +173,9 @@ class DocumentService(BaseService):
             wvc = get_weaviate_client(with_openai=True)
             await wvc.connect()
             try:
-                collection = wvc.collections.get(collection_name)
+                collection = wvc.collections.get(collection_name).with_tenant(
+                    str(document.user_id)
+                )
                 await collection.data.delete_many(
                     where=Filter.by_property("record_id").equal(str(record_id))
                 )
