@@ -48,7 +48,14 @@ class ChatMessageModel(RecordModel):
         ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True
     )
     user_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
-    role: Mapped[ChatMessageRole] = mapped_column(Enum(ChatMessageRole), nullable=False)
+    role: Mapped[ChatMessageRole] = mapped_column(
+        Enum(
+            ChatMessageRole,
+            name="chat_message_role",
+            values_callable=lambda e: [i.value for i in e],
+        ),
+        nullable=False,
+    )
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     chat: Mapped[ChatModel] = relationship(back_populates="messages")
