@@ -1,11 +1,11 @@
+import { useCallback } from "react";
 import { HiMiniExclamationCircle } from "react-icons/hi2";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
-
-import type { Document, DocumentStatus } from "@/api/wallstr-sdk";
 import { twMerge } from "tailwind-merge";
-import { useCallback } from "react";
 import { throttle } from "es-toolkit";
+
 import { api } from "@/api";
+import type { Document, DocumentStatus } from "@/api/wallstr-sdk";
 
 export default function DocumentsInlineBlock({
   documents,
@@ -16,15 +16,12 @@ export default function DocumentsInlineBlock({
   className?: string;
   onDocumentOpen?: (id: string) => void;
 }) {
-  const onRestartProcessing = useCallback(
-    throttle(
-      async (id: string) =>
-        api.documents.triggerProcessing({
-          path: { document_id: id },
-        }),
-      1000,
-    ),
-    [],
+  const onRestartProcessing = throttle(
+    async (id: string) =>
+      api.documents.triggerProcessing({
+        path: { document_id: id },
+      }),
+    1000,
   );
 
   if (!documents || documents.length === 0) {

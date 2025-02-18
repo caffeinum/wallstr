@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 
 import QueryClientProvider from "@/providers/QueryClientProvider";
 
@@ -28,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <QueryClientProvider>{children}</QueryClientProvider>
+        <QueryClientProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

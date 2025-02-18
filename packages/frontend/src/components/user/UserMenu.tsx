@@ -1,19 +1,18 @@
 "use client";
-import {useCallback} from "react";
-import Link from "next/link";
-import {useRouter} from "next/navigation";
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 
-import {useQuery} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-import {api} from "@/api";
+import { api } from "@/api";
 
 export default function UserMenu() {
   const router = useRouter();
 
-  const {isPending, isError, data, error} = useQuery({
+  const { isPending, isError, data, error } = useQuery({
     queryKey: ["/auth/me"],
     queryFn: async () => {
-      const {data} = await api.auth.getCurrentUser({throwOnError: true});
+      const { data } = await api.auth.getCurrentUser({ throwOnError: true });
       return data;
     },
   });
@@ -43,9 +42,6 @@ export default function UserMenu() {
           <span className="text-sm font-medium">{data?.email}</span>
         </li>
         <div className="divider my-0" />
-        <li>
-          <Link href="/app/settings">Settings</Link>
-        </li>
         <li>
           <button onClick={handleSignOut}>Sign out</button>
         </li>

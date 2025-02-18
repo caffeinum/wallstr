@@ -29,6 +29,12 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.64.1
         version: 5.64.1(@tanstack/react-query@5.64.1(react@19.0.0))(react@19.0.0)
+      ag-grid-community:
+        specifier: ^33.1.0
+        version: 33.1.0
+      ag-grid-react:
+        specifier: ^33.1.0
+        version: 33.1.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -2192,6 +2198,18 @@ packages:
   adjust-sourcemap-loader@4.0.0:
     resolution: {integrity: sha512-OXwN5b9pCUXNQHJpwwD2qP40byEmSgzj8B4ydSN0uMNYWiFmJ6x6KwUllMmfk8Rwu/HJDFR7U8ubsWBoN0Xp0A==}
     engines: {node: '>=8.9'}
+
+  ag-charts-types@11.1.0:
+    resolution: {integrity: sha512-9cu2vJuFZNrhf7o5USG5n/meTIJKhJfTIds5ziRV+FI3mT1QZME2nchu4WQnoIE8gft9ACkuhtCUgOyW44A2iQ==}
+
+  ag-grid-community@33.1.0:
+    resolution: {integrity: sha512-xPEgNjRuudfimbGytoDttjlgAjz/N+muq7Tgw2GTMuUeSG0z54kBObvJxhezOEEashVMKBpqb/YhzIE6e+opqQ==}
+
+  ag-grid-react@33.1.0:
+    resolution: {integrity: sha512-YB/t6U+P7HPcGY+ukJiVYtQNbDsNVVocDITPANsy21pfh5ojvoNfKEdieC904IPTdgjSMTpNDQJogBzTpMLTCA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
@@ -7909,6 +7927,19 @@ snapshots:
     dependencies:
       loader-utils: 2.0.4
       regex-parser: 2.3.0
+
+  ag-charts-types@11.1.0: {}
+
+  ag-grid-community@33.1.0:
+    dependencies:
+      ag-charts-types: 11.1.0
+
+  ag-grid-react@33.1.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      ag-grid-community: 33.1.0
+      prop-types: 15.8.1
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:

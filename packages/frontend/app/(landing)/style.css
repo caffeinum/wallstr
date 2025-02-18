@@ -1,0 +1,34 @@
+.ag-header-cell {
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  padding: 12px;
+  text-align: center;
+  color: #e5e7eb !important;
+}
+
+.ag-cell {
+  padding: 10px !important;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  line-height: 1.3;
+  font-size: 13px;
+  color: #e5e7eb !important;
+  /* Light gray text */
+}
+
+.ag-cell,
+.ag-header-cell {
+  padding: 10px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-row-hover {
+  background-color: #2a3447 !important;
+}
+
+.ag-root {
+  border: 1px solid #2e323f;
+}
