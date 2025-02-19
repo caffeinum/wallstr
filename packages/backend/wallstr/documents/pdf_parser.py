@@ -32,13 +32,14 @@ logger = structlog.get_logger()
 
 DETECTION_MODEL: (
     Literal["yolox"]
+    | Literal["yolox_tiny"]
     # unsupported yet
     | Literal["yolox_quantized"]
     | Literal["detectron2_onnx"]
     | Literal["detectron2_quantized"]
     | Literal["detectron2_mask_rcnn"]
     | Literal["yolox_quantized"]
-) = "yolox"
+) = "yolox_tiny"
 
 
 class Table(BaseModel):
@@ -55,24 +56,28 @@ class PdfParser:
         self.llm_with_vision = llm_with_vision
 
     async def parse(self, file_buffer: io.BytesIO) -> list[dict[str, Any]]:
-        model_name = DETECTION_MODEL
-        logger.info(f"Infer the layout with {model_name} model")
         file_buffer.seek(0)
-        loop = asyncio.get_event_loop()
-        inferred_document_layout = await loop.run_in_executor(
-            None,
-            lambda: process_data_with_model(
-                file_buffer,
-                model_name=model_name,
-                pdf_image_dpi=200,
-            ),
-        )
+
+        model_name = DETECTION_MODEL
+        async with tiktok(f"Infer the layout with {model_name} model"):
+            loop = asyncio.get_event_loop()
+            file_buffer.seek(0)
+            inferred_document_layout = await loop.run_in_executor(
+                None,
+                lambda: process_data_with_model(
+                    file_buffer,
+                    model_name=model_name,
+                    pdf_image_dpi=200,
+                ),
+            )
 
         logger.info("Extract the layout with pdfminer")
         extracted_layout, layouts_links = process_data_with_pdfminer(
             file=file_buffer,
             dpi=200,
         )
+
+
         merged_document_layout = merge_inferred_with_extracted_layout(
             inferred_document_layout=inferred_document_layout,
             extracted_layout=extracted_layout,  # type: ignore
@@ -92,7 +97,7 @@ class PdfParser:
         )
         logger.info("Chunking the file...")
         chunked_elements = dispatch.chunk(
-            elements=elements, chunking_strategy="basic", max_characters=1000
+            elements=elements, chunking_strategy="basic", max_characters=2000
         )
 
         chunked_elements_dicts = [e.to_dict() for e in chunked_elements]
