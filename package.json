@@ -8,6 +8,8 @@
   "packageManager": "pnpm@9.15.3",
   "description": "wallstrAI",
   "scripts": {
+    "build": "pnpm -F wallstr_frontend build",
+    "start": "pnpm -F wallstr_frontend start",
     "frontend:dev": "pnpm -F wallstr_frontend dev",
     "frontend:lint": "pnpm -F wallstr_frontend lint",
     "frontend:format:check": "pnpm -F wallstr_frontend format:check",
