@@ -20,10 +20,6 @@ export default function DocumentsInlineBlock({
   const queryClient = useQueryClient();
 
   const onRestartProcessing = throttle(async (id: string) => {
-    await api.documents.triggerProcessing({
-      path: { document_id: id },
-    });
-
     queryClient.setQueriesData<InfiniteData<GetChatMessagesResponse>>({ queryKey: ["/chat"] }, (old) => {
       if (!old) return old;
 
@@ -39,6 +35,10 @@ export default function DocumentsInlineBlock({
         })),
         pageParams: old.pageParams,
       };
+    });
+
+    await api.documents.triggerProcessing({
+      path: { document_id: id },
     });
   }, 1000);
 
