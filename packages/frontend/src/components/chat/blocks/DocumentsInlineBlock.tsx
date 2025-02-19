@@ -3,9 +3,10 @@ import { HiMiniExclamationCircle } from "react-icons/hi2";
 import { FaFile, FaFileImage, FaFilePdf, FaFileWord, FaFileExcel } from "react-icons/fa";
 import { twMerge } from "tailwind-merge";
 import { throttle } from "es-toolkit";
+import { useQueryClient, InfiniteData } from "@tanstack/react-query";
 
 import { api } from "@/api";
-import type { Document, DocumentStatus } from "@/api/wallstr-sdk";
+import type { Document, DocumentStatus, GetChatMessagesResponse } from "@/api/wallstr-sdk";
 
 export default function DocumentsInlineBlock({
   documents,
@@ -16,13 +17,30 @@ export default function DocumentsInlineBlock({
   className?: string;
   onDocumentOpen?: (id: string) => void;
 }) {
-  const onRestartProcessing = throttle(
-    async (id: string) =>
-      api.documents.triggerProcessing({
-        path: { document_id: id },
-      }),
-    1000,
-  );
+  const queryClient = useQueryClient();
+
+  const onRestartProcessing = throttle(async (id: string) => {
+    await api.documents.triggerProcessing({
+      path: { document_id: id },
+    });
+
+    queryClient.setQueriesData<InfiniteData<GetChatMessagesResponse>>({ queryKey: ["/chat"] }, (old) => {
+      if (!old) return old;
+
+      return {
+        pages: old.pages.map((page) => ({
+          ...page,
+          items: page.items.map((message) => ({
+            ...message,
+            documents: message.documents?.map((doc) =>
+              doc.id === id ? { ...doc, status: "processing" as DocumentStatus, error: null } : doc,
+            ),
+          })),
+        })),
+        pageParams: old.pageParams,
+      };
+    });
+  }, 1000);
 
   if (!documents || documents.length === 0) {
     return null;
