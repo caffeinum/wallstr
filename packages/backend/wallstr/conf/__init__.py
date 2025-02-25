@@ -6,9 +6,11 @@ import tomllib
 from pydantic import HttpUrl, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from wallstr.conf.models import ModelsConfig
+
 
 def get_version() -> str:
-    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
+    with open(Path(__file__).parent.parent.parent / "pyproject.toml", "rb") as f:
         data = tomllib.load(f)
         return cast(str, data["tool"]["poetry"]["version"])
 
@@ -28,6 +30,10 @@ class JWTSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_nested_delimiter="__", case_sensitive=True, extra="ignore"
+    )
+
     VERSION: str = get_version()
     ENV: Env = Env.dev
     DEBUG: bool = False
@@ -46,9 +52,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: SecretStr
 
     # Optional
-    UNSTRUCTURED_API_KEY: SecretStr | None = None
     WEAVIATE_API_URL: SecretStr | None = None
     WEAVIATE_GRPC_URL: SecretStr | None = None
+
+    MODELS: ModelsConfig = ModelsConfig()
 
     CORS_ALLOW_ORIGINS: list[str] = []
 
@@ -74,10 +81,16 @@ class Settings(BaseSettings):
             raise ValueError(f"{info.field_name} cannot be empty")
         return value
 
-    model_config = SettingsConfigDict(
-        env_file=".env", case_sensitive=True, extra="ignore"
-    )
-
 
 # https://github.com/pydantic/pydantic/issues/3753
 settings = Settings.model_validate({})
+
+
+class Config(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="CFG_",
+        env_nested_delimiter="__",
+        case_sensitive=True,
+        extra="ignore",
+    )
