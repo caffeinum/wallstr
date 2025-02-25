@@ -59,15 +59,15 @@ export default function ChatsList({
         >
           New chat...
         </Link>
-        {chats.items.map((chat) => (
+        {chats.items.map((chat, i) => (
           <Link
             key={chat.id}
             href={`/chat/${chat.slug}`}
-            className={`badge badge-md ${
+            className={`badge badge-md  ml-2 ${
               chat.slug === slug ? "badge-neutral" : "badge-ghost"
             } transition-colors cursor-pointer whitespace-nowrap`}
           >
-            {chat.title || chat.slug}
+            {chat.title || `${i + 1}. Chat #${i + 1}`}
           </Link>
         ))}
       </div>
