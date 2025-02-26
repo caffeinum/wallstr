@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 import tomllib
-from pydantic import HttpUrl, SecretStr, ValidationInfo, field_validator
+from pydantic import HttpUrl, SecretStr, ValidationInfo, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wallstr.conf.models import ModelsConfig
@@ -89,8 +89,19 @@ settings = Settings.model_validate({})
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix="CFG_",
+        env_prefix="CFG__",
         env_nested_delimiter="__",
         case_sensitive=True,
         extra="ignore",
     )
+
+    AUTH_ALLOW_SIGNUP: bool = True
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def AUTH_PROVIDERS(self) -> list[str]:
+        return []
+
+
+# https://github.com/pydantic/pydantic/issues/3753
+config = Config.model_validate({})

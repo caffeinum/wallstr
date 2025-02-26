@@ -14,7 +14,7 @@ from wallstr.auth.schemas import (
 )
 from wallstr.auth.services import AuthService, UserService
 from wallstr.auth.utils import generate_jwt
-from wallstr.conf import settings
+from wallstr.conf import config, settings
 from wallstr.openapi import generate_unique_id_function
 
 router = APIRouter(
@@ -26,20 +26,22 @@ router = APIRouter(
 logger = structlog.get_logger()
 
 
-@router.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
-async def signup(
-    data: SignUpRequest,
-    auth_svc: Annotated[AuthService, Depends(AuthService.inject_svc)],
-) -> User:
-    try:
-        user = await auth_svc.signup_with_password(data)
-    except EmailAlreadyRegisteredError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
-        ) from e
+if config.AUTH_ALLOW_SIGNUP:
 
-    return User.model_validate(user)
+    @router.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
+    async def signup(
+        data: SignUpRequest,
+        auth_svc: Annotated[AuthService, Depends(AuthService.inject_svc)],
+    ) -> User:
+        try:
+            user = await auth_svc.signup_with_password(data)
+        except EmailAlreadyRegisteredError as e:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered",
+            ) from e
+
+        return User.model_validate(user)
 
 
 @router.post(
