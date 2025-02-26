@@ -53,7 +53,7 @@ export default function SignInForm({
       <h2 className="text-2xl font-bold text-center">Sign In</h2>
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {error && (
-          <div className="alert alert-error">
+          <div className="alert alert-error mt-2">
             <span>{error}</span>
           </div>
         )}
@@ -92,11 +92,13 @@ export default function SignInForm({
             placeholder="Enter your password"
           />
           {errors.password && <span className="text-error text-sm">{errors.password.message}</span>}
+          {/* Disable until implemented
           <div className="text-sm text-right">
             <a href={urls.forgotPassword} className="label link link-hover">
               Forgot password?
             </a>
           </div>
+          */}
         </div>
 
         <button type="submit" className="btn btn-neutral w-full" disabled={isSubmitting}>
