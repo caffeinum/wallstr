@@ -26,22 +26,30 @@ router = APIRouter(
 logger = structlog.get_logger()
 
 
-if config.AUTH_ALLOW_SIGNUP:
+@router.post(
+    "/signup",
+    response_model=User,
+    status_code=status.HTTP_201_CREATED,
+    responses={405: {"description": "Signup is disabled"}},
+)
+async def signup(
+    data: SignUpRequest,
+    auth_svc: Annotated[AuthService, Depends(AuthService.inject_svc)],
+) -> User:
+    if not config.AUTH_ALLOW_SIGNUP:
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail="Signup is disabled"
+        )
 
-    @router.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
-    async def signup(
-        data: SignUpRequest,
-        auth_svc: Annotated[AuthService, Depends(AuthService.inject_svc)],
-    ) -> User:
-        try:
-            user = await auth_svc.signup_with_password(data)
-        except EmailAlreadyRegisteredError as e:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already registered",
-            ) from e
+    try:
+        user = await auth_svc.signup_with_password(data)
+    except EmailAlreadyRegisteredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        ) from e
 
-        return User.model_validate(user)
+    return User.model_validate(user)
 
 
 @router.post(

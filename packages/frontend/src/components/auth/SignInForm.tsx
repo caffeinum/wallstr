@@ -6,12 +6,20 @@ import { useRouter } from "next/navigation";
 import { api } from "@/api";
 import { setToken } from "@/utils/auth";
 
-interface SignInFormData {
+type SignInFormData = {
   email: string;
   password: string;
-}
+};
 
-export default function SignInForm({ urls }: { urls: { forgotPassword: string; signUp: string } }) {
+export default function SignInForm({
+  urls,
+  authProviders,
+  allowSignup,
+}: {
+  urls: { forgotPassword: string; signUp: string };
+  authProviders: string[];
+  allowSignup: boolean;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const {
@@ -94,24 +102,37 @@ export default function SignInForm({ urls }: { urls: { forgotPassword: string; s
         <button type="submit" className="btn btn-neutral w-full" disabled={isSubmitting}>
           {isSubmitting ? "Signing In..." : "Sign In"}
         </button>
+        {authProviders.length > 0 ? (
+          <>
+            <div className="divider">or sign in with</div>
 
-        <div className="divider">or sign in with</div>
+            <div className="flex flex-col space-y-2">
+              {authProviders.includes("google") && (
+                <button className="btn btn-outline w-full" disabled>
+                  Sign in with Google
+                </button>
+              )}
 
-        <div className="flex flex-col space-y-2">
-          <button className="btn btn-outline w-full" disabled>
-            Sign in with Google
-          </button>
-
-          <button className="btn btn-outline w-full" disabled>
-            Sign in with GitHub
-          </button>
-        </div>
+              {authProviders.includes("github") && (
+                <button className="btn btn-outline w-full" disabled>
+                  Sign in with GitHub
+                </button>
+              )}
+            </div>
+          </>
+        ) : null}
 
         <p className="text-sm text-center text-gray-600">
           Don&apos;t have an account?{" "}
-          <a href={urls.signUp} className="link link-primary">
-            Sign up here
-          </a>
+          {allowSignup ? (
+            <a href={urls.signUp} className="link link-primary">
+              Sign up here
+            </a>
+          ) : (
+            <a href="mailto:team@wallstr.chat" className="link link-primary">
+              Message to us
+            </a>
+          )}
         </p>
       </form>
     </div>

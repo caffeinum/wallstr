@@ -14,3 +14,14 @@ class SSE(BaseModel):
     @computed_field
     def type(self) -> str:
         raise NotImplementedError("Subclasses must define a `type` field.")
+
+
+class AuthConfig(BaseModel):
+    allow_signup: bool
+    providers: list[str]
+
+
+class ConfigResponse(BaseModel):
+    name: str = "Wallstr"
+    version: str
+    auth: AuthConfig

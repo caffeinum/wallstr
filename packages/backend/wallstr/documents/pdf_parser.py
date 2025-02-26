@@ -77,7 +77,6 @@ class PdfParser:
             dpi=200,
         )
 
-
         merged_document_layout = merge_inferred_with_extracted_layout(
             inferred_document_layout=inferred_document_layout,
             extracted_layout=extracted_layout,  # type: ignore

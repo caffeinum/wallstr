@@ -67,8 +67,8 @@ def get_llm(
 
 def get_llm_with_vision(
     model: SUPPORTED_LLM_MODELS_WITH_VISION = "gpt-4o-mini",
-) -> ChatOpenAI:
+) -> ChatOpenAI | AzureChatOpenAI:
     llm = get_llm(model)
-    if not isinstance(llm, ChatOpenAI):
+    if not isinstance(llm, ChatOpenAI) and not isinstance(llm, AzureChatOpenAI):
         raise ValueError(f"Only ChatOpenAI model supports vision, got {llm}")
     return llm

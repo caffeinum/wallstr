@@ -45,6 +45,8 @@ import type {
   ConnectError,
   RootData,
   RootResponse,
+  GetConfigData,
+  GetConfigResponse,
 } from "./types.gen";
 
 export const client = createClient(createConfig());
@@ -316,6 +318,16 @@ export class DefaultService {
   public static root<ThrowOnError extends boolean = false>(options?: Options<RootData, ThrowOnError>) {
     return (options?.client ?? client).get<RootResponse, unknown, ThrowOnError>({
       url: "/",
+      ...options,
+    });
+  }
+
+  /**
+   * Get Config
+   */
+  public static getConfig<ThrowOnError extends boolean = false>(options?: Options<GetConfigData, ThrowOnError>) {
+    return (options?.client ?? client).get<GetConfigResponse, unknown, ThrowOnError>({
+      url: "/config",
       ...options,
     });
   }

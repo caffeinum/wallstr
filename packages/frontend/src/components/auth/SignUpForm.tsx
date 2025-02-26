@@ -1,9 +1,9 @@
 "use client";
-import {useCallback, useState} from "react";
-import {useForm} from "react-hook-form";
-import {useRouter} from "next/navigation";
+import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
-import {api} from "@/api";
+import { api } from "@/api";
 
 type SignUpFormData = {
   email: string;
@@ -12,20 +12,20 @@ type SignUpFormData = {
   fullname: string;
 };
 
-export default function SignUpForm({urls}: {urls: {signIn: string}}) {
+export default function SignUpForm({ urls, authProviders }: { urls: { signIn: string }; authProviders: string[] }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const {
     handleSubmit,
     register,
-    formState: {errors, isSubmitting},
+    formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>();
 
   const onSubmit = useCallback(
     async (data: SignUpFormData) => {
       try {
         setError(null);
-        const {response} = await api.auth.signup({
+        const { response } = await api.auth.signup({
           body: data,
         });
 
@@ -145,17 +145,25 @@ export default function SignUpForm({urls}: {urls: {signIn: string}}) {
           {isSubmitting ? "Creating Account..." : "Create Account"}
         </button>
 
-        <div className="divider">or sign up with</div>
+        {authProviders.length > 0 && (
+          <>
+            <div className="divider">or sign up with</div>
 
-        <div className="flex flex-col space-y-2">
-          <button className="btn btn-outline w-full" disabled>
-            Sign up with Google
-          </button>
+            <div className="flex flex-col space-y-2">
+              {authProviders.includes("google") && (
+                <button className="btn btn-outline w-full" disabled>
+                  Sign up with Google
+                </button>
+              )}
 
-          <button className="btn btn-outline w-full" disabled>
-            Sign up with GitHub
-          </button>
-        </div>
+              {authProviders.includes("github") && (
+                <button className="btn btn-outline w-full" disabled>
+                  Sign up with GitHub
+                </button>
+              )}
+            </div>
+          </>
+        )}
 
         <p className="text-sm text-center text-gray-600">
           Already have an account?{" "}

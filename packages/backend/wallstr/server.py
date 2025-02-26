@@ -10,9 +10,8 @@ from weaviate import WeaviateAsyncClient
 
 from wallstr.auth.api import router as auth_router
 from wallstr.chat.api import router as chat_router
-from wallstr.chat.dev_api import router as dev_router
 from wallstr.conf import config, settings
-from wallstr.core.schemas import ConfigResponse
+from wallstr.core.schemas import AuthConfig, ConfigResponse
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from wallstr.documents.api import router as documents_router
 from wallstr.documents.weaviate import get_weaviate_client
@@ -76,7 +75,6 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(chat_router)
-app.include_router(dev_router)
 app.include_router(documents_router)
 app.include_router(sse_router)
 
@@ -90,10 +88,9 @@ async def root() -> dict[str, str]:
 async def get_config() -> ConfigResponse:
     return ConfigResponse(
         version=settings.VERSION,
-        auth={
-            "allow_signup": config.AUTH_ALLOW_SIGNUP,
-            "providers": config.AUTH_PROVIDERS,
-        },
+        auth=AuthConfig(
+            allow_signup=config.AUTH_ALLOW_SIGNUP, providers=config.AUTH_PROVIDERS
+        ),
     )
 
 

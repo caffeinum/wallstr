@@ -5,6 +5,11 @@ export type AccessToken = {
   token_type?: string;
 };
 
+export type AuthConfig = {
+  allow_signup: boolean;
+  providers: Array<string>;
+};
+
 export type Chat = {
   id: string;
   slug: string;
@@ -22,6 +27,12 @@ export type ChatMessage = {
 };
 
 export type ChatMessageRole = "user" | "assistant";
+
+export type ConfigResponse = {
+  name?: string;
+  version: string;
+  auth: AuthConfig;
+};
 
 export type Document = {
   id: string;
@@ -114,6 +125,10 @@ export type SignupData = {
 };
 
 export type SignupErrors = {
+  /**
+   * Signup is disabled
+   */
+  405: unknown;
   /**
    * Validation Error
    */
@@ -555,3 +570,19 @@ export type RootResponses = {
 };
 
 export type RootResponse = RootResponses[keyof RootResponses];
+
+export type GetConfigData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/config";
+};
+
+export type GetConfigResponses = {
+  /**
+   * Successful Response
+   */
+  200: ConfigResponse;
+};
+
+export type GetConfigResponse = GetConfigResponses[keyof GetConfigResponses];
