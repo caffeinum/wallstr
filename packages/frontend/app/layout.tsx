@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 import QueryClientProvider from "@/providers/QueryClientProvider";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {process.env.NEXT_PUBLIC_GA_TAG ? <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_TAG} /> : null}
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider>
           <ThemeProvider>{children}</ThemeProvider>
