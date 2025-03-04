@@ -7,6 +7,7 @@ from typing import Any, Literal, cast
 
 import pdf2image
 import structlog
+from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import HumanMessage
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -25,7 +26,7 @@ from unstructured_inference.utils import LayoutElement
 from unstructured_ingest.utils.chunking import assign_and_map_hash_ids
 
 from wallstr.conf import settings
-from wallstr.core.llm import LLMModel
+from wallstr.core.llm import LLMModel, estimate_input_tokens
 from wallstr.core.utils import tiktok
 
 logger = structlog.get_logger()
@@ -84,9 +85,13 @@ class PdfParser:
         )
         cleaned_document_layout = clean_pdfminer_inner_elements(merged_document_layout)
         logger.info("Parsing document tables")
-        final_document_layout = await self._parse_tables_with_llm(
-            file_buffer, cleaned_document_layout
-        )
+        with get_openai_callback() as cb:
+            final_document_layout = await self._parse_tables_with_llm(
+                file_buffer, cleaned_document_layout
+            )
+            logger.info(
+                f"OpenAI tokens used: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$"
+            )
         elements = document_to_element_list(
             final_document_layout,
             sortable=True,
@@ -176,11 +181,15 @@ class PdfParser:
                 ]
             ),
         ]
+        estimated_tokens = estimate_input_tokens(
+            self.llm_with_vision, messages, image=cropped_image
+        )
+        logger.info(f"Estimated input tokens: {estimated_tokens:_}")
         try:
             response = await self.llm_with_vision.with_structured_output(Table).ainvoke(
                 messages
             )
-            logger.info(f"Extracted table text: {response}")
+            logger.debug(f"Extracted table text: {response}")
         except Exception as e:
             logger.error(f"Failed to extract table text: {e}")
             return ""
