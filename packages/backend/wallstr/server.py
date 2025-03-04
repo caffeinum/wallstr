@@ -3,12 +3,13 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TypedDict
 
+import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 from weaviate import WeaviateAsyncClient
 
-import wallstr.sentry  #  type: ignore[unused-import]
+import wallstr.sentry  #  type: ignore[import]
 from wallstr.auth.api import router as auth_router
 from wallstr.chat.api import router as chat_router
 from wallstr.conf import config, settings
@@ -17,13 +18,9 @@ from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_ma
 from wallstr.documents.api import router as documents_router
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import configure_logging
-from wallstr.openapi import (
-    configure_openapi,
-    generate_unique_id_function,
-)
+from wallstr.openapi import configure_openapi, generate_unique_id_function
 from wallstr.sse.api import router as sse_router
 
-configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -37,6 +34,8 @@ class AppState(TypedDict):
 async def lifespan(app: FastAPI) -> AsyncGenerator[AppState, None]:
     engine = create_async_engine(settings.DATABASE_URL, "wallstr")
     session_maker = create_session_maker(engine)
+    if settings.LOGFIRE_TOKEN:
+        logfire.instrument_sqlalchemy(engine)
 
     redis = Redis.from_url(settings.REDIS_URL.get_secret_value())
     wvc = get_weaviate_client(with_openai=True)
@@ -95,4 +94,6 @@ async def get_config() -> ConfigResponse:
     )
 
 
+configure_logging(name="api")
+logfire.instrument_fastapi(app, capture_headers=True)
 configure_openapi(app)

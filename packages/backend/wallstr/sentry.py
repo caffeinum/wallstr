@@ -18,4 +18,3 @@ if settings.SENTRY_DSN:
             "continuous_profiling_auto_start": True,
         },
     )
-

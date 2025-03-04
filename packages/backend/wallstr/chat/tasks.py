@@ -7,6 +7,7 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
+from structlog.contextvars import bind_contextvars
 from weaviate.classes.query import Filter, MetadataQuery
 from weaviate.collections.classes.internal import Object
 from weaviate.collections.classes.types import WeaviateProperties
@@ -18,7 +19,7 @@ from wallstr.chat.schemas import (
     ChatMessageStartSSE,
 )
 from wallstr.chat.services import ChatService
-from wallstr.core.llm import get_llm
+from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, get_llm
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import debug
 from wallstr.worker import dramatiq
@@ -27,7 +28,9 @@ logger = structlog.get_logger()
 
 
 @dramatiq.actor  # type: ignore
-async def process_chat_message(message_id: str, openai_model: str = "gpt-4o") -> None:
+async def process_chat_message(
+    message_id: str, model: SUPPORTED_LLM_MODELS_TYPES = "gpt-4o"
+) -> None:
     ctx = CurrentMessage.get_current_message()
     if not ctx:
         raise Exception("No ctx message")
@@ -49,11 +52,12 @@ async def process_chat_message(message_id: str, openai_model: str = "gpt-4o") ->
     if not redis:
         raise Exception("No redis")
 
+    bind_contextvars(chat_id=message.chat_id, message_id=message.id)
     topic = f"{message.user_id}:{message.chat_id}:{message.id}"
     new_message_id = uuid4()
     await redis.publish(topic, ChatMessageStartSSE(id=new_message_id).model_dump_json())
 
-    llm = get_llm(model=openai_model)
+    llm = get_llm(model=model)
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
     llm_context = await get_llm_context(db_session, document_ids, message)
     chunks: list[str] = []

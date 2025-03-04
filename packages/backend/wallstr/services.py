@@ -37,6 +37,6 @@ class BaseService:
             yield
             return
         async with self.db.begin():
-            logger.trace(f"Tx start from {from_.function}")
+            logger.trace(f"tx starts from {from_.function}")
             yield
-        logger.trace(f"Tx commit from {from_.function}")
+        logger.trace(f"tx commits from {from_.function}")

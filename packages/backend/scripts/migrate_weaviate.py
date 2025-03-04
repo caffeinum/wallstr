@@ -7,7 +7,7 @@ from weaviate.classes.config import Configure, DataType, Property
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import configure_logging
 
-configure_logging()
+configure_logging(name="migrate_weaviate")
 
 logger = structlog.get_logger()
 

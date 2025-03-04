@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     WEAVIATE_API_URL: SecretStr | None = None
     WEAVIATE_GRPC_URL: SecretStr | None = None
     SENTRY_DSN: SecretStr | None = None
+    LOGFIRE_TOKEN: SecretStr | None = None
 
     MODELS: ModelsConfig = ModelsConfig()
 

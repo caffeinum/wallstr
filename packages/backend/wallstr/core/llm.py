@@ -14,7 +14,7 @@ from wallstr.conf import settings
 
 logger = structlog.get_logger()
 
-SUPPORTED_LLM_MODELS = Literal["llama3.2", "gpt-4o", "gpt-4o-mini", "llava"]
+SUPPORTED_LLM_MODELS_TYPES = Literal["llama3.2", "gpt-4o", "gpt-4o-mini", "llava"]
 SUPPORTED_LLM_MODELS_WITH_VISION = ["gpt-4o-mini", "llava"]
 SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = Literal["gpt-4o-mini", "llava"]
 
@@ -22,7 +22,7 @@ LLMModel = ChatOllama | ChatOpenAI | AzureChatOpenAI
 
 
 def get_llm(
-    model: SUPPORTED_LLM_MODELS | None = None,
+    model: SUPPORTED_LLM_MODELS_TYPES | None = None,
 ) -> LLMModel:
     if model is not None:
         match model:

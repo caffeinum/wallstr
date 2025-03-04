@@ -30,7 +30,7 @@ async def session_engine() -> AsyncGenerator[AsyncEngine]:
 async def configure(session_engine: AsyncEngine) -> AsyncGenerator[None]:
     async with session_engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.create_all)
-    configure_logging()
+    configure_logging(name="test")
     yield
     async with session_engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.drop_all)

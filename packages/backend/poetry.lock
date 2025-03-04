@@ -266,6 +266,21 @@ test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypo
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
+name = "asgiref"
+version = "3.8.1"
+description = "ASGI specs, helper code, and adapters"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "asgiref-3.8.1-py3-none-any.whl", hash = "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"},
+    {file = "asgiref-3.8.1.tar.gz", hash = "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"},
+]
+
+[package.extras]
+tests = ["mypy (>=0.800)", "pytest", "pytest-asyncio"]
+
+[[package]]
 name = "asyncpg"
 version = "0.30.0"
 description = "An asyncio PostgreSQL driver"
@@ -1037,7 +1052,7 @@ version = "1.2.18"
 description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec"},
     {file = "deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d"},
@@ -1258,6 +1273,21 @@ files = [
 
 [package.extras]
 tests = ["pytest"]
+
+[[package]]
+name = "executing"
+version = "2.2.0"
+description = "Get the currently executing AST node of a frame, and other information"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "executing-2.2.0-py2.py3-none-any.whl", hash = "sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa"},
+    {file = "executing-2.2.0.tar.gz", hash = "sha256:5d108c028108fe2551d1a7b2e8b713341e2cb4fc0aa7dcf966fa4327a5226755"},
+]
+
+[package.extras]
+tests = ["asttokens (>=2.1.0)", "coverage", "coverage-enable-subprocess", "ipython", "littleutils", "pytest", "rich ; python_version >= \"3.11\""]
 
 [[package]]
 name = "fastapi"
@@ -1704,7 +1734,7 @@ version = "1.68.0"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "googleapis_common_protos-1.68.0-py2.py3-none-any.whl", hash = "sha256:aaf179b2f81df26dfadac95def3b16a95064c76a5f45f07e4c68a21bb371c4ac"},
     {file = "googleapis_common_protos-1.68.0.tar.gz", hash = "sha256:95d38161f4f9af0d9423eed8fb7b64ffd2568c3464eb542ff02c5bfa1953ab3c"},
@@ -2314,7 +2344,7 @@ version = "8.5.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "importlib_metadata-8.5.0-py3-none-any.whl", hash = "sha256:45e54197d28b7a7f1559e60b95e7c567032b602131fbd588f1497f47880aa68b"},
     {file = "importlib_metadata-8.5.0.tar.gz", hash = "sha256:71522656f0abace1d072b9e5481a48f07c138e00f079c38c8f883823f9c26bd7"},
@@ -2887,6 +2917,51 @@ langsmith-pyo3 = ["langsmith-pyo3 (>=0.1.0rc2,<0.2.0)"]
 pytest = ["pytest (>=7.0.0)", "rich (>=13.9.4,<14.0.0)"]
 
 [[package]]
+name = "logfire"
+version = "3.7.0"
+description = "The best Python observability tool! 🪵🔥"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "logfire-3.7.0-py3-none-any.whl", hash = "sha256:634bdb23f30eb532bb137f10d26b709bc19d1384a9af458d1097e483fcd3d9f2"},
+    {file = "logfire-3.7.0.tar.gz", hash = "sha256:44a7eec73a038bd9c0f81c2c8c750a66414ee1615a714c51d6e7e696f634b24e"},
+]
+
+[package.dependencies]
+executing = ">=2.0.1"
+opentelemetry-exporter-otlp-proto-http = ">=1.21.0,<1.31.0"
+opentelemetry-instrumentation = ">=0.41b0"
+opentelemetry-instrumentation-fastapi = {version = ">=0.42b0", optional = true, markers = "extra == \"fastapi\""}
+opentelemetry-instrumentation-sqlalchemy = {version = ">=0.42b0", optional = true, markers = "extra == \"sqlalchemy\""}
+opentelemetry-sdk = ">=1.21.0,<1.31.0"
+protobuf = ">=4.23.4"
+rich = ">=13.4.2"
+typing-extensions = ">=4.1.0"
+
+[package.extras]
+aiohttp = ["opentelemetry-instrumentation-aiohttp-client (>=0.42b0)"]
+asgi = ["opentelemetry-instrumentation-asgi (>=0.42b0)"]
+asyncpg = ["opentelemetry-instrumentation-asyncpg (>=0.42b0)"]
+aws-lambda = ["opentelemetry-instrumentation-aws-lambda (>=0.42b0)"]
+celery = ["opentelemetry-instrumentation-celery (>=0.42b0)"]
+django = ["opentelemetry-instrumentation-django (>=0.42b0)"]
+fastapi = ["opentelemetry-instrumentation-fastapi (>=0.42b0)"]
+flask = ["opentelemetry-instrumentation-flask (>=0.42b0)"]
+httpx = ["opentelemetry-instrumentation-httpx (>=0.42b0)"]
+mysql = ["opentelemetry-instrumentation-mysql (>=0.42b0)"]
+psycopg = ["opentelemetry-instrumentation-psycopg (>=0.42b0)", "packaging"]
+psycopg2 = ["opentelemetry-instrumentation-psycopg2 (>=0.42b0)", "packaging"]
+pymongo = ["opentelemetry-instrumentation-pymongo (>=0.42b0)"]
+redis = ["opentelemetry-instrumentation-redis (>=0.42b0)"]
+requests = ["opentelemetry-instrumentation-requests (>=0.42b0)"]
+sqlalchemy = ["opentelemetry-instrumentation-sqlalchemy (>=0.42b0)"]
+sqlite3 = ["opentelemetry-instrumentation-sqlite3 (>=0.42b0)"]
+starlette = ["opentelemetry-instrumentation-starlette (>=0.42b0)"]
+system-metrics = ["opentelemetry-instrumentation-system-metrics (>=0.42b0)"]
+wsgi = ["opentelemetry-instrumentation-wsgi (>=0.42b0)"]
+
+[[package]]
 name = "lxml"
 version = "5.3.1"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -3067,7 +3142,7 @@ version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
     {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
@@ -3241,7 +3316,7 @@ version = "0.1.2"
 description = "Markdown URL utilities"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -4009,7 +4084,7 @@ version = "1.30.0"
 description = "OpenTelemetry Python API"
 optional = false
 python-versions = ">=3.8"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "opentelemetry_api-1.30.0-py3-none-any.whl", hash = "sha256:d5f5284890d73fdf47f843dda3210edf37a38d66f44f2b5aedc1e89ed455dc09"},
     {file = "opentelemetry_api-1.30.0.tar.gz", hash = "sha256:375893400c1435bf623f7dfb3bcd44825fe6b56c34d0667c542ea8257b1a1240"},
@@ -4020,12 +4095,147 @@ deprecated = ">=1.2.6"
 importlib-metadata = ">=6.0,<=8.5.0"
 
 [[package]]
+name = "opentelemetry-exporter-otlp-proto-common"
+version = "1.30.0"
+description = "OpenTelemetry Protobuf encoding"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_exporter_otlp_proto_common-1.30.0-py3-none-any.whl", hash = "sha256:5468007c81aa9c44dc961ab2cf368a29d3475977df83b4e30aeed42aa7bc3b38"},
+    {file = "opentelemetry_exporter_otlp_proto_common-1.30.0.tar.gz", hash = "sha256:ddbfbf797e518411857d0ca062c957080279320d6235a279f7b64ced73c13897"},
+]
+
+[package.dependencies]
+opentelemetry-proto = "1.30.0"
+
+[[package]]
+name = "opentelemetry-exporter-otlp-proto-http"
+version = "1.30.0"
+description = "OpenTelemetry Collector Protobuf over HTTP Exporter"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_exporter_otlp_proto_http-1.30.0-py3-none-any.whl", hash = "sha256:9578e790e579931c5ffd50f1e6975cbdefb6a0a0a5dea127a6ae87df10e0a589"},
+    {file = "opentelemetry_exporter_otlp_proto_http-1.30.0.tar.gz", hash = "sha256:c3ae75d4181b1e34a60662a6814d0b94dd33b628bee5588a878bed92cee6abdc"},
+]
+
+[package.dependencies]
+deprecated = ">=1.2.6"
+googleapis-common-protos = ">=1.52,<2.0"
+opentelemetry-api = ">=1.15,<2.0"
+opentelemetry-exporter-otlp-proto-common = "1.30.0"
+opentelemetry-proto = "1.30.0"
+opentelemetry-sdk = ">=1.30.0,<1.31.0"
+requests = ">=2.7,<3.0"
+
+[[package]]
+name = "opentelemetry-instrumentation"
+version = "0.51b0"
+description = "Instrumentation Tools & Auto Instrumentation for OpenTelemetry Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_instrumentation-0.51b0-py3-none-any.whl", hash = "sha256:c6de8bd26b75ec8b0e54dff59e198946e29de6a10ec65488c357d4b34aa5bdcf"},
+    {file = "opentelemetry_instrumentation-0.51b0.tar.gz", hash = "sha256:4ca266875e02f3988536982467f7ef8c32a38b8895490ddce9ad9604649424fa"},
+]
+
+[package.dependencies]
+opentelemetry-api = ">=1.4,<2.0"
+opentelemetry-semantic-conventions = "0.51b0"
+packaging = ">=18.0"
+wrapt = ">=1.0.0,<2.0.0"
+
+[[package]]
+name = "opentelemetry-instrumentation-asgi"
+version = "0.51b0"
+description = "ASGI instrumentation for OpenTelemetry"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_instrumentation_asgi-0.51b0-py3-none-any.whl", hash = "sha256:e8072993db47303b633c6ec1bc74726ba4d32bd0c46c28dfadf99f79521a324c"},
+    {file = "opentelemetry_instrumentation_asgi-0.51b0.tar.gz", hash = "sha256:b3fe97c00f0bfa934371a69674981d76591c68d937b6422a5716ca21081b4148"},
+]
+
+[package.dependencies]
+asgiref = ">=3.0,<4.0"
+opentelemetry-api = ">=1.12,<2.0"
+opentelemetry-instrumentation = "0.51b0"
+opentelemetry-semantic-conventions = "0.51b0"
+opentelemetry-util-http = "0.51b0"
+
+[package.extras]
+instruments = ["asgiref (>=3.0,<4.0)"]
+
+[[package]]
+name = "opentelemetry-instrumentation-fastapi"
+version = "0.51b0"
+description = "OpenTelemetry FastAPI Instrumentation"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_instrumentation_fastapi-0.51b0-py3-none-any.whl", hash = "sha256:10513bbc11a1188adb9c1d2c520695f7a8f2b5f4de14e8162098035901cd6493"},
+    {file = "opentelemetry_instrumentation_fastapi-0.51b0.tar.gz", hash = "sha256:1624e70f2f4d12ceb792d8a0c331244cd6723190ccee01336273b4559bc13abc"},
+]
+
+[package.dependencies]
+opentelemetry-api = ">=1.12,<2.0"
+opentelemetry-instrumentation = "0.51b0"
+opentelemetry-instrumentation-asgi = "0.51b0"
+opentelemetry-semantic-conventions = "0.51b0"
+opentelemetry-util-http = "0.51b0"
+
+[package.extras]
+instruments = ["fastapi (>=0.58,<1.0)"]
+
+[[package]]
+name = "opentelemetry-instrumentation-sqlalchemy"
+version = "0.51b0"
+description = "OpenTelemetry SQLAlchemy instrumentation"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_instrumentation_sqlalchemy-0.51b0-py3-none-any.whl", hash = "sha256:5ff4816228b496aef1511149e2b17a25e0faacec4d5eb65bf18a9964af40f1af"},
+    {file = "opentelemetry_instrumentation_sqlalchemy-0.51b0.tar.gz", hash = "sha256:dbfe95b69006017f903dda194606be458d54789e6b3419d37161fb8861bb98a5"},
+]
+
+[package.dependencies]
+opentelemetry-api = ">=1.12,<2.0"
+opentelemetry-instrumentation = "0.51b0"
+opentelemetry-semantic-conventions = "0.51b0"
+packaging = ">=21.0"
+wrapt = ">=1.11.2"
+
+[package.extras]
+instruments = ["sqlalchemy (>=1.0.0,<2.1.0)"]
+
+[[package]]
+name = "opentelemetry-proto"
+version = "1.30.0"
+description = "OpenTelemetry Python Proto"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_proto-1.30.0-py3-none-any.whl", hash = "sha256:c6290958ff3ddacc826ca5abbeb377a31c2334387352a259ba0df37c243adc11"},
+    {file = "opentelemetry_proto-1.30.0.tar.gz", hash = "sha256:afe5c9c15e8b68d7c469596e5b32e8fc085eb9febdd6fb4e20924a93a0389179"},
+]
+
+[package.dependencies]
+protobuf = ">=5.0,<6.0"
+
+[[package]]
 name = "opentelemetry-sdk"
 version = "1.30.0"
 description = "OpenTelemetry Python SDK"
 optional = false
 python-versions = ">=3.8"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "opentelemetry_sdk-1.30.0-py3-none-any.whl", hash = "sha256:14fe7afc090caad881addb6926cec967129bd9260c4d33ae6a217359f6b61091"},
     {file = "opentelemetry_sdk-1.30.0.tar.gz", hash = "sha256:c9287a9e4a7614b9946e933a67168450b9ab35f08797eb9bc77d998fa480fa18"},
@@ -4042,7 +4252,7 @@ version = "0.51b0"
 description = "OpenTelemetry Semantic Conventions"
 optional = false
 python-versions = ">=3.8"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "opentelemetry_semantic_conventions-0.51b0-py3-none-any.whl", hash = "sha256:fdc777359418e8d06c86012c3dc92c88a6453ba662e941593adb062e48c2eeae"},
     {file = "opentelemetry_semantic_conventions-0.51b0.tar.gz", hash = "sha256:3fabf47f35d1fd9aebcdca7e6802d86bd5ebc3bc3408b7e3248dde6e87a18c47"},
@@ -4051,6 +4261,18 @@ files = [
 [package.dependencies]
 deprecated = ">=1.2.6"
 opentelemetry-api = "1.30.0"
+
+[[package]]
+name = "opentelemetry-util-http"
+version = "0.51b0"
+description = "Web util for OpenTelemetry"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "opentelemetry_util_http-0.51b0-py3-none-any.whl", hash = "sha256:0561d7a6e9c422b9ef9ae6e77eafcfcd32a2ab689f5e801475cbb67f189efa20"},
+    {file = "opentelemetry_util_http-0.51b0.tar.gz", hash = "sha256:05edd19ca1cc3be3968b1e502fd94816901a365adbeaab6b6ddb974384d3a0b9"},
+]
 
 [[package]]
 name = "orjson"
@@ -4785,7 +5007,7 @@ version = "5.29.3"
 description = ""
 optional = false
 python-versions = ">=3.8"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "protobuf-5.29.3-cp310-abi3-win32.whl", hash = "sha256:3ea51771449e1035f26069c4c7fd51fba990d07bc55ba80701c78f886bf9c888"},
     {file = "protobuf-5.29.3-cp310-abi3-win_amd64.whl", hash = "sha256:a4fa6f80816a9a0678429e84973f2f98cbc218cca434abe8db2ad0bffc98503a"},
@@ -5075,7 +5297,7 @@ version = "2.19.1"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
     {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
@@ -5702,7 +5924,7 @@ version = "13.9.4"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.8.0"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
     {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
@@ -8107,7 +8329,7 @@ version = "3.21.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
-groups = ["worker"]
+groups = ["main", "worker"]
 files = [
     {file = "zipp-3.21.0-py3-none-any.whl", hash = "sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931"},
     {file = "zipp-3.21.0.tar.gz", hash = "sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4"},
@@ -8311,4 +8533,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "80cdb02ee6406911e5031445d4c505e60816632bb0dab097505bdf85477b7cab"
+content-hash = "e06471c32340d71760d0c9902ed5572162530f805d5fd6fd8fdc3454bef4eb99"

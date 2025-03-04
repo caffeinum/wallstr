@@ -86,12 +86,13 @@ class PdfParser:
         cleaned_document_layout = clean_pdfminer_inner_elements(merged_document_layout)
         logger.info("Parsing document tables")
         with get_openai_callback() as cb:
-            final_document_layout = await self._parse_tables_with_llm(
+            final_document_layout, estimated_tokens = await self._parse_tables_with_llm(
                 file_buffer, cleaned_document_layout
             )
             logger.info(
                 f"OpenAI tokens used: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$"
             )
+            logger.info(f"OpenAI estimated tokens: {estimated_tokens:_}")
         elements = document_to_element_list(
             final_document_layout,
             sortable=True,
@@ -112,11 +113,12 @@ class PdfParser:
 
     async def _parse_tables_with_llm(
         self, file_buffer: io.BytesIO, layout: DocumentLayout
-    ) -> DocumentLayout:
-        async def extract_table_text(
-            image: Image.Image, element: LayoutElement
-        ) -> None:
-            element.text = await self._extract_table_text(image, element)
+    ) -> tuple[DocumentLayout, int]:
+        async def extract_table_text(image: Image.Image, element: LayoutElement) -> int:
+            element.text, estimated_tokens = await self._extract_table_text(
+                image, element
+            )
+            return estimated_tokens
 
         async with tiktok("Extracting tables from layout"):
             tasks = []
@@ -139,14 +141,14 @@ class PdfParser:
 
             try:
                 # TODO: add rate limiting per user
-                await asyncio.gather(*tasks)
+                estimated_tokens = sum(await asyncio.gather(*tasks))
             except Exception as e:
                 logger.exception(f"Failed to extract table text: {e}")
-        return layout
+        return layout, estimated_tokens
 
     async def _extract_table_text(
         self, image: Image.Image, element: LayoutElement
-    ) -> str:
+    ) -> tuple[str, int]:
         padding = 1
         cropped_image = image.crop(
             (
@@ -189,12 +191,12 @@ class PdfParser:
             response = await self.llm_with_vision.with_structured_output(Table).ainvoke(
                 messages
             )
-            logger.debug(f"Extracted table text: {response}")
+            response = cast(Table, response)
+            logger.debug("Extracted table text", data=response.model_dump())
         except Exception as e:
             logger.error(f"Failed to extract table text: {e}")
-            return ""
+            return "", 0
 
-        response = cast(Table, response)
         text = f"""
         Table: {response.title}
         Description:
@@ -202,4 +204,4 @@ class PdfParser:
         Data:
         {response.data}
         """
-        return text
+        return text, estimated_tokens

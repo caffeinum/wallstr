@@ -4,6 +4,7 @@ import sys
 from collections.abc import Iterable
 from typing import Any, cast
 
+import logfire
 import rich
 import structlog
 import uvicorn.logging
@@ -53,9 +54,11 @@ processors: Iterable[Processor] = [
     structlog.stdlib.PositionalArgumentsFormatter(),
     structlog.processors.StackInfoRenderer(),
     structlog.dev.set_exc_info,
-    # structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-    structlog.processors.TimeStamper(fmt="%H:%M:%S", utc=False),
-    # truncate_log_event,
+    *(
+        [structlog.processors.TimeStamper(fmt="%H:%M:%S", utc=False)]
+        if settings.ENV != "prod"
+        else []
+    ),
 ]
 
 styles = {
@@ -71,10 +74,18 @@ class CustomLogger(_FixedFindCallerLogger):
             self._log(TRACE, message, args, **kwargs)
 
 
-def configure_logging(is_worker: bool = False) -> None:
+def configure_logging(name: str) -> None:
     logging.addLevelName(TRACE, "TRACE")
 
-    logging_config = _get_logging_config(is_worker)
+    if settings.LOGFIRE_TOKEN:
+        logfire.configure(
+            token=settings.LOGFIRE_TOKEN.get_secret_value(),
+            environment=settings.ENV,
+            service_name=name,
+            console=False,
+        )
+
+    logging_config = _get_logging_config()
     logging.config.dictConfig(logging_config)
 
     structlog.configure(
@@ -114,7 +125,7 @@ def debug(*args: Any) -> None:
     pprint(args)
 
 
-def _get_logging_config(is_worker: bool = False) -> dict[str, Any]:
+def _get_logging_config() -> dict[str, Any]:
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -124,6 +135,7 @@ def _get_logging_config(is_worker: bool = False) -> dict[str, Any]:
                 "foreign_pre_chain": processors,
                 "processors": [
                     structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    *([logfire.StructlogProcessor()] if settings.LOGFIRE_TOKEN else []),
                     structlog.dev.ConsoleRenderer(
                         level_styles=cast(Styles, styles),  # structlog bug
                         exception_formatter=plain_traceback,

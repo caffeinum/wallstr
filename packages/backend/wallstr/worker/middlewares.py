@@ -1,5 +1,6 @@
 from typing import Any, TypeVar
 
+import logfire
 from dramatiq import Broker, Message, Worker
 from dramatiq.asyncio import get_event_loop_thread
 from dramatiq.middleware import AsyncIO
@@ -25,6 +26,8 @@ class AsyncSessionMiddleware(AsyncIO):
         self.redis = Redis.from_url(settings.REDIS_URL.get_secret_value())
         self.engine = create_async_engine(settings.DATABASE_URL, "dramatiq-worker")
         self.session_maker = create_session_maker(self.engine)
+        if settings.LOGFIRE_TOKEN:
+            logfire.instrument_sqlalchemy(self.engine)
 
     def before_process_message(self, broker: Broker, message: Message[T]) -> None:
         super().before_process_message(broker, message)  # type: ignore[no-untyped-call]
