@@ -10,6 +10,7 @@ from dramatiq.middleware import (
 from dramatiq.results import Results
 from dramatiq.results.backends import RedisBackend
 
+import wallstr.sentry  #  type: ignore[unused-import]
 from wallstr.conf import settings
 
 from .middlewares import AsyncSessionMiddleware
