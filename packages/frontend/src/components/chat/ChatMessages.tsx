@@ -312,9 +312,9 @@ function IncomeMessage({
             )}
           </div>
 
-          <div className="chat-footer opacity-50 flex flex-row justify-between w-full">
-            {message.created_at && <div className="mt-0.5">{format(new Date(message.created_at), "p")}</div>}
-          </div>
+          {message.created_at && (
+            <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
+          )}
         </>
       )}
     </div>
