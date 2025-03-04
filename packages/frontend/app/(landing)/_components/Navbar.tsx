@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { FaGithub } from "react-icons/fa";
 
 export default function Navbar() {
+  const router = useRouter();
+
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-br from-[#0F172A] to-[#1E3A8A] px-4 py-3 shadow-lg backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -33,11 +36,12 @@ export default function Navbar() {
             </a>
           </div>
 
-          <a href="mailto:team@wallstr.chat?subject=Demo%20Request&body=Hello,%20I%20would%20like%20to%20book%20a%20demo.">
-            <button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-1 shadow-md transition-all transform hover:scale-105 rounded">
-              Book a Demo
-            </button>
-          </a>
+          <button
+            onClick={() => router.push("/chat")}
+            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-1 shadow-md transition-all transform hover:scale-105 rounded cursor-pointer"
+          >
+            Login
+          </button>
         </div>
       </div>
     </nav>

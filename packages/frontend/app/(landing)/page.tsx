@@ -160,12 +160,12 @@ export default function LandingPage() {
           <p className="text-xl text-white/80 max-w-3xl mx-auto mb-12">
             Institutional-grade AI analysis trusted by Street investment bankers
           </p>
-          <button
-            onClick={() => router.push("/chat")}
+          <a
+            href="mailto:team@wallstr.chat?subject=Demo%20Request&body=Hello,%20I%20would%20like%20to%20book%20a%20demo."
             className="btn bg-blue-600 hover:bg-blue-500 text-white text-lg px-10 py-4 rounded-lg font-semibold shadow-lg transition-transform transform hover:scale-105"
           >
-            Join Professionals Saving 15+ Hours Weekly →
-          </button>
+            <span>Book a Demo</span>
+          </a>
         </div>
       </section>
 
@@ -228,6 +228,7 @@ export default function LandingPage() {
                 filter: true,
                 wrapText: true,
                 autoHeight: false,
+                minWidth: 140,
                 flex: 1,
                 cellStyle: (params) => ({
                   whiteSpace: "normal",
@@ -244,7 +245,7 @@ export default function LandingPage() {
       </section>
 
       <section id="cta" className="py-24 bg-[#0F172A] text-center text-white">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto px-4 md:px-0">
           <h2 className="text-4xl font-bold mb-6">Start Your AI-Powered Research Today</h2>
           <p className="text-lg mb-8">Join Street&apos;s funds accelerating their due diligence with Wallstr.chat</p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
