@@ -4,8 +4,8 @@ import { useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import ChatInput from "@/components/chat/ChatInput";
-import ChatMessages from "@/components/chat/ChatMessages";
 import { api } from "@/api";
+import { Quote } from "@/components/chat/Quote";
 
 import type { DocumentPayload } from "@/api/wallstr-sdk";
 import ChatsList from "@/components/chat/ChatsList";
@@ -67,7 +67,9 @@ export default function AppPage() {
     <div className="flex flex-col md:flex-row flex-1 bg-base-200">
       <ChatsList />
       <div className="flex flex-1 flex-col overflow-y-scroll">
-        <ChatMessages className="flex-1 overflow-y-scroll" />
+        <div className="flex-1 overflow-y-scroll flex items-center justify-center">
+          <Quote />
+        </div>
         <ChatInput onSubmit={createChat} isPending={isPending} />
       </div>
     </div>
