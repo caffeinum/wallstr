@@ -6,6 +6,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import QueryClientProvider from "@/providers/QueryClientProvider";
 
 import "./globals.css";
+import { settings } from "@/conf";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {process.env.NEXT_PUBLIC_GA_TAG ? <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_TAG} /> : null}
+      {settings.GA_TAG ? <GoogleAnalytics gaId={settings.GA_TAG!} /> : null}
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryClientProvider>
           <ThemeProvider>{children}</ThemeProvider>
