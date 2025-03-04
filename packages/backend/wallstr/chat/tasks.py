@@ -105,12 +105,23 @@ async def process_chat_message(
 async def get_llm_context(
     db_session: AsyncSession, document_ids: list[UUID], message: ChatMessageModel
 ) -> list[SystemMessage | HumanMessage | AIMessage]:
-    llm_context: list[SystemMessage | HumanMessage | AIMessage] = [
-        SystemMessage(SYSTEM_PROMPT),
-        *await get_prompts_examples(message),
-        *await get_rag(document_ids, message),
-        HumanMessage(content=message.content),
-    ]
+    rag = await get_rag(document_ids, message)
+    llm_context: list[SystemMessage | HumanMessage | AIMessage]
+    if not rag:
+        llm_context = [
+            SystemMessage(SYSTEM_PROMPT),
+            HumanMessage(content=message.content),
+            HumanMessage(
+                content="Tell the user that you don't have needful data to provide the answer."
+            ),
+        ]
+    else:
+        llm_context = [
+            SystemMessage(SYSTEM_PROMPT),
+            *await get_prompts_examples(message),
+            *rag,
+            HumanMessage(content=message.content),
+        ]
 
     debug(llm_context)
     return list(llm_context)
@@ -139,6 +150,8 @@ async def get_history(
 async def get_rag(
     document_ids: list[UUID], message: ChatMessageModel
 ) -> list[HumanMessage]:
+    if not document_ids:
+        return []
     wvc = get_weaviate_client(with_openai=True)
     await wvc.connect()
     try:
@@ -150,9 +163,7 @@ async def get_rag(
             return []
 
         response = await collection.with_tenant(tenant_id).query.near_text(
-            filters=Filter.by_property("document_id").contains_any(document_ids)
-            if document_ids
-            else None,
+            filters=Filter.by_property("document_id").contains_any(document_ids),
             query=message.content,
             certainty=0.7,
             limit=50,
@@ -200,6 +211,7 @@ async def get_prompts_examples(message: ChatMessageModel) -> list[SystemMessage]
 
 SYSTEM_PROMPT = """
 You are a highly precise financial analysis AI specializing in institutional banking, investment research, and financial document interpretation. Your role is to extract, analyze, and structure key financial insights **only from the provided documents**—do not use model knowledge or external data.  
+If there is a lack of information or the data is unclear, you should state that the information is insufficient and you cannot provide an accurate answer.
 Response Criteria
 1. Clarity: Each sentence conveys a single, well-defined idea.
 2. Conciseness: Deliver insights using the fewest words necessary.
