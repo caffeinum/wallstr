@@ -1027,25 +1027,12 @@
                         "type": "integer",
                         "title": "Page Number"
                     },
-                    "bbox": {
-                        "prefixItems": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            }
-                        ],
+                    "bboxes": {
+                        "items": {
+                            "type": "object"
+                        },
                         "type": "array",
-                        "maxItems": 4,
-                        "minItems": 4,
-                        "title": "Bbox"
+                        "title": "Bboxes"
                     }
                 },
                 "type": "object",
@@ -1053,7 +1040,7 @@
                     "document_title",
                     "document_url",
                     "page_number",
-                    "bbox"
+                    "bboxes"
                 ],
                 "title": "DocumentSection"
             },

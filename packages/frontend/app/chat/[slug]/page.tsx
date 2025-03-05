@@ -14,10 +14,17 @@ import dynamic from "next/dynamic";
 // https://github.com/wojtekmaj/react-pdf/issues/1811#issuecomment-2284891560
 const PDFViewer = dynamic(() => import("@/components/pdf_viewer/PDFViewer"), { ssr: false });
 
+type BoundingBox = {
+  points: [[number, number], [number, number], [number, number], [number, number]];
+  layoutWidth: number;
+  layoutHeight: number;
+};
+
 type TDocument = {
   title: string;
   documentUrl: string;
   page: number;
+  bboxes?: BoundingBox[];
 };
 
 const MIN_PANEL_WIDTH = 576; // w-xl
@@ -199,6 +206,16 @@ export default function ChatPage() {
       title: data.document_title,
       documentUrl: data.document_url,
       page: data.page_number,
+      // TODO
+      // Remove on defining backend BoundingBox type
+      bboxes: data.bboxes.map(
+        (bbox) =>
+          ({
+            points: bbox.points,
+            layoutWidth: bbox.layout_width,
+            layoutHeight: bbox.layout_height,
+          }) as BoundingBox,
+      ),
     });
   };
 

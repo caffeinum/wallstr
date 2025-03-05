@@ -1,3 +1,4 @@
+import pickle
 from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
@@ -5,6 +6,7 @@ from uuid import UUID
 import boto3
 import botocore.config
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from unstructured.staging.base import elements_from_base64_gzipped_json
 from weaviate.classes.query import Filter
 
 from wallstr.auth.dependencies import Auth
@@ -81,11 +83,21 @@ async def get_document_by_section(
         ExpiresIn=60 * 5,
     )
 
+    elements = elements_from_base64_gzipped_json(
+        chunk.properties["metadata"]["orig_elements"]
+    )
+    bboxes = [
+        element.metadata.coordinates.to_dict()  # type: ignore[no-untyped-call]
+        for element in elements
+        if element.metadata.page_number == chunk.properties["metadata"]["page_number"]
+        and element.metadata.coordinates
+    ]
+
     section = DocumentSection(
         document_title=document.filename,
         document_url=document_url,
         page_number=chunk.properties["metadata"]["page_number"],
-        bbox=(1, 1, 1, 1),
+        bboxes=bboxes,
     )
 
     return section

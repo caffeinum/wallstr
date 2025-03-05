@@ -7,6 +7,12 @@ import { FaTimes } from "react-icons/fa";
 import { Document, Page, pdfjs } from "react-pdf";
 import { debounce } from "es-toolkit";
 
+type BoundingBox = {
+  points: [[number, number], [number, number], [number, number], [number, number]];
+  layoutWidth: number;
+  layoutHeight: number;
+};
+
 // Initialize PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -16,12 +22,14 @@ export default function PDFViewer({
   width,
   page,
   onClose,
+  bboxes = [],
 }: {
   documentUrl: string;
   title: string;
   width: number;
   page: number;
   onClose: () => void;
+  bboxes?: BoundingBox[];
 }) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -52,7 +60,12 @@ export default function PDFViewer({
       </div>
       <div className="flex-1 overflow-y-auto p-4" style={{ width: width + 2 }}>
         <Document file={documentUrl} onLoadSuccess={onLoadSuccess} className="flex flex-col items-center">
-          <Page pageNumber={pageNumber} width={debouncedWidth} renderTextLayer={true} renderAnnotationLayer={true} />
+          <div style={{ position: "relative" }}>
+            <Page pageNumber={pageNumber} width={debouncedWidth} renderTextLayer={true} renderAnnotationLayer={true} />
+            {bboxes.map((bbox, index) => (
+              <HighlightOverlay key={index} bbox={bbox} pageWidth={debouncedWidth} />
+            ))}
+          </div>
         </Document>
       </div>
       <div className="p-4 border-t border-base-300 flex justify-between items-center">
@@ -78,4 +91,18 @@ export default function PDFViewer({
       </div>
     </>
   );
+}
+
+function HighlightOverlay({ bbox, pageWidth }: { bbox: BoundingBox; pageWidth: number }) {
+  const scale = pageWidth / bbox.layoutWidth;
+
+  const [[x1, y1], , [x2, y2]] = bbox.points;
+  const style = {
+    left: x1 * scale,
+    top: y1 * scale,
+    width: (x2 - x1) * scale,
+    height: (y2 - y1) * scale,
+  };
+
+  return <div style={style} className="pointer-events-none absolute bg-warning/10" />;
 }

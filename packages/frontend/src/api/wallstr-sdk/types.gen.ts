@@ -56,7 +56,9 @@ export type DocumentSection = {
   document_title: string;
   document_url: string;
   page_number: number;
-  bbox: [number, number, number, number];
+  bboxes: Array<{
+    [key: string]: unknown;
+  }>;
 };
 
 export type DocumentStatus = "uploading" | "uploaded" | "processing" | "ready";

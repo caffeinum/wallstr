@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
@@ -55,7 +56,7 @@ class DocumentSection(BaseModel):
     document_title: str
     document_url: str
     page_number: int
-    bbox: tuple[float, float, float, float]
+    bboxes: list[dict[str, Any]]
 
 
 class DocumentPreview(BaseModel):
