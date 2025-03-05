@@ -167,6 +167,8 @@ class DocumentService(BaseService):
                 chunk["record_id"] = record_id
                 chunk["user_id"] = document.user_id
                 chunk["document_id"] = document.id
+                chunk["metadata"]["version"] = PdfParser.version
+                chunk["metadata"]["inference_model"] = PdfParser.inference_model
 
             # Put data to weaviate
             collection_name = "Documents"

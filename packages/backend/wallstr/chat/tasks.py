@@ -59,6 +59,7 @@ async def process_chat_message(
 
     llm = get_llm(model=model)
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
+    logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
     llm_context = await get_llm_context(db_session, document_ids, message)
     chunks: list[str] = []
     with get_openai_callback() as cb:
@@ -165,9 +166,9 @@ async def get_rag(
         response = await collection.with_tenant(tenant_id).query.near_text(
             filters=Filter.by_property("document_id").contains_any(document_ids),
             query=message.content,
-            certainty=0.7,
+            distance=0.73,
             limit=50,
-            return_metadata=MetadataQuery(distance=True, certainty=True),
+            return_metadata=MetadataQuery(distance=True),
         )
         debug(response.objects)
 

@@ -12,6 +12,7 @@ from langchain_core.messages import HumanMessage
 from PIL import Image
 from pydantic import BaseModel, Field
 from unstructured.chunking import dispatch
+from unstructured.documents.elements import Element
 from unstructured.partition.pdf import document_to_element_list
 from unstructured.partition.pdf_image.pdfminer_processing import (
     clean_pdfminer_inner_elements,
@@ -31,17 +32,6 @@ from wallstr.core.utils import tiktok
 
 logger = structlog.get_logger()
 
-DETECTION_MODEL: (
-    Literal["yolox"]
-    | Literal["yolox_tiny"]
-    # unsupported yet
-    | Literal["yolox_quantized"]
-    | Literal["detectron2_onnx"]
-    | Literal["detectron2_quantized"]
-    | Literal["detectron2_mask_rcnn"]
-    | Literal["yolox_quantized"]
-) = "yolox_tiny"
-
 
 class Table(BaseModel):
     title: str | None = Field(description="Title of the table")
@@ -52,6 +42,17 @@ class Table(BaseModel):
 
 
 class PdfParser:
+    version: int = 1
+    inference_model: (
+        Literal["yolox"]
+        | Literal["yolox_quantized"]
+        | Literal["yolox_tiny"]
+        # unsupported yet
+        | Literal["detectron2_onnx"]
+        | Literal["detectron2_quantized"]
+        | Literal["detectron2_mask_rcnn"]
+    ) = "yolox_quantized"
+
     def __init__(self, llm: LLMModel, llm_with_vision: LLMModel) -> None:
         self.llm = llm
         self.llm_with_vision = llm_with_vision
@@ -59,15 +60,14 @@ class PdfParser:
     async def parse(self, file_buffer: io.BytesIO) -> list[dict[str, Any]]:
         file_buffer.seek(0)
 
-        model_name = DETECTION_MODEL
-        async with tiktok(f"Infer the layout with {model_name} model"):
+        async with tiktok(f"Infer the layout with {PdfParser.inference_model} model"):
             loop = asyncio.get_event_loop()
             file_buffer.seek(0)
             inferred_document_layout = await loop.run_in_executor(
                 None,
                 lambda: process_data_with_model(
                     file_buffer,
-                    model_name=model_name,
+                    model_name=PdfParser.inference_model,
                     pdf_image_dpi=200,
                 ),
             )
@@ -81,7 +81,7 @@ class PdfParser:
         merged_document_layout = merge_inferred_with_extracted_layout(
             inferred_document_layout=inferred_document_layout,
             extracted_layout=extracted_layout,  # type: ignore
-            hi_res_model_name=model_name,
+            hi_res_model_name=PdfParser.inference_model,
         )
         cleaned_document_layout = clean_pdfminer_inner_elements(merged_document_layout)
         logger.info("Parsing document tables")
@@ -101,10 +101,7 @@ class PdfParser:
             layouts_links=layouts_links,
         )
         logger.info("Chunking the file...")
-        chunked_elements = dispatch.chunk(
-            elements=elements, chunking_strategy="basic", max_characters=2000
-        )
-
+        chunked_elements = self._chunk(elements)
         chunked_elements_dicts = [e.to_dict() for e in chunked_elements]
         chunked_elements_dicts = assign_and_map_hash_ids(
             elements=chunked_elements_dicts
@@ -120,6 +117,7 @@ class PdfParser:
             )
             return estimated_tokens
 
+        estimated_tokens = 0
         async with tiktok("Extracting tables from layout"):
             tasks = []
             for page in layout.pages:
@@ -162,7 +160,7 @@ class PdfParser:
         if settings.DEBUG:
             debug_dir = Path(".debug")
             debug_dir.mkdir(exist_ok=True)
-            filename = f"table_{sha256(image.tobytes()).hexdigest()}.png"
+            filename = f"table_{sha256(cropped_image.tobytes()).hexdigest()}.png"
             cropped_image.save(debug_dir / filename)
             logger.info(f"Saved table image to {filename}")
 
@@ -205,3 +203,15 @@ class PdfParser:
         {response.data}
         """
         return text, estimated_tokens
+
+    def _chunk(self, elements: list[Element]) -> list[Element]:
+        """
+        Custom chunking implementation similar to unstructured
+        chunked_elements = dispatch.chunk(
+            elements=elements, chunking_strategy="basic", max_characters=2000
+        )
+        """
+        chunked_elements = dispatch.chunk(
+            elements=elements, chunking_strategy="by_title", max_characters=2000
+        )
+        return chunked_elements
