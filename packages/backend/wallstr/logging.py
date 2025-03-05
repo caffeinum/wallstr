@@ -2,12 +2,12 @@ import logging
 import logging.config
 import sys
 from collections.abc import Iterable
+from copy import copy
 from typing import Any, cast
 
 import logfire
 import rich
 import structlog
-import uvicorn.logging
 from langchain_core.messages import BaseMessage
 from rich.panel import Panel
 from rich.pretty import pprint
@@ -125,6 +125,27 @@ def debug(*args: Any) -> None:
     pprint(args)
 
 
+class AccessLogsFormatter(structlog.stdlib.ProcessorFormatter):
+    def format(self, record: logging.LogRecord) -> str:
+        recordcopy = copy(record)
+        (
+            client_addr,
+            method,
+            full_path,
+            http_version,
+            status_code,
+        ) = recordcopy.args  # type: ignore[misc]
+        request_line = f"{method} {full_path} HTTP/{http_version}"
+        recordcopy.__dict__.update(
+            {
+                "client_addr": client_addr,
+                "request_line": request_line,
+                "status_code": status_code,
+            }
+        )
+        return super().format(recordcopy)
+
+
 def _get_logging_config() -> dict[str, Any]:
     return {
         "version": 1,
@@ -142,21 +163,20 @@ def _get_logging_config() -> dict[str, Any]:
                     ),
                 ],
             },
-            "access1": {
-                "()": structlog.stdlib.ProcessorFormatter,
+            "access": {
+                "()": AccessLogsFormatter,
                 "foreign_pre_chain": [
-                    uvicorn.logging.AccessFormatter.formatMessage,
                     *processors,
                 ],
                 "processors": [
                     structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                    *([logfire.StructlogProcessor()] if settings.LOGFIRE_TOKEN else []),
                     structlog.dev.ConsoleRenderer(
                         level_styles=cast(Styles, styles),  # structlog bug
                         exception_formatter=plain_traceback,
                     ),
                 ],
             },
-            "access": {"()": uvicorn.logging.AccessFormatter},
         },
         "handlers": {
             "default": {
