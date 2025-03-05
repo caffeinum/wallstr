@@ -49,12 +49,6 @@ async def reprocess_documents(all_: bool = False) -> None:
         while True:
             data = await collection.with_tenant(tenant_id).query.fetch_objects(
                 return_properties=["document_id"],
-                filters=(
-                    Filter.by_property("version").not_equal(PdfParser.version)
-                    | Filter.by_property("inference_model").not_equal(
-                        PdfParser.inference_model
-                    )
-                ),
                 limit=wvc_limit,
                 offset=wvc_offset,
             )
