@@ -1,4 +1,3 @@
-import pickle
 from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
@@ -16,7 +15,6 @@ from wallstr.documents.models import DocumentStatus
 from wallstr.documents.schemas import DocumentPreview, DocumentSection
 from wallstr.documents.services import DocumentService
 from wallstr.documents.tasks import process_document
-from wallstr.models.base import utc_now
 from wallstr.openapi import generate_unique_id_function
 
 router = APIRouter(
@@ -173,16 +171,10 @@ async def trigger_processing(
             status_code=status.HTTP_403_FORBIDDEN, detail="Document is not uploaded yet"
         )
 
-    # TODO: move to the SQLAlchemy model field
-    if (
-        document.status == DocumentStatus.PROCESSING
-        and document.error is None
-        and document.updated_at
-        and utc_now() - document.updated_at <= timedelta(minutes=10)
-    ):
+    if not document.can_parse:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Document is already being processed",
+            detail="Document cannot be processed, it is being processed already",
         )
 
     process_document.send(document_id=str(document_id))

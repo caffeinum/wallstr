@@ -6,9 +6,11 @@ from dramatiq.asyncio import get_event_loop_thread
 from dramatiq.middleware import AsyncIO
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from weaviate import WeaviateAsyncClient
 
 from wallstr.conf import settings
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
+from wallstr.documents.weaviate import get_weaviate_client
 
 T = TypeVar("T")
 
@@ -18,14 +20,17 @@ class AsyncSessionMiddleware(AsyncIO):
 
     def __init__(self) -> None:
         super().__init__()  # type: ignore[no-untyped-call]
-        self.engine: AsyncEngine | None = None
-        self.session_maker: AsyncSessionMaker | None = None
+        self.engine: AsyncEngine
+        self.session_maker: AsyncSessionMaker
+        self.wvc: WeaviateAsyncClient
 
     def before_worker_boot(self, broker: Broker, worker: Worker) -> None:
         super().before_worker_boot(broker, worker)  # type: ignore[no-untyped-call]
         self.redis = Redis.from_url(settings.REDIS_URL.get_secret_value())
         self.engine = create_async_engine(settings.DATABASE_URL, "dramatiq-worker")
         self.session_maker = create_session_maker(self.engine)
+        self.wvc = get_weaviate_client(with_openai=True)
+
         if settings.LOGFIRE_TOKEN:
             logfire.instrument_sqlalchemy(self.engine)
 
@@ -36,6 +41,7 @@ class AsyncSessionMiddleware(AsyncIO):
         message.options["session_maker"] = self.session_maker
         message.options["session"] = self.session_maker()
         message.options["redis"] = self.redis
+        message.options["wvc"] = self.wvc
 
     def after_process_message(
         self,

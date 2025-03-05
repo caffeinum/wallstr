@@ -20,6 +20,7 @@ from wallstr.conf import config, settings
 from wallstr.core.schemas import AuthConfig, ConfigResponse
 from wallstr.db import AsyncSessionMaker, create_async_engine, create_session_maker
 from wallstr.documents.api import router as documents_router
+from wallstr.documents.api_backoffice import router as documents_backoffice_router
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import configure_logging
 from wallstr.openapi import configure_openapi, generate_unique_id_function
@@ -80,6 +81,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
+app.include_router(documents_backoffice_router)
 app.include_router(sse_router)
 
 

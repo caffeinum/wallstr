@@ -137,14 +137,10 @@ class DocumentService(BaseService):
             if document.status == DocumentStatus.UPLOADING:
                 raise Exception("Document is uploading")
 
-            # TODO: move to the SQLAlchemy model field
-            if (
-                document.status == DocumentStatus.PROCESSING
-                and document.error is None
-                and document.updated_at
-                and utc_now() - document.updated_at <= timedelta(minutes=10)
-            ):
-                raise Exception("Document is already being processed")
+            if not document.can_parse:
+                raise Exception(
+                    "Document cannot be processed, it is being processed already"
+                )
 
             await self.mark_document_processing(document.user_id, document.id)
 
@@ -167,8 +163,8 @@ class DocumentService(BaseService):
                 chunk["record_id"] = record_id
                 chunk["user_id"] = document.user_id
                 chunk["document_id"] = document.id
-                chunk["metadata"]["version"] = PdfParser.version
-                chunk["metadata"]["inference_model"] = PdfParser.inference_model
+                chunk["version"] = PdfParser.version
+                chunk["inference_model"] = PdfParser.inference_model
 
             # Put data to weaviate
             collection_name = "Documents"

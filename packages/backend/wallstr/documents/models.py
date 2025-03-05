@@ -1,12 +1,12 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import Enum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from wallstr.models.base import RecordModel, string_column
+from wallstr.models.base import RecordModel, string_column, utc_now
 
 
 class DocumentType(str, enum.Enum):
@@ -54,3 +54,12 @@ class DocumentModel(RecordModel):
         nullable=False,
     )
     storage_path: Mapped[str] = string_column(length=1024, nullable=False)
+
+    @property
+    def can_parse(self) -> bool:
+        return not (
+            self.status == DocumentStatus.PROCESSING
+            and self.error is None
+            and self.updated_at
+            and utc_now() - self.updated_at <= timedelta(minutes=10)
+        )
