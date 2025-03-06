@@ -61,6 +61,8 @@ async def reprocess_documents(all_: bool = False) -> None:
         await wvc.close()
 
         logger.info(f"Found {len(document_ids)} documents for tenant {tenant_id}")
+        # TODO: there is limitation of dramatiq and pika in concurrency model
+        # pika isn't threadsafe and it leads to the problem with asyncio parallel message group enqueuing
         limit = 1
         documents_per_tenant = 0
         for chunk in itertools.batched(document_ids, limit):
@@ -76,7 +78,9 @@ async def reprocess_documents(all_: bool = False) -> None:
             def parse_documents(documents: list[DocumentModel]) -> None:
                 g = group(  # type: ignore[no-untyped-call]
                     [
-                        process_document.message(str(document.id))
+                        process_document.message_with_options(
+                            kwargs={"document_id": str(document.id)}, priority=100
+                        )
                         for document in documents
                     ]
                 ).run()
@@ -84,6 +88,10 @@ async def reprocess_documents(all_: bool = False) -> None:
 
             loop = asyncio.get_running_loop()
             try:
+                if len(documents) != 1:
+                    raise Exception(
+                        f"Invalid documents count: {len(documents)}, only 1 document supported due to dramatiq and pika limitation"
+                    )
                 await loop.run_in_executor(None, parse_documents, documents)
             except Exception as e:
                 logger.error(f"Failed to reprocess documents: {e}")
