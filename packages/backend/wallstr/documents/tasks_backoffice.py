@@ -61,7 +61,7 @@ async def reprocess_documents(all_: bool = False) -> None:
         await wvc.close()
 
         logger.info(f"Found {len(document_ids)} documents for tenant {tenant_id}")
-        limit = 5
+        limit = 1
         documents_per_tenant = 0
         for chunk in itertools.batched(document_ids, limit):
             documents = [
@@ -83,9 +83,13 @@ async def reprocess_documents(all_: bool = False) -> None:
                 g.wait(timeout=10 * 60 * 1000)
 
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, parse_documents, documents)
-            total_documents += len(documents)
-            documents_per_tenant += len(documents)
+            try:
+                await loop.run_in_executor(None, parse_documents, documents)
+            except Exception as e:
+                logger.error(f"Failed to reprocess documents: {e}")
+            else:
+                total_documents += len(documents)
+                documents_per_tenant += len(documents)
         logger.info(
             f"Filtered {documents_per_tenant}/{len(document_ids)} valid documents for tenant {tenant_id}"
         )
