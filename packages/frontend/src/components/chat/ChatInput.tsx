@@ -5,6 +5,8 @@ import { AiOutlineFile, AiOutlineClose } from "react-icons/ai";
 
 import { STORAGE_KEYS } from "@/hooks/useLocalStorage";
 
+const MAX_LINES_HEIGHT = 15;
+
 export default function ChatInput({
   onSubmit,
   isPending,
@@ -29,7 +31,7 @@ export default function ChatInput({
 
     textarea.style.height = "auto";
     const lineHeight = parseInt(getComputedStyle(textarea).lineHeight);
-    const maxHeight = lineHeight * 5;
+    const maxHeight = lineHeight * MAX_LINES_HEIGHT;
     const newHeight = Math.min(textarea.scrollHeight, maxHeight);
 
     textarea.style.height = `${newHeight}px`;
@@ -115,7 +117,7 @@ export default function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder="Type your message... (Ctrl+Enter to send)"
             rows={1}
-            className="textarea textarea-bordered w-full pl-12 pr-20 resize-none min-h-[2.5rem] max-h-[10rem] overflow-y-auto"
+            className="textarea textarea-bordered w-full pl-12 pr-20 resize-none min-h-[2.5rem] max-h-[10rem] overflow-y-auto max-h-none"
             disabled={isPending}
           />
 
