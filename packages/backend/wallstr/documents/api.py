@@ -85,10 +85,12 @@ async def get_document_by_section(
         chunk.properties["metadata"]["orig_elements"]
     )
     bboxes = [
-        element.metadata.coordinates.to_dict()  # type: ignore[no-untyped-call]
+        {
+            **element.metadata.coordinates.to_dict(),  # type: ignore[no-untyped-call]
+            "page_number": element.metadata.page_number,
+        }
         for element in elements
-        if element.metadata.page_number == chunk.properties["metadata"]["page_number"]
-        and element.metadata.coordinates
+        if element.metadata.coordinates
     ]
 
     section = DocumentSection(

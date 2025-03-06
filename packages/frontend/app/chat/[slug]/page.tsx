@@ -18,6 +18,7 @@ type BoundingBox = {
   points: [[number, number], [number, number], [number, number], [number, number]];
   layoutWidth: number;
   layoutHeight: number;
+  pageNumber: number;
 };
 
 type TDocument = {
@@ -214,6 +215,7 @@ export default function ChatPage() {
             points: bbox.points,
             layoutWidth: bbox.layout_width,
             layoutHeight: bbox.layout_height,
+            pageNumber: bbox.page_number,
           }) as BoundingBox,
       ),
     });

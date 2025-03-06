@@ -9,6 +9,7 @@ import { debounce } from "es-toolkit";
 
 type BoundingBox = {
   points: [[number, number], [number, number], [number, number], [number, number]];
+  pageNumber: number;
   layoutWidth: number;
   layoutHeight: number;
 };
@@ -63,7 +64,7 @@ export default function PDFViewer({
           <div style={{ position: "relative" }}>
             <Page pageNumber={pageNumber} width={debouncedWidth} renderTextLayer={true} renderAnnotationLayer={true} />
             {bboxes.map((bbox, index) => (
-              <HighlightOverlay key={index} bbox={bbox} pageWidth={debouncedWidth} />
+              <HighlightOverlay key={index} bbox={bbox} pageWidth={debouncedWidth} pageNumber={pageNumber} />
             ))}
           </div>
         </Document>
@@ -93,7 +94,16 @@ export default function PDFViewer({
   );
 }
 
-function HighlightOverlay({ bbox, pageWidth }: { bbox: BoundingBox; pageWidth: number }) {
+function HighlightOverlay({
+  bbox,
+  pageWidth,
+  pageNumber,
+}: {
+  bbox: BoundingBox;
+  pageWidth: number;
+  pageNumber: number;
+}) {
+  if (pageNumber != bbox.pageNumber) return null;
   const scale = pageWidth / bbox.layoutWidth;
 
   const [[x1, y1], , [x2, y2]] = bbox.points;
