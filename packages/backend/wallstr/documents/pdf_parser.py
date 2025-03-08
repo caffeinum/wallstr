@@ -208,7 +208,7 @@ class PdfParser:
         """
         Custom chunking implementation similar to unstructured
         chunked_elements = dispatch.chunk(
-            elements=elements, chunking_strategy="basic", max_characters=2000
+            elements=elements, chunking_strategy="by_title", max_characters=2000
         )
         """
         chunked_elements = dispatch.chunk(

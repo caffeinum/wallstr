@@ -21,12 +21,16 @@ export type ChatMessage = {
   id: string;
   role: ChatMessageRole;
   content: string;
+  message_type: ChatMessageType;
   documents: Array<Document>;
   pending_documents?: Array<PendingDocument>;
+  memo?: Memo | null;
   created_at: string;
 };
 
 export type ChatMessageRole = "user" | "assistant";
+
+export type ChatMessageType = "text" | "memo";
 
 export type ConfigResponse = {
   name?: string;
@@ -71,6 +75,20 @@ export type HttpUnauthorizedError = {
 
 export type HttpValidationError = {
   detail?: Array<ValidationError>;
+};
+
+export type Memo = {
+  id: string;
+  user_prompt: string;
+  sections: Array<MemoSection>;
+};
+
+export type MemoSection = {
+  id: string;
+  group: string;
+  aspect: string;
+  content: string;
+  index: number;
 };
 
 export type MessageRequest = {
@@ -531,6 +549,33 @@ export type TriggerProcessingResponses = {
 };
 
 export type TriggerProcessingResponse = TriggerProcessingResponses[keyof TriggerProcessingResponses];
+
+export type ReprocessDocumentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/documents/reprocess";
+};
+
+export type ReprocessDocumentsErrors = {
+  /**
+   * Unauthorized
+   */
+  401: HttpUnauthorizedError;
+  /**
+   * Forbidden
+   */
+  403: unknown;
+};
+
+export type ReprocessDocumentsError = ReprocessDocumentsErrors[keyof ReprocessDocumentsErrors];
+
+export type ReprocessDocumentsResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
 
 export type ConnectData = {
   body?: never;

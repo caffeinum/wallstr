@@ -1,4 +1,8 @@
 from wallstr.auth.models import SessionModel, UserModel
+from wallstr.chat.memo.models import (
+    MemoModel,
+    MemoSectionModel,
+)
 from wallstr.chat.models import (
     ChatMessageModel,
     ChatMessageXDocumentModel,
@@ -14,6 +18,9 @@ __all__ = [
     "ChatModel",
     "ChatMessageModel",
     "ChatMessageXDocumentModel",
+    # memo
+    "MemoModel",
+    "MemoSectionModel",
     # documents
     "DocumentModel",
 ]

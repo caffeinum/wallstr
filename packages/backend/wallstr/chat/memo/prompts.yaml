@@ -1,0 +1,149 @@
+short_memo_template:
+  system_prompt: |
+    You need to write a memo on a company.
+    You are getting specific section of this memo.
+    The memo should be concise and to the point, every thesis should have a link to.
+    The memo should be written in a professional tone and should be free of spelling and grammatical errors.
+    Be concise, mark with bold the numbers and percentages, and use bullet points where necessary.
+  groups:
+    - name: Key Investment Thesis
+      prompts:
+        - name: Core Investment View
+          prompt: What is the investment case? What market position does the company hold? What is the supporting data?
+          example: |-
+            Company X leads AI compute with a *45% market share*,
+            a *YoY revenue growth of 20%*, and *gross margin expansion of 250 bps* driven by AI cloud demand.
+        - name: Market Opportunity
+          prompt: What is the total addressable market (TAM)? What is the expected CAGR? How does the company position itself?
+          example: |-
+            AI infrastructure market *$380B TAM by 2028*, growing at *CAGR of 20%*.
+        - name: Catalysts
+          prompt: What specific events in the next 12 months could impact stock performance? What are the expected revenue or margin impacts?
+          example: |-
+            CES 2025 product launch, potential *$5B in pre-orders*, expected *gross margin lift of 150 bps*.
+        - name: Risks & Mitigants
+          prompt: What are the top 3 downside risks? Quantify potential financial impact. What factors mitigate the risks?
+          example: |-
+            Geopolitical trade restrictions could *reduce Asia revenue by 10%* though historically
+            trade restrictions took 2-5 years to be implemented which will afford the company time to develop appropriate strategies in response;
+            custom ASIC competition may *lower data center margins by 200 bps* though new entrants require $1bn upfront investments
+            which limits the universe of potential competitors;
+            gaming cyclicality could cut *$3B in revenue* based on 2008 peak-to-trough drop in demand though gaming companies
+            have adjusted their business models to generate more DLC revenue with higher conversion rates to sustain slumps in new game demand.
+
+    - name: Financial & Valuation Analysis
+      prompts:
+        - name: Revenue
+          prompt: What is the latest annual reported revenue over the last 5 years and last 8 quarters? What is the YoY and QoQ growth rates? What segments contributed most?
+          example: $85.3B total revenue (+18% YoY), driven by *Cloud AI (+30%) and Data Center (+40%)*.
+        - name: Gross Margin
+          prompt: What is the current gross margin? What factors influenced the change? How does it compare to historical margins?
+          example: 67.5% gross margin (+250 bps YoY), *improved supply chain and AI premium pricing*.
+        - name: Operating Income
+          prompt: What is the operating income? What is the YoY change? How does operating leverage impact margins?
+          example: $25.6B operating income (+15% YoY), operating margin expanded *by 120 bps due to lower fixed costs per unit*.
+        - name: Net Income
+          prompt: What is the net income? How does it compare YoY? What are the key drivers?
+          example: $18.2B net income (+22% YoY), *tax incentives contributed 2% uplift*, operating cost discipline added 3% margin expansion.
+        - name: EPS (Earnings per Share)
+          prompt: What is the latest EPS? What drove EPS growth?
+          example: $8.25 EPS (+20% YoY), supported by *$5B share buyback reducing shares outstanding by 3.5%*.
+        - name: EBITDA to Free Cash Flow Walk
+          prompt: What was the EBITDA, capex, change in net working capital, interest, taxes, and other cash flows for the same time period
+          example: |
+            EBITDA: $30.2B
+            Less Capex: -$8.5B
+            Working Capital Changes: -$1.2B
+            Interest & Taxes: -$4.8B
+            Free Cash Flow: $15.7B
+
+    - name: Business Segments & Product Performance
+      populate: true # populate with specific prompts based on company type from LLM
+      prompts:
+        - name: Company Description
+          prompt: What does the company do? What does it offer its customers?
+          example: The company is a video gaming development studio focused on MMORPG primarily played in the US and East Asia
+        - name: Cloud AI & Data Centers
+          prompt: What percentage of revenue comes from this segment? What is the YoY growth?
+          example: 50% of total revenue, growing at *30% YoY*, driven by *AI accelerators and enterprise software*.
+          specific: true # specific, needs to add specific sections per company type
+        - name: Gaming & Consumer Hardware
+          prompt: How much revenue comes from gaming? How cyclically exposed is it?
+          example: 30% of total revenue, *flat YoY*, affected by *weaker PC demand*.
+          specific: true # specific, needs to add specific sections per company type
+        - name: Automotive & Robotics
+          prompt: What are the company's leading AI-powered products?
+          example: 15% of total revenue, key products include *autonomous vehicle chips, AI-powered robotics*.
+          specific: true # specific, needs to add specific sections per company type
+        - name: Professional Visualization
+          prompt: How does this segment contribute to revenue? What are the key revenue drivers?
+          example: 5% of total revenue, supported by *metaverse and 3D modeling tools*.
+          specific: true # specific, needs to add specific sections per company type
+
+    - name: Strategic Developments & M&A Activity
+      prompts:
+        - name: Recent Acquisitions
+          prompt: What are the major M&A deals? What is the valuation and rationale?
+          example: Acquired AI startup Y for *$3B*, expanding *NLP capabilities*.
+        - name: Strategic Partnerships
+          prompt: What are key collaborations? How do they strengthen the company's position?
+          example: Partnership with CloudCo, optimizing *AI model training and inference efficiency*.
+        - name: Product Roadmap
+          prompt: What are the new product launches and expected impact?
+          example: New AI chip *launching in 2026*, expected *10% improvement in efficiency vs. prior gen*.
+
+    - name: Industry & Competitive Positioning
+      prompts:
+        - name: Market Size & Growth
+          prompt: What is the TAM and CAGR? What trends are influencing industry expansion?
+          example: AI compute market *$380B TAM by 2028*, growing at *20% CAGR* due to *enterprise AI adoption*.
+        - name: Competitors
+          prompt: Who are the main competitors, and how does the company compare?
+          example: Company Y (30% market share), Company Z (20%). Company X leads in *durability and customization*.
+        - name: Competitive Position
+          prompt: What is the market share in key segments? How does the company compare to its top competitors?
+          example: Company X holds *45% AI chip market share*, competing with *Company Y (30%) and Company Z (15%)*.
+
+    - name: Valuation & Market Sentiment
+      prompts:
+        - name: P/E Ratio
+          prompt: What is the current P/E ratio? How does it compare to the sector median? What justifies this valuation? How did it evolve over time?
+          example: 35x P/E vs. *sector median 28x*, premium valuation justified by *AI-driven growth narrative*.
+        - name: EV/EBITDA
+          prompt: What is the EV/EBITDA multiple? How did it evolve over time? How does it compare to competitors?
+          example: EV/EBITDA at *28x vs. peers at 22x*, supported by *higher recurring revenue from AI services*.
+        - name: Price/Sales
+          prompt: What is the P/S ratio? How did it evolve over time? What is the company's revenue growth rate compared to peers?
+          example: P/S ratio *12x vs. industry 9x*, justified by *20% YoY revenue growth vs. industry 15%*.
+
+    - name: Risk Factors & Downside Scenarios
+      prompts:
+        - name: Regulatory Risks - Export Controls
+          prompt: What regulations impact operations? What is the estimated revenue exposure to these risks? What mitigates this risk?
+          example: |-
+            US-China chip export restrictions impact *15% of company revenue (~$12.5B)*,
+            though revenue is growing at 20% ex-China which would eliminate the effects of a total ban in <12 months.
+            Total ban on exports to China is unlikely based on analyst consensus.
+        - name: Regulatory Risks - Compliance
+          prompt: What compliance issues could impact revenue? What mitigates this risk?
+          example: |-
+            Potential *FDA regulation changes* affecting ADHD-friendly toys.
+            FDA rule-making power has been severely curtailed by the recent court precedents and executive orders.
+            New rules typically require a 12-month consultation process.
+        - name: Competitive Risks
+          prompt: |-
+            What competitors are emerging? Are they going for the same customers and going to steal wallet share?
+            Are they well-funded? What impact do they pose? What mitigates this risk?
+          example: |-
+            Google and Amazon developing *custom AI chips*, potentially reducing demand for company X's products.
+            Google and Amazon do not have own manufacturing capacity that is very expensive to build
+            while company X has sole-sourcing agreements with its manufacturing base that will hinder Google's and Amazon's production ramp up
+        - name: Economic Sensitivity
+          prompt: How does an economic downturn affect revenue and profitability margins? What mitigates this risk?
+          example: |-
+            A recession could lower *enterprise IT spending by 10%*, affecting revenue.
+            Highly variable nature of the cost base will allow the company to manage expenses and generate incremental EBITDA
+            despite revenue declines to soften the effects of the borader economy on profitability."
+        - name: Execution Risks
+          prompt: What supply chain or operational risks exist? What mitigates this risk?
+          example: Semiconductor shortages delaying *flagship AI chip launches by 3 months* costing he company $100M.

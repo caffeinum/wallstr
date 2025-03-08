@@ -11,6 +11,7 @@ import { api } from "@/api";
 import type {
   ChatMessage,
   ChatMessageRole,
+  ChatMessageType,
   DocumentStatus,
   GetChatMessagesResponse,
 } from "@/api/wallstr-sdk/types.gen";
@@ -18,6 +19,7 @@ import { useSSE } from "@/hooks/useSSE";
 
 import CopyButton from "./CopyButton";
 import DocumentsInlineBlock from "./blocks/DocumentsInlineBlock";
+import MemoBlock from "./blocks/MemoBlock";
 
 interface StreamingMessage {
   id: string;
@@ -104,6 +106,7 @@ export default function ChatMessages({
           id: data.new_id,
           content: data.content,
           role: "assistant" as ChatMessageRole,
+          message_type: "text" as ChatMessageType,
           created_at: data.created_at,
           documents: [],
         };
@@ -160,11 +163,22 @@ export default function ChatMessages({
     let nextIndex = Object.keys(referencesMap).length + 1;
     let hasChanges = false;
 
+    const regExp = /\[([^\]]+)\]\(([^)]+)\)/g;
     messages.forEach((message) => {
-      const matches = message.content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
-      if (!matches) return;
+      const matches: string[] = message.content.match(regExp) || [];
 
-      matches.forEach((match) => {
+      if (message.memo?.sections) {
+        message.memo.sections.map((memoSection) => {
+          const memoSectionMatch = memoSection.content.match(regExp);
+          if (memoSectionMatch) {
+            matches.push(...memoSectionMatch);
+          }
+        });
+      }
+
+      if (!matches.length) return;
+
+      matches.forEach((match: string) => {
         const href = match.match(/\(([^)]+)\)/)?.[1];
         if (!href) return;
 
@@ -177,29 +191,33 @@ export default function ChatMessages({
         });
       });
     });
+
     if (hasChanges) {
       setReferencesMap(newRefs);
     }
   }, [messages, referencesMap, setReferencesMap]);
 
-  const MarkdownComponents = {
-    a: ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
-      <ReferenceLink
-        href={href}
-        onRefClick={(id: string | null) => {
-          if (id === selectedRef) {
-            id = null;
-          }
-          if (onRefClick) {
-            onRefClick(id);
-          }
-          selectRef(id);
-        }}
-        referencesMap={referencesMap}
-        selectedId={selectedRef}
-      />
-    ),
-  };
+  const MarkdownComponents = useMemo(
+    () => ({
+      a: ({ href }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+        <ReferenceLink
+          href={href}
+          onRefClick={(id: string | null) => {
+            if (id === selectedRef) {
+              id = null;
+            }
+            if (onRefClick) {
+              onRefClick(id);
+            }
+            selectRef(id);
+          }}
+          referencesMap={referencesMap}
+          selectedId={selectedRef}
+        />
+      ),
+    }),
+    [referencesMap, selectedRef, onRefClick],
+  );
 
   if (isLoading) {
     return (
@@ -219,7 +237,7 @@ export default function ChatMessages({
   }
 
   return (
-    <div className={twMerge("flex flex-col justify-end py-4", className)}>
+    <div className={twMerge("flex flex-col justify-end", className)}>
       <div className="overflow-y-scroll max-w-4xl w-full mx-auto flex flex-col-reverse">
         <div className="space-y-4 w-full pr-4">
           {hasNextPage && (
@@ -266,6 +284,10 @@ function IncomeMessage({
   onDocumentOpen?: (id: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  if (message.message_type === "memo") {
+    return <MemoBlock message={message} MarkdownComponents={MarkdownComponents} />;
+  }
 
   return (
     <div className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
@@ -349,7 +371,7 @@ function ReferenceLink({
             selectedId === id ? "bg-primary text-primary-content" : "bg-base-200 hover:bg-base-300",
           )}
         >
-          <span className="font-medium">{referencesMap[id]}.</span>
+          <span className="font-medium">{referencesMap[id] || ""}.</span>
         </button>
       ))}
     </span>

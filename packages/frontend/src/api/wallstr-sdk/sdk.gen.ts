@@ -41,6 +41,8 @@ import type {
   TriggerProcessingData,
   TriggerProcessingResponse,
   TriggerProcessingError,
+  ReprocessDocumentsData,
+  ReprocessDocumentsError,
   ConnectData,
   ConnectError,
   RootData,
@@ -296,6 +298,26 @@ export class DocumentsService {
         },
       ],
       url: "/documents/{document_id}/process",
+      ...options,
+    });
+  }
+
+  /**
+   * Reprocess Documents
+   * Current api triggers reparsing documents
+   * It either sync with the latest inference_model and version or all existing documents in the database
+   */
+  public static reprocessDocuments<ThrowOnError extends boolean = false>(
+    options?: Options<ReprocessDocumentsData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).post<unknown, ReprocessDocumentsError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/documents/reprocess",
       ...options,
     });
   }

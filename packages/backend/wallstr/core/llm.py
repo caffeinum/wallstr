@@ -5,7 +5,7 @@ from typing import Literal
 
 import structlog
 import tiktoken
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from PIL.Image import Image
@@ -86,7 +86,7 @@ def get_llm_with_vision(
 
 def estimate_input_tokens(
     llm: LLMModel,
-    input_: str | Sequence[HumanMessage | SystemMessage | AIMessage],
+    input_: str | Sequence[BaseMessage],
     *,
     image: Image | None = None,
     image_mode: Literal["low", "high", "auto"] = "auto",
@@ -161,7 +161,7 @@ def estimate_input_tokens_for_image(
 
 
 def _merge_langchain_messages(
-    input_: Sequence[HumanMessage | SystemMessage | AIMessage],
+    input_: Sequence[BaseMessage],
 ) -> list[str]:
     """
     Returns list with raw text from LangChain messages

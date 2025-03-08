@@ -714,6 +714,44 @@
                 }
             }
         },
+        "/documents/reprocess": {
+            "post": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Reprocess Documents",
+                "description": "Current api triggers reparsing documents\nIt either sync with the latest inference_model and version or all existing documents in the database",
+                "operationId": "reprocess_documents",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPUnauthorizedError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/sse/": {
             "get": {
                 "summary": "Connect",
@@ -871,6 +909,9 @@
                         "type": "string",
                         "title": "Content"
                     },
+                    "message_type": {
+                        "$ref": "#/components/schemas/ChatMessageType"
+                    },
                     "documents": {
                         "items": {
                             "$ref": "#/components/schemas/Document"
@@ -886,6 +927,16 @@
                         "title": "Pending Documents",
                         "default": []
                     },
+                    "memo": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Memo"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
@@ -897,6 +948,7 @@
                     "id",
                     "role",
                     "content",
+                    "message_type",
                     "documents",
                     "created_at"
                 ],
@@ -909,6 +961,14 @@
                     "assistant"
                 ],
                 "title": "ChatMessageRole"
+            },
+            "ChatMessageType": {
+                "type": "string",
+                "enum": [
+                    "text",
+                    "memo"
+                ],
+                "title": "ChatMessageType"
             },
             "ConfigResponse": {
                 "properties": {
@@ -1090,6 +1150,67 @@
                 },
                 "type": "object",
                 "title": "HTTPValidationError"
+            },
+            "Memo": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "sections": {
+                        "items": {
+                            "$ref": "#/components/schemas/MemoSection"
+                        },
+                        "type": "array",
+                        "title": "Sections"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user_prompt",
+                    "sections"
+                ],
+                "title": "Memo"
+            },
+            "MemoSection": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "group": {
+                        "type": "string",
+                        "title": "Group"
+                    },
+                    "aspect": {
+                        "type": "string",
+                        "title": "Aspect"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "index": {
+                        "type": "integer",
+                        "title": "Index"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "group",
+                    "aspect",
+                    "content",
+                    "index"
+                ],
+                "title": "MemoSection"
             },
             "MessageRequest": {
                 "properties": {

@@ -1,10 +1,13 @@
 from uuid import UUID
 
 from sqlalchemy import sql
+from sqlalchemy.orm import joinedload
 
+from wallstr.chat.memo.models import MemoModel
 from wallstr.chat.models import (
     ChatMessageModel,
     ChatMessageRole,
+    ChatMessageType,
     ChatModel,
     ChatXDocumentModel,
 )
@@ -35,10 +38,14 @@ class ChatService(BaseService):
     async def get_chat_message(self, message_id: UUID) -> ChatMessageModel | None:
         async with self.tx():
             result = await self.db.execute(
-                sql.select(ChatMessageModel).filter_by(id=message_id)
+                sql.select(ChatMessageModel)
+                .options(
+                    joinedload(ChatMessageModel.memo).joinedload(MemoModel.sections)
+                )
+                .filter_by(id=message_id)
             )
 
-            message = result.scalar_one_or_none()
+            message = result.unique().scalar_one_or_none()
         return message
 
     async def get_chat_messages(
@@ -47,13 +54,16 @@ class ChatService(BaseService):
         async with self.tx():
             result = await self.db.execute(
                 sql.select(ChatMessageModel)
+                .options(
+                    joinedload(ChatMessageModel.memo).joinedload(MemoModel.sections)
+                )
                 .filter_by(chat_id=chat_id)
                 .order_by(ChatMessageModel.created_at.desc())
                 .offset(offset)
                 .limit(limit + 1)
             )
 
-            messages = result.scalars().all()
+            messages = result.unique().scalars().all()
             has_more = len(messages) > limit
             new_cursor = offset + limit if has_more else None
         return list(messages[:limit]), new_cursor
@@ -113,8 +123,10 @@ class ChatService(BaseService):
         self,
         chat_id: UUID,
         message: str | None,
+        *,
         documents: list[DocumentPayload] | None = None,
         role: ChatMessageRole = ChatMessageRole.USER,
+        message_type: ChatMessageType = ChatMessageType.TEXT,
     ) -> ChatMessageModel:
         documents = documents or []
         async with self.tx():
@@ -143,6 +155,7 @@ class ChatService(BaseService):
                 role=role,
                 content=message,
                 documents=doc_models,
+                message_type=message_type,
             )
             self.db.add(chat_message)
 

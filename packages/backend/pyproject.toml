@@ -12,8 +12,8 @@ package-mode = false
 
 [tool.taskipy.tasks]
 dev = "uvicorn wallstr.server:app --reload --reload-include .env"
-worker = "dramatiq wallstr.worker.main --watch . -t 5 -Q default"
-"worker:heavy" = "dramatiq wallstr.worker.heavy --watch . -t 3 -Q parse"
+worker = "dramatiq wallstr.worker.main -p 1 -t 2 -Q default"
+"worker:heavy" = "dramatiq wallstr.worker.heavy -p 1 -t 1 -Q parse"
 lint = "ruff format --check . && ruff check --diff"
 format = "ruff format"
 mypy = "mypy ."
@@ -49,6 +49,7 @@ tiktoken = "^0.9.0"
 langchain-community = "^0.3.18"
 sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
 logfire = {extras = ["fastapi", "sqlalchemy"], version = "^3.7.0"}
+replicate = "^1.0.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.14.1"
@@ -81,6 +82,7 @@ weaviate-client = "^4.10.4"
 langchain-ollama = "^0.2.3"
 pdf2image = "^1.17.0"
 pillow = "^11.1.0"
+ruamel-yaml = "^0.18.10"
 
 
 [[tool.poetry.source]]

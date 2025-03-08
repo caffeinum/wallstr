@@ -32,7 +32,7 @@ def uvicorn_server() -> Server:
         coro = task.get_coro()
         if not coro:
             continue
-        frame = coro.cr_frame
+        frame = coro.cr_frame  # type: ignore[attr-defined]
         if not frame:
             continue
         args = frame.f_locals

@@ -1,4 +1,5 @@
 import enum
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import Enum, ForeignKey, Index, String, Text
@@ -7,6 +8,9 @@ from sqlalchemy.orm import Mapped, WriteOnlyMapped, mapped_column, relationship
 from wallstr.core.utils import generate_unique_slug
 from wallstr.documents.models import DocumentModel
 from wallstr.models.base import RecordModel, TimestampModel, string_column
+
+if TYPE_CHECKING:
+    from wallstr.chat.memo.models import MemoModel
 
 
 class ChatModel(RecordModel):
@@ -33,6 +37,11 @@ class ChatMessageRole(str, enum.Enum):
     ASSISTANT = "assistant"
 
 
+class ChatMessageType(str, enum.Enum):
+    TEXT = "text"
+    MEMO = "memo"
+
+
 class ChatMessageModel(RecordModel):
     __tablename__ = "chat_messages"
     __table_args__ = (
@@ -56,12 +65,26 @@ class ChatMessageModel(RecordModel):
         ),
         nullable=False,
     )
+    message_type: Mapped[ChatMessageType] = mapped_column(
+        Enum(
+            ChatMessageType,
+            name="chat_message_type",
+            values_callable=lambda e: [i.value for i in e],
+        ),
+        name="type",
+        nullable=False,
+        server_default=ChatMessageType.TEXT,
+        default=ChatMessageType.TEXT,
+    )
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     chat: Mapped[ChatModel] = relationship(back_populates="messages")
     documents: Mapped[list[DocumentModel]] = relationship(
         secondary="chat_messages_x_documents",
         lazy="selectin",
+    )
+    memo: Mapped["MemoModel"] = relationship(
+        back_populates="chat_message", lazy="noload"
     )
 
 
