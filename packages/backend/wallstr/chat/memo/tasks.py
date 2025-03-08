@@ -50,7 +50,7 @@ except:
 
 @dramatiq.actor  # type: ignore
 async def generate_memo(
-    message_id: str, user_prompt: str, model: SUPPORTED_LLM_MODELS_TYPES = "gpt-4o-mini"
+    message_id: str, user_prompt: str, model: SUPPORTED_LLM_MODELS_TYPES = "gpt-4o"
 ) -> None:
     ctx = CurrentMessage.get_current_message()
     if not ctx:
