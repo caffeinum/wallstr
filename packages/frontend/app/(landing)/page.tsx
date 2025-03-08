@@ -1,13 +1,11 @@
 "use client";
 import { AgGridReact } from "ag-grid-react";
-import { ClientSideRowModelModule, ColDef } from "ag-grid-community";
+import { ClientSideRowModelModule, ColDef, colorSchemeDarkBlue, themeAlpine } from "ag-grid-community";
 import { useRouter } from "next/navigation";
 
 import Navbar from "./_components/Navbar";
 import Footer from "./_components/Footer";
 
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./style.css";
 
 const FeatureIcons = {
@@ -214,6 +212,7 @@ export default function LandingPage() {
               rowData={examples}
               columnDefs={columnDefs}
               modules={[ClientSideRowModelModule]}
+              theme={themeAlpine.withPart(colorSchemeDarkBlue)}
               pagination={true}
               paginationPageSize={5}
               rowHeight={100}
