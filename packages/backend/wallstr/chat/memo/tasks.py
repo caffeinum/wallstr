@@ -16,7 +16,7 @@ from wallstr.chat.services import ChatService
 from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, get_llm
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.core.utils import tiktok
-from wallstr.documents.llm import get_prompts_examples, get_rag
+from wallstr.documents.llm import get_rag
 from wallstr.logging import debug
 from wallstr.worker import dramatiq
 
@@ -85,16 +85,13 @@ async def generate_memo(
             prompt = section.prompt
             debug(f"Prompt:\n {prompt}")
 
-            rag = await get_rag(
-                document_ids, memo.user_id, prompt, distance=0.6, limit=20
-            )
+            rag = await get_rag(document_ids, memo.user_id, prompt, distance=0.6)
             if not rag:
                 logger.info(f'No RAG for "{group.name} | {section.name}"')
                 continue
 
             messages = [
                 SystemMessage(SYSTEM_PROMPT),
-                *await get_prompts_examples(prompt),
                 *rag,
                 HumanMessage(prompt),
             ]
