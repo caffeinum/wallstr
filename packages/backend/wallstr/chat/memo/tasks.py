@@ -82,7 +82,13 @@ async def generate_memo(
 
     async def generate_memo_group(group_index: int, group: MemoGroupTemplate) -> None:
         for index, section in enumerate(group.prompts):
-            prompt = section.prompt
+            prompt = f"""
+            Section: {group_index + 1}. {group.name}
+            Aspect: {index + 1}. {section.name}
+            General user prompt: {user_prompt}
+            Prompt: {section.prompt}
+            Response example: {section.example}
+            """
             debug(f"Prompt:\n {prompt}")
 
             rag = await get_rag(document_ids, memo.user_id, prompt, distance=0.6)
@@ -92,6 +98,7 @@ async def generate_memo(
 
             messages = [
                 SystemMessage(SYSTEM_PROMPT),
+                SystemMessage(MEMO_TEMPLATE.system_prompt),
                 *rag,
                 HumanMessage(prompt),
             ]
