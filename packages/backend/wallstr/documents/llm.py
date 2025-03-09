@@ -2,7 +2,7 @@ from textwrap import indent
 from uuid import UUID
 
 import structlog
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from weaviate.classes.query import Filter, MetadataQuery
 from weaviate.collections.classes.internal import Object
 from weaviate.collections.classes.types import WeaviateProperties
@@ -20,7 +20,13 @@ async def get_rag(
     *,
     distance: float = 0.73,
     limit: int = 50,
+    soft_limit: int | None = None,
+    soft_distance: float | None = None,
 ) -> list[HumanMessage]:
+    """
+    Output finded RAG context for the given document_ids and user_id.
+    soft_limit allows to request minimum numbers of sections, when the distance > soft_distance
+    """
     if not document_ids:
         return []
     wvc = get_weaviate_client(with_openai=True)
@@ -40,10 +46,17 @@ async def get_rag(
             limit=limit,
             return_metadata=MetadataQuery(distance=True),
         )
-        debug(response.objects)
-        logger.info(f"RAG matches: {len(response.objects)}")
+        objects = response.objects
+        debug(objects)
+        logger.info(f"RAG matches: {len(objects)}")
+        if soft_limit and soft_distance and len(objects) > soft_limit:
+            objects = [
+                *objects[:soft_limit],
+                *[obj for obj in objects if obj.metadata.distance < soft_distance],
+            ]
+            logger.info(f"RAG matches with soft_limit: {len(objects)}")
 
-        context = "\n".join([_get_rag_line(prompt) for prompt in response.objects])
+        context = "\n".join([_get_rag_line(prompt) for prompt in objects])
         if not context:
             return []
         return [
@@ -59,3 +72,23 @@ def _get_rag_line(chunk: Object[WeaviateProperties, None]) -> str:
     ## id: {chunk.uuid}
     {indent(text, " " * 4)}
     """
+
+
+async def get_prompts_examples(prompt: str) -> list[SystemMessage]:
+    wvc = get_weaviate_client(with_openai=True)
+    await wvc.connect()
+    try:
+        collection = wvc.collections.get("Prompts")
+        response = await collection.query.near_text(
+            query=prompt,
+            certainty=0.5,
+            limit=10,
+        )
+        return [
+            SystemMessage(f"""
+        Example of response you provide:
+        {"\n".join([f"- {prompt.properties["reply"]}" for prompt in response.objects])}
+        """)
+        ]
+    finally:
+        await wvc.close()
