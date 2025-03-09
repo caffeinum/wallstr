@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { HiOutlineDuplicate } from "react-icons/hi";
+import { HiOutlineDuplicate, HiOutlineCheck } from "react-icons/hi";
 import { twMerge } from "tailwind-merge";
 
 export default function CopyButton({ onCopy, className }: { onCopy: () => void; className?: string }) {
@@ -19,12 +19,15 @@ export default function CopyButton({ onCopy, className }: { onCopy: () => void; 
       onClick={handleCopy}
       className={twMerge("inline-flex items-center gap-1 text-xs transition-colors cursor-pointer", className)}
     >
-      {copied ? <span>Copied</span> : null}
-      <>
-        <HiOutlineDuplicate className="w-4 h-4 animate-press" />
-        <span className="sr-only">Copy</span>
-      </>
+      <span className={`opacity-0 transition-opacity ${copied ? "opacity-100" : "opacity-0"}`}>Copied</span>
+      {copied ? (
+        <HiOutlineCheck className="w-4 h-4" />
+      ) : (
+        <>
+          <HiOutlineDuplicate className="w-4 h-4 animate-press" />
+          <span className="sr-only">Copy</span>
+        </>
+      )}
     </button>
   );
 }
-
