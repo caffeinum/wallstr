@@ -1,15 +1,12 @@
 "use client";
-import { AnchorHTMLAttributes, useEffect, useMemo, useRef, useState } from "react";
+import { AnchorHTMLAttributes, useEffect, useMemo, useState } from "react";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import Markdown, { Components } from "react-markdown";
+import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { convert as htmlToText } from "html-to-text";
 
 import { api } from "@/api";
 import type {
-  ChatMessage,
   ChatMessageRole,
   ChatMessageType,
   DocumentStatus,
@@ -17,9 +14,7 @@ import type {
 } from "@/api/wallstr-sdk/types.gen";
 import { useSSE } from "@/hooks/useSSE";
 
-import CopyButton from "./CopyButton";
-import DocumentsInlineBlock from "./blocks/DocumentsInlineBlock";
-import MemoBlock from "./blocks/MemoBlock";
+import IncomeMessageBlock from "./blocks/IncomeMessageBlock";
 
 interface StreamingMessage {
   id: string;
@@ -33,14 +28,16 @@ type TReferencesMap = {
 
 export default function ChatMessages({
   slug,
-  className,
   onRefClick,
   onDocumentOpen,
+  onToggleExpand,
+  className,
 }: {
   slug?: string;
-  className?: string;
   onRefClick?: (id: string | null) => void;
   onDocumentOpen?: (id: string) => void;
+  onToggleExpand?: (isExpanded: boolean) => void;
+  className?: string;
 }) {
   const [streamingMessages, setStreamingMessages] = useState<StreamingMessage[]>([]);
   const [referencesMap, setReferencesMap] = useState<TReferencesMap>({});
@@ -238,8 +235,8 @@ export default function ChatMessages({
 
   return (
     <div className={twMerge("flex flex-col justify-end", className)}>
-      <div className="overflow-y-scroll max-w-4xl w-full mx-auto flex flex-col-reverse">
-        <div className="space-y-4 w-full pr-4">
+      <div className="flex flex-col-reverse w-full overflow-y-scroll">
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
           {hasNextPage && (
             <button
               onClick={() => fetchNextPage()}
@@ -251,10 +248,11 @@ export default function ChatMessages({
           )}
 
           {messages.map((message) => (
-            <IncomeMessage
+            <IncomeMessageBlock
               key={message.id}
               message={message}
               onDocumentOpen={onDocumentOpen}
+              onToggleExpand={onToggleExpand}
               MarkdownComponents={MarkdownComponents}
             />
           ))}
@@ -270,75 +268,6 @@ export default function ChatMessages({
           ))}
         </div>
       </div>
-    </div>
-  );
-}
-
-function IncomeMessage({
-  message,
-  onDocumentOpen,
-  MarkdownComponents,
-}: {
-  message: ChatMessage;
-  MarkdownComponents: Components;
-  onDocumentOpen?: (id: string) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  if (message.message_type === "memo") {
-    return <MemoBlock message={message} MarkdownComponents={MarkdownComponents} />;
-  }
-
-  return (
-    <div className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
-      {message.documents.length > 0 && (
-        <DocumentsInlineBlock documents={message.documents} onDocumentOpen={onDocumentOpen} />
-      )}
-      {message.content && (
-        <>
-          <div
-            className={`chat-bubble prose prose-sm relative ${
-              message.role === "user" ? "bg-neutral text-neutral-content whitespace-pre-wrap" : ""
-            }`}
-          >
-            <div
-              ref={ref}
-              className={`prose prose-sm ${
-                message.role === "user" ? "bg-neutral text-neutral-content whitespace-pre-wrap" : ""
-              }`}
-            >
-              <Markdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
-                {message.content}
-              </Markdown>
-            </div>
-            {message.role === "assistant" && (
-              <div className="text-right -mt-1 -mr-1 align-bottom">
-                <CopyButton
-                  className="align-bottom"
-                  onCopy={async () => {
-                    let html = "";
-                    if (ref.current) {
-                      html = ref.current.innerHTML.trim();
-                      // remove all links to the documents sections
-                      html = html.replace(/<button[^>]*>.*?<\/button>/g, "");
-                    }
-                    navigator.clipboard.write([
-                      new ClipboardItem({
-                        "text/html": new Blob([html], { type: "text/html" }),
-                        "text/plain": new Blob([htmlToText(html)], { type: "text/plain" }),
-                      }),
-                    ]);
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {message.created_at && (
-            <div className="chat-footer opacity-50 mt-0.5">{format(new Date(message.created_at), "p")}</div>
-          )}
-        </>
-      )}
     </div>
   );
 }

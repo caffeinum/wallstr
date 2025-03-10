@@ -39,6 +39,7 @@ export default function ChatPage() {
   const [selectedDocument, setSelectedDocument] = useState<TDocument | null>(null);
   const [isMdScreen, setIsMdScreen] = useState(false);
   const [panelWidth, setPanelWidth] = useState(MAX_PANEL_WIDTH);
+  const [isExpanded, setIsExpanded] = useState(false);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -86,6 +87,13 @@ export default function ChatPage() {
     isDragging.current = false;
     document.body.style.cursor = "default";
   }, [isMdScreen]);
+
+  const onToggleExpand = useCallback(
+    (_isExpanded: boolean) => {
+      setIsExpanded(_isExpanded);
+    },
+    [setIsExpanded],
+  );
 
   useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
@@ -193,70 +201,83 @@ export default function ChatPage() {
     },
   });
 
-  const handleRefClick = async (id: string | null) => {
-    if (!id) {
-      setSelectedDocument(null);
-      return;
-    }
-    const { data } = await api.documents.getDocumentBySection({
-      path: { section_id: id },
-    });
+  const handleRefClick = useCallback(
+    async (id: string | null) => {
+      if (!id) {
+        setSelectedDocument(null);
+        return;
+      }
+      const { data } = await api.documents.getDocumentBySection({
+        path: { section_id: id },
+      });
 
-    if (!data) return;
-    setSelectedDocument({
-      title: data.document_title,
-      documentUrl: data.document_url,
-      page: data.page_number,
-      // TODO
-      // Remove on defining backend BoundingBox type
-      bboxes: data.bboxes.map(
-        (bbox) =>
-          ({
-            points: bbox.points,
-            layoutWidth: bbox.layout_width,
-            layoutHeight: bbox.layout_height,
-            pageNumber: bbox.page_number,
-          }) as BoundingBox,
-      ),
-    });
-  };
+      if (!data) return;
+      setSelectedDocument({
+        title: data.document_title,
+        documentUrl: data.document_url,
+        page: data.page_number,
+        // TODO
+        // Remove on defining backend BoundingBox type
+        bboxes: data.bboxes.map(
+          (bbox) =>
+            ({
+              points: bbox.points,
+              layoutWidth: bbox.layout_width,
+              layoutHeight: bbox.layout_height,
+              pageNumber: bbox.page_number,
+            }) as BoundingBox,
+        ),
+      });
+    },
+    [setSelectedDocument],
+  );
 
-  const handleDocumentOpen = useCallback(async (id: string) => {
-    const { data } = await api.documents.getDocumentUrl({
-      path: { document_id: id },
-    });
+  const handleDocumentOpen = useCallback(
+    async (id: string) => {
+      const { data } = await api.documents.getDocumentUrl({
+        path: { document_id: id },
+      });
 
-    if (!data) return;
-    setSelectedDocument({
-      title: data.document_title,
-      documentUrl: data.document_url,
-      page: 1,
-    });
-  }, []);
+      if (!data) return;
+      setSelectedDocument({
+        title: data.document_title,
+        documentUrl: data.document_url,
+        page: 1,
+      });
+    },
+    [setSelectedDocument],
+  );
 
   return (
     <div className="flex flex-col md:flex-row flex-1 bg-base-200 w-full">
+      {/*
+      {isExpanded && <div className="absolute bg-black/60 h-screen w-screen z-1 left-0 top-0"></div>}
+      */}
       <ChatsList slug={slug} forceCollapse={!!selectedDocument && panelWidth > CHATS_LIST_COLLAPSE_WIDTH} />
-      <div className="flex flex-1 flex-col overflow-y-scroll">
-        <ChatMessages
-          slug={slug}
-          className="flex-1 overflow-y-scroll"
-          onRefClick={handleRefClick}
-          onDocumentOpen={handleDocumentOpen}
-        />
-        <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
-      </div>
-      {selectedDocument && (
-        <div className="flex flex-row">
-          <div
-            className="hidden md:block w-1 hover:bg-base-300 cursor-col-resize active:bg-base-300 flex-shrink-0"
-            onMouseDown={handleMouseDown}
+
+      <div className={`flex-1 flex flex-row ${isExpanded ? "absolute top-0 w-screen h-screen" : ""}`}>
+        <div className={`flex-1 flex flex-col ${isExpanded ? "relative" : "overflow-y-scroll"}`}>
+          <ChatMessages
+            slug={slug}
+            className="flex-1 overflow-y-scroll"
+            onRefClick={handleRefClick}
+            onDocumentOpen={handleDocumentOpen}
+            onToggleExpand={onToggleExpand}
           />
-          <div className="bg-base-100 border-l border-base-300 flex flex-col w-full">
-            <PDFViewer {...selectedDocument} onClose={() => setSelectedDocument(null)} width={panelWidth} />
-          </div>
+          <ChatInput onSubmit={(message, files) => mutate({ message, attachedFiles: files })} isPending={isPending} />
         </div>
-      )}
+        {selectedDocument && (
+          <div className="flex flex-row">
+            <div
+              className="hidden md:block w-1 hover:bg-base-300 cursor-col-resize active:bg-base-300 flex-shrink-0"
+              onMouseDown={handleMouseDown}
+            />
+            <div className="bg-base-100 border-l border-base-300 flex flex-col w-full">
+              <PDFViewer {...selectedDocument} onClose={() => setSelectedDocument(null)} width={panelWidth} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
