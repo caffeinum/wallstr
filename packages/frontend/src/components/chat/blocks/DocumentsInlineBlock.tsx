@@ -47,8 +47,8 @@ export default function DocumentsInlineBlock({
   }
 
   return (
-    <div className={twMerge("chat-header max-w-full", className)}>
-      <div>
+    <div className={twMerge("chat-header max-w-full truncate", className)}>
+      <div className="truncate">
         {documents.map((doc) => (
           <InlineDocument key={doc.id} {...doc} onOpen={onDocumentOpen} onRestartProcessing={onRestartProcessing} />
         ))}
@@ -83,10 +83,7 @@ function InlineDocument({
     <span className="flex items-center justify-end gap-2 p-2">
       <DocumentStatusIcon status={status} hasError={!!error} onRestartProcessing={() => onRestartProcessing(id)} />
       <DocumentIcon filename={filename} />
-      <span
-        className={`text-sm min-w-0 truncate max-w-42 sm:max-w-92 md:max-w-full ${status === "uploading" ? "" : "hover:link"}`}
-        onClick={onClick}
-      >
+      <span className={`text-sm truncate ${status === "uploading" ? "" : "hover:link"}`} onClick={onClick}>
         <span>{filename}</span>
       </span>
     </span>

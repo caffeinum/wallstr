@@ -65,7 +65,7 @@ export default function MemoBlock({
         field: "aspect",
         spanHeaderHeight: true,
         maxWidth: 180,
-        minWidth: 50,
+        wrapText: true,
       },
       {
         headerName: headerName,
