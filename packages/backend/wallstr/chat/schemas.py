@@ -54,6 +54,7 @@ class ChatTitleUpdatedSSE(SSE):
 
 class ChatMessageSSE(SSE):
     id: UUID
+    chat_id: UUID
     content: str
 
     @computed_field
@@ -63,6 +64,7 @@ class ChatMessageSSE(SSE):
 
 class ChatMessageStartSSE(SSE):
     id: UUID
+    chat_id: UUID
 
     @computed_field
     def type(self) -> str:
@@ -72,6 +74,7 @@ class ChatMessageStartSSE(SSE):
 class ChatMessageEndSSE(SSE):
     id: UUID
     new_id: UUID
+    chat_id: UUID
     created_at: datetime
     content: str
 

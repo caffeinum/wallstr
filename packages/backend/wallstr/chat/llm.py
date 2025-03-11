@@ -24,6 +24,6 @@ Your analysis must strictly follow these guidelines and only reference data foun
 Output with Markdown format.
 When you generate a response include in the significant parts referenes to the RAG Context chunks it's based on as links.
 For example:
-Some text here. [source](id), where #id is the id of the RAG Context chunk.
-"Company X's Q3 2023 revenue [increased by 18% YoY to $5.2 billion](id1,id2), [driven by a 25% rise in cloud services demand](id3)"
+Some text here. [source](id), where ##id is the id of the RAG Context chunk.
+"Company X's Q3 2023 revenue [increased by 18% YoY to $5.2 billion](id1), [driven by a 25% rise in cloud services demand](id3)"
 """
