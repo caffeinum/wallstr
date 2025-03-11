@@ -6,144 +6,163 @@ short_memo_template:
     The memo should be written in a professional tone and should be free of spelling and grammatical errors.
     Be concise, mark with bold the numbers and percentages, and use bullet points where necessary.
   groups:
-    - name: Key Investment Thesis
-      prompts:
-        - name: Core Investment View
-          prompt: What is the investment case? What market position does the company hold? What is the supporting data?
-          example: |-
-            Company X leads AI compute with a *45% market share*,
-            a *YoY revenue growth of 20%*, and *gross margin expansion of 250 bps* driven by AI cloud demand.
-        - name: Market Opportunity
-          prompt: What is the total addressable market (TAM)? What is the expected CAGR? How does the company position itself?
-          example: |-
-            AI infrastructure market *$380B TAM by 2028*, growing at *CAGR of 20%*.
-        - name: Catalysts
-          prompt: What specific events in the next 12 months could impact stock performance? What are the expected revenue or margin impacts?
-          example: |-
-            CES 2025 product launch, potential *$5B in pre-orders*, expected *gross margin lift of 150 bps*.
-        - name: Risks & Mitigants
-          prompt: What are the top 3 downside risks? Quantify potential financial impact. What factors mitigate the risks?
-          example: |-
-            Geopolitical trade restrictions could *reduce Asia revenue by 10%* though historically
-            trade restrictions took 2-5 years to be implemented which will afford the company time to develop appropriate strategies in response;
-            custom ASIC competition may *lower data center margins by 200 bps* though new entrants require $1bn upfront investments
-            which limits the universe of potential competitors;
-            gaming cyclicality could cut *$3B in revenue* based on 2008 peak-to-trough drop in demand though gaming companies
-            have adjusted their business models to generate more DLC revenue with higher conversion rates to sustain slumps in new game demand.
-
     - name: Financial & Valuation Analysis
       prompts:
         - name: Revenue
-          prompt: What is the latest annual reported revenue over the last 5 years and last 8 quarters? What is the YoY and QoQ growth rates? What segments contributed most?
-          example: $85.3B total revenue (+18% YoY), driven by *Cloud AI (+30%) and Data Center (+40%)*.
+          prompt: |
+            Provide the company's latest revenue for the most recent quarter, including absolute value and Year-over-Year (YoY) growth rates.
+            Identify and quantify the key drivers behind revenue growth or decline, such as pricing strategies, volume expansion, product mix shifts, new market penetration, or macroeconomic factors.
+            Compare revenue performance across multiple timeframes: (1) year-to-date (YTD) revenue, (2) full-year revenue for the past three fiscal years, and (3) historical trends, highlighting major inflection points.
+        - name: Expenses
+          prompt: |
+            Provide the company's latest expenses for the most recent quarter, including absolute values and Year-over-Year (YoY) change.
+            Break down expenses into key categories based on reporting data, indicate % or revenue for each category.
+            Compare expenses across multiple timeframes: (1) year-to-date (YTD), (2) full-year expenses for the past three fiscal years, and (3) historical trends, highlighting key cost drivers.
+            Ensure responses include precise numerical values, clear attribution of drivers, and a structured breakdown of insights.
         - name: Gross Margin
-          prompt: What is the current gross margin? What factors influenced the change? How does it compare to historical margins?
-          example: 67.5% gross margin (+250 bps YoY), *improved supply chain and AI premium pricing*.
+          prompt: |
+            Provide the company's latest gross margin for the most recent quarter, including its absolute percentage and Year-over-Year (YoY) change.
+            Identify and quantify the key factors influencing margin expansion or contraction, such as shifts in revenue mix, pricing strategies, cost optimizations, or supply chain effects.
+            If applicable, include the impact of inventory provisions or cost fluctuations.
+            Compare gross margins across multiple timeframes: (1) the year-to-date (YTD) margin, (2) full-year margins for the past three fiscal years, and (3) historical trends, highlighting major drivers behind shifts in profitability.
+            Ensure the response includes precise numerical values, clear attribution of drivers, and a structured breakdown of insights.
         - name: Operating Income
-          prompt: What is the operating income? What is the YoY change? How does operating leverage impact margins?
-          example: $25.6B operating income (+15% YoY), operating margin expanded *by 120 bps due to lower fixed costs per unit*.
+          prompt: |
+            Provide the company's latest operating income for the most recent quarter, including its absolute value and Year-over-Year (YoY) change.
+            Identify and quantify the key factors influencing operating income growth or contraction, such as revenue growth, cost structure changes, operating leverage, or expense management.
+            Compare operating income across multiple timeframes: (1) the year-to-date (YTD) figure, (2) full-year operating income for the past three fiscal years, and (3) historical trends, highlighting major drivers behind shifts in profitability.
+            Ensure responses include precise numerical values, clear attribution of drivers, and a structured breakdown of insights.
         - name: Net Income
-          prompt: What is the net income? How does it compare YoY? What are the key drivers?
-          example: $18.2B net income (+22% YoY), *tax incentives contributed 2% uplift*, operating cost discipline added 3% margin expansion.
-        - name: EPS (Earnings per Share)
-          prompt: What is the latest EPS? What drove EPS growth?
-          example: $8.25 EPS (+20% YoY), supported by *$5B share buyback reducing shares outstanding by 3.5%*.
-        - name: EBITDA to Free Cash Flow Walk
-          prompt: What was the EBITDA, capex, change in net working capital, interest, taxes, and other cash flows for the same time period
-          example: |
-            EBITDA: $30.2B
-            Less Capex: -$8.5B
-            Working Capital Changes: -$1.2B
-            Interest & Taxes: -$4.8B
-            Free Cash Flow: $15.7B
+          prompt: |
+            Provide the company's latest net income for the most recent quarter, including its absolute value and Year-over-Year (YoY) change.
+            Identify and quantify the key factors driving net income growth or contraction, such as:
+            Revenue growth (or decline).
+            Gross margin impact (profitability at the product/service level).
+            Operating expense trends (cost control, efficiency improvements).
+            Non-operating income or expenses (e.g., investment gains/losses, foreign exchange effects).
+            Tax impacts (effective tax rate changes, credits, or incentives).
+            Compare net income across multiple timeframes: (1) year-to-date (YTD), (2) full-year figures for the past three fiscal years, and (3) historical trends, highlighting major profitability shifts.
+            Ensure responses include precise numerical values, clear attribution of drivers, and a structured breakdown of insights.
+        - name: Balance sheet
+          prompt: |
+            Provide a structured analysis of the company’s balance sheet, emphasizing key financial metrics, trends, and capital structure changes.
+            Break down major components, ensuring clear attribution of changes over time.
+            1. Key Balance Sheet Metrics (Latest Quarter & YoY Change):
+            Total Assets: Break down key components, including cash & cash equivalents, receivables, inventory, and property & equipment.
+            Total Liabilities: Include short-term and long-term debt, accounts payable, and accrued liabilities.
+            Shareholders’ Equity: Report retained earnings, common stock, and any significant changes.
+            Net Debt Calculation: Total Debt – Cash & Cash Equivalents.
+            2. Multi-Year Comparative Analysis:
+            Compare YoY changes in assets, liabilities, and equity for the past three fiscal years.
+            Identify major trends in leverage, liquidity, and asset efficiency.
+            Highlight capital structure shifts (e.g., debt issuance, equity dilution, stock buybacks).
+            3. Debt & Liquidity Analysis:
+            Debt-to-Equity (D/E) Ratio = Total Debt / Shareholders’ Equity.
+            Interest Coverage Ratio = Operating income / Interest Expense.
+            Cash Flow Impact on Balance Sheet: Analyze how operating cash flow, debt repayment, and shareholder returns affect the capital structure.
+            Ensure responses include precise numerical values, structured data tables, and a breakdown of key drivers for readability.
 
     - name: Business Segments & Product Performance
-      populate: true # populate with specific prompts based on company type from LLM
       prompts:
         - name: Company Description
-          prompt: What does the company do? What does it offer its customers?
-          example: The company is a video gaming development studio focused on MMORPG primarily played in the US and East Asia
-        - name: Cloud AI & Data Centers
-          prompt: What percentage of revenue comes from this segment? What is the YoY growth?
-          example: 50% of total revenue, growing at *30% YoY*, driven by *AI accelerators and enterprise software*.
-          specific: true # specific, needs to add specific sections per company type
-        - name: Gaming & Consumer Hardware
-          prompt: How much revenue comes from gaming? How cyclically exposed is it?
-          example: 30% of total revenue, *flat YoY*, affected by *weaker PC demand*.
-          specific: true # specific, needs to add specific sections per company type
-        - name: Automotive & Robotics
-          prompt: What are the company's leading AI-powered products?
-          example: 15% of total revenue, key products include *autonomous vehicle chips, AI-powered robotics*.
-          specific: true # specific, needs to add specific sections per company type
-        - name: Professional Visualization
-          prompt: How does this segment contribute to revenue? What are the key revenue drivers?
-          example: 5% of total revenue, supported by *metaverse and 3D modeling tools*.
-          specific: true # specific, needs to add specific sections per company type
-
-    - name: Strategic Developments & M&A Activity
-      prompts:
-        - name: Recent Acquisitions
-          prompt: What are the major M&A deals? What is the valuation and rationale?
-          example: Acquired AI startup Y for *$3B*, expanding *NLP capabilities*.
-        - name: Strategic Partnerships
-          prompt: What are key collaborations? How do they strengthen the company's position?
-          example: Partnership with CloudCo, optimizing *AI model training and inference efficiency*.
-        - name: Product Roadmap
-          prompt: What are the new product launches and expected impact?
-          example: New AI chip *launching in 2026*, expected *10% improvement in efficiency vs. prior gen*.
+          prompt: |
+            Provide a structured overview of the company's business model, core offerings, and market positioning, with detailed analysis of its key business segments.
+            1. Business Overview:
+            Describe the company’s industry, primary operations, and business model (e.g., B2B, B2C, SaaS, hardware, services).
+            Outline its core products, services, or technologies and their primary use cases.
+            Identify the key customer segments the company serves (e.g., enterprises, consumers, government).
+            2. Segment Breakdown & Analysis:
+            Provide a detailed breakdown of the company’s main business segments. For each segment, include:
+            Revenue contribution (percentage of total revenue).
+            YoY growth rates and performance trends.
+            Key growth drivers for each segment (e.g., new product launches, market demand, geographical expansion).
+            Major challenges faced within each segment (e.g., competitive pressures, regulatory constraints, supply chain issues).
+            3. Value Proposition & Competitive Advantage:
+            Explain how the company creates value for customers across its segments (e.g., cost efficiency, innovation, scalability).
+            Highlight competitive differentiation within each segment, including proprietary technology, customer relationships, or pricing strategies.
+            4. Revenue Model & Growth Drivers:
+            Detail primary revenue sources for each segment (e.g., subscription fees, product sales, licensing, advertising).
+            Identify key growth drivers across segments, such as market expansion, product innovation, or industry trends.
+            Ensure responses are concise, structured, and include specific numerical figures, YoY growth, or strategic insights where available.
 
     - name: Industry & Competitive Positioning
       prompts:
-        - name: Market Size & Growth
-          prompt: What is the TAM and CAGR? What trends are influencing industry expansion?
-          example: AI compute market *$380B TAM by 2028*, growing at *20% CAGR* due to *enterprise AI adoption*.
-        - name: Competitors
-          prompt: Who are the main competitors, and how does the company compare?
-          example: Company Y (30% market share), Company Z (20%). Company X leads in *durability and customization*.
-        - name: Competitive Position
-          prompt: What is the market share in key segments? How does the company compare to its top competitors?
-          example: Company X holds *45% AI chip market share*, competing with *Company Y (30%) and Company Z (15%)*.
-
-    - name: Valuation & Market Sentiment
-      prompts:
-        - name: P/E Ratio
-          prompt: What is the current P/E ratio? How does it compare to the sector median? What justifies this valuation? How did it evolve over time?
-          example: 35x P/E vs. *sector median 28x*, premium valuation justified by *AI-driven growth narrative*.
-        - name: EV/EBITDA
-          prompt: What is the EV/EBITDA multiple? How did it evolve over time? How does it compare to competitors?
-          example: EV/EBITDA at *28x vs. peers at 22x*, supported by *higher recurring revenue from AI services*.
-        - name: Price/Sales
-          prompt: What is the P/S ratio? How did it evolve over time? What is the company's revenue growth rate compared to peers?
-          example: P/S ratio *12x vs. industry 9x*, justified by *20% YoY revenue growth vs. industry 15%*.
+        - name: Market Size & Growth, market share and competitors
+          prompt: |
+            1.Market Size & Growth
+            Total Addressable Market (TAM): Provide the latest estimate of the TAM for the industry, including absolute market size ($B) and YoY growth trends.
+            Industry Growth Trends: Identify historical CAGR (Compound Annual Growth Rate) and projected growth rate over the next 5-10 years.
+            Highlight key macroeconomic, technological, or regulatory factors driving industry expansion.
+            2.Competitive Landscape
+            Identify the main competitors in the industry, both direct and indirect.
+            If available, include a comparison of product offerings, pricing strategies, customer base, and geographic presence.
+            3.Competitive Position & Market Share
+            Provide the company’s market share (%) in its key business segments.
+            Compare its market position relative to its top competitors, highlighting strengths and weaknesses.
+            Assess competitive advantages or disadvantages, such as pricing power, economies of scale, brand strength, and distribution network.
+            If available, include any barriers to entry or structural industry advantages that impact competitive positioning.
+            Future Outlook & Industry Disruption Risks
+            Highlight emerging trends that could reshape the competitive landscape (e.g., AI, cloud computing, new regulations, supply chain shifts).
+            Assess potential risks to the company’s market position, such as new entrants, disruptive technologies, or shifting consumer preferences.
+            Ensure responses include precise numerical values, clear benchmarking against competitors, and structured insights for readability.
 
     - name: Risk Factors & Downside Scenarios
       prompts:
-        - name: Regulatory Risks - Export Controls
-          prompt: What regulations impact operations? What is the estimated revenue exposure to these risks? What mitigates this risk?
-          example: |-
-            US-China chip export restrictions impact *15% of company revenue (~$12.5B)*,
-            though revenue is growing at 20% ex-China which would eliminate the effects of a total ban in <12 months.
-            Total ban on exports to China is unlikely based on analyst consensus.
-        - name: Regulatory Risks - Compliance
-          prompt: What compliance issues could impact revenue? What mitigates this risk?
-          example: |-
-            Potential *FDA regulation changes* affecting ADHD-friendly toys.
-            FDA rule-making power has been severely curtailed by the recent court precedents and executive orders.
-            New rules typically require a 12-month consultation process.
+        - name: Regulatory Risks
+          prompt: |
+            1. Industry-Specific Regulations & Compliance Requirements
+            Identify key regulations that impact the company’s operations (e.g., data privacy laws, environmental mandates, financial reporting rules).
+            Explain how these regulations affect business practices, product offerings, or geographic expansion.
+            2. Revenue Exposure to Regulatory Risks
+            Estimate the percentage of total revenue impacted by regulatory risks.
+            Highlight any pending or proposed regulatory changes that could affect future revenue.
+            Identify historical instances of fines, legal disputes, or compliance-related financial losses.
+            3. Compliance Issues & Mitigation Strategies
+            Identify potential compliance risks that could lead to revenue disruption (e.g., supply chain restrictions, licensing issues, data security violations).
+            Explain how the company mitigates these risks through internal controls, legal teams, lobbying, or technology investments.
+            Ensure responses include precise revenue exposure estimates, industry-specific regulatory details, and structured insights on risk mitigation
         - name: Competitive Risks
-          prompt: |-
-            What competitors are emerging? Are they going for the same customers and going to steal wallet share?
-            Are they well-funded? What impact do they pose? What mitigates this risk?
-          example: |-
-            Google and Amazon developing *custom AI chips*, potentially reducing demand for company X's products.
-            Google and Amazon do not have own manufacturing capacity that is very expensive to build
-            while company X has sole-sourcing agreements with its manufacturing base that will hinder Google's and Amazon's production ramp up
+          prompt: |
+            1. Emerging & Existing Competitors
+            Identify new and existing competitors in the market.
+            Highlight whether they are targeting the same customer base and attempting to gain market share.
+            Assess their funding status (e.g., VC-backed startups, publicly traded firms with high cash reserves).
+            2. Competitive Threats to Market Share
+            Determine whether competitors offer superior technology, pricing, distribution, or customer experience advantages.
+            Analyze market share trends to assess whether the company is gaining or losing ground relative to competitors.
+            3. Mitigation Strategies
+            Explain the company’s strategic responses to competitive threats, such as:
+            Product innovation to maintain differentiation.
+            Pricing strategies to prevent customer attrition.
+            Mergers, acquisitions, or partnerships to enhance competitive positioning.
+            Ensure responses include specific competitor names, funding comparisons, and data-driven insights into market share impact.
         - name: Economic Sensitivity
-          prompt: How does an economic downturn affect revenue and profitability margins? What mitigates this risk?
-          example: |-
-            A recession could lower *enterprise IT spending by 10%*, affecting revenue.
-            Highly variable nature of the cost base will allow the company to manage expenses and generate incremental EBITDA
-            despite revenue declines to soften the effects of the borader economy on profitability."
+          prompt: |
+            1. Impact of Economic Downturns on Revenue & Profitability
+            Assess the company’s exposure to economic cycles (e.g., discretionary vs. non-discretionary spending).
+            Identify revenue streams most sensitive to macroeconomic trends such as inflation, interest rate hikes, or consumer demand slowdowns.
+            2. Historical Performance During Economic Downturns
+            Provide data on past revenue trends during recessions (e.g., 2008 financial crisis, COVID-19 downturn).
+            Highlight any resilience factors (e.g., recurring revenue, long-term contracts, government-backed clients).
+            3. Risk Mitigation Strategies
+            Explain how the company hedges against economic downturn risks, such as:
+            Diversification across industries/geographies.
+            Cost-cutting strategies or operational efficiencies.
+            Shifting business model toward stable revenue streams (e.g., SaaS, subscriptions).
+            Ensure responses include historical economic sensitivity data, sector comparisons, and clearly defined mitigation strategies.
         - name: Execution Risks
-          prompt: What supply chain or operational risks exist? What mitigates this risk?
-          example: Semiconductor shortages delaying *flagship AI chip launches by 3 months* costing he company $100M.
+          prompt: |
+            1. Supply Chain & Operational Vulnerabilities
+            Identify potential supply chain risks, including:
+            Reliance on key suppliers or regional dependencies (e.g., China-based manufacturing).
+            Logistics disruptions (e.g., port congestion, raw material shortages).
+            Geopolitical tensions or trade barriers affecting sourcing.
+            2. Impact of Execution Risks on Financial Performance
+            Quantify how supply chain disruptions, labor shortages, or production delays impact revenue, gross margin, or cost structure.
+            Highlight any past instances of significant operational disruptions affecting financial performance.
+            3. Mitigation Strategies
+            Outline company strategies to minimize execution risks, such as:
+            Supplier diversification and inventory management optimizations.
+            Automation & process improvements to reduce operational inefficiencies.
+            Vertical integration or nearshoring to reduce reliance on third-party vendors.
+            Ensure responses include real-world examples of operational disruptions, financial impacts, and structured mitigation plans.

@@ -26,7 +26,6 @@ logger = structlog.get_logger()
 class MemoPrompt(BaseModel):
     name: str
     prompt: str
-    example: str
 
 
 class MemoGroupTemplate(BaseModel):
@@ -82,13 +81,7 @@ async def generate_memo(
 
     async def generate_memo_group(group_index: int, group: MemoGroupTemplate) -> None:
         for index, section in enumerate(group.prompts):
-            prompt = f"""
-            Section: {group_index + 1}. {group.name}
-            Aspect: {index + 1}. {section.name}
-            General user prompt: {user_prompt}
-            Prompt: {section.prompt}
-            Response example: {section.example}
-            """
+            prompt = section.prompt
             debug(f"Prompt:\n {prompt}")
 
             rag = await get_rag(document_ids, memo.user_id, prompt, distance=0.6)
