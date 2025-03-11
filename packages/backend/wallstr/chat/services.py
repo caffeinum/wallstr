@@ -177,3 +177,14 @@ class ChatService(BaseService):
                 .order_by(ChatXDocumentModel.created_at.desc())
             )
             return [row[0] for row in result.all()]
+
+    async def set_chat_title(self, chat_id: UUID, title: str) -> ChatModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(ChatModel)
+                .filter_by(id=chat_id)
+                .values(title=title)
+                .returning(ChatModel)
+            )
+            chat = result.scalar_one()
+        return chat

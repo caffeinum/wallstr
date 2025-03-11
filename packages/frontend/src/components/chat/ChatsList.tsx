@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 import { useState, useEffect } from "react";
-import { RiMenuUnfoldFill } from "react-icons/ri";
-import { RiMenuUnfold2Fill } from "react-icons/ri";
+import { RiMenuUnfoldFill, RiMenuUnfold2Fill } from "react-icons/ri";
 
 import { api } from "@/api";
+import { useSSE } from "@/hooks/useSSE";
 
 export default function ChatsList({
   slug,
@@ -17,6 +17,7 @@ export default function ChatsList({
   forceCollapse?: boolean;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
   const { data: chats } = useQuery({
     queryKey: ["/chats"],
     queryFn: async () => {
@@ -24,6 +25,17 @@ export default function ChatsList({
       return data;
     },
   });
+
+  const sse = useSSE();
+  useEffect(() => {
+    if (!sse) return;
+
+    function onChatTitleUpdated() {}
+    sse.on("chat_title_updated", onChatTitleUpdated);
+    return () => {
+      sse.off("chat_title_updated", onChatTitleUpdated);
+    };
+  }, [sse]);
 
   useEffect(() => {
     if (forceCollapse) {

@@ -53,6 +53,39 @@ async def get_rag(
         await wvc.close()
 
 
+async def get_pages(
+    user_id: UUID,
+    document_ids: list[UUID],
+    pages: list[int],
+    *,
+    limit: int | None = None,
+) -> list[str]:
+    """
+    Don't use it until parsing adds page for every record_id
+    """
+    wvc = get_weaviate_client(with_openai=True)
+    try:
+        await wvc.connect()
+        tenant_id = str(user_id)
+        collection = wvc.collections.get("Documents")
+        if not await collection.tenants.get_by_names([tenant_id]):
+            logger.info(f"Tenant {tenant_id} not found")
+            return []
+
+        response = await collection.with_tenant(tenant_id).query.fetch_objects(
+            filters=(
+                Filter.by_property("document_id").contains_any(document_ids)
+                # TODO: in parsing.version=1 page is stored in metadata.page
+                & Filter.by_property("page").contains_any(pages)
+            ),
+            limit=limit,
+        )
+
+        return [str(obj.properties["text"]) for obj in response.objects]
+    finally:
+        await wvc.close()
+
+
 def _get_rag_line(chunk: Object[WeaviateProperties, None]) -> str:
     text = str(chunk.properties["text"])
     return f"""

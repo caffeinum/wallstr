@@ -17,10 +17,12 @@ from wallstr.chat.schemas import (
     ChatMessageEndSSE,
     ChatMessageSSE,
     ChatMessageStartSSE,
+    ChatTitleUpdatedSSE,
 )
 from wallstr.chat.services import ChatService
 from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, get_llm
-from wallstr.documents.llm import get_rag
+from wallstr.core.rate_limiters import get_rate_limiter
+from wallstr.documents.llm import get_pages, get_rag
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import debug
 from wallstr.worker import dramatiq
@@ -120,6 +122,26 @@ async def process_chat_message(
     )
     debug("".join(chunks))
 
+    # set chat title
+    chat = await chat_svc.get_chat(message.chat_id, message.user_id)
+    if chat and not chat.title:
+        title = await derive_chat_title(
+            db_session,
+            message.chat_id,
+            message.user_id,
+            content=new_message.content,
+            model=model,
+            user_prompt=message.content,
+        )
+        if title:
+            await redis.publish(
+                f"{message.user_id}:{message.chat_id}",
+                ChatTitleUpdatedSSE(
+                    id=new_message_id,
+                    content=title,
+                ).model_dump_json(),
+            )
+
     await redis.publish(
         topic,
         ChatMessageEndSSE(
@@ -129,6 +151,62 @@ async def process_chat_message(
             content=new_message.content,
         ).model_dump_json(),
     )
+
+
+async def derive_chat_title(
+    db_session: AsyncSession,
+    chat_id: UUID,
+    user_id: UUID,
+    content: str,
+    *,
+    model: SUPPORTED_LLM_MODELS_TYPES,
+    user_prompt: str,
+) -> str | None:
+    llm = get_llm(model=model)
+    rate_limiter = get_rate_limiter(model)
+
+    messages = [
+        SystemMessage(SYSTEM_PROMPT),
+        HumanMessage(
+            content="""
+            You need derive a title for the chat based on context in format as 'Company | Topic'.
+            Context contains user prompt and LLM response
+            Company is a name of the company
+            Topic should be not longer than 3 words"
+            """
+        ),
+        HumanMessage(content=f"User prompt: {user_prompt}"),
+        HumanMessage(content=f"AI response: {content}"),
+    ]
+    await rate_limiter.acquire(llm, messages)
+    with get_openai_callback() as cb:
+        response = await llm.ainvoke(messages)
+    logger.info(
+        f"OpenAI tokens used for getting title: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$"
+    )
+
+    title = response.content
+    if not title:
+        logger.error("Title not derived")
+        return None
+
+    if not isinstance(title, str):
+        logger.error("Title is not a string")
+        return None
+
+    chat_svc = ChatService(db_session)
+    async with db_session.begin():
+        chat = await chat_svc.get_chat(chat_id, user_id)
+        if not chat:
+            logger.error(f"Chat {chat_id} not found")
+            return None
+
+        if chat.title:
+            logger.warning(f"Chat {chat_id} already has a title")
+            return None
+
+        await chat_svc.set_chat_title(chat_id, title)
+    return title
 
 
 async def get_llm_context(

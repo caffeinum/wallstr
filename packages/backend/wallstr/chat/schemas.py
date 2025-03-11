@@ -43,6 +43,15 @@ class Chat(BaseModel):
     messages: Paginated[ChatMessage]
 
 
+class ChatTitleUpdatedSSE(SSE):
+    id: UUID
+    content: str
+
+    @computed_field
+    def type(self) -> str:
+        return "chat_title_updated"
+
+
 class ChatMessageSSE(SSE):
     id: UUID
     content: str
