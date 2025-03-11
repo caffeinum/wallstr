@@ -109,7 +109,7 @@ async def generate_memo(
                     chat_svc = MemoService(db_session)
                     await chat_svc.create_memo_section(
                         memo=memo,
-                        group=f"{group_index + 1} {group.name}",
+                        group=f"{group_index + 1}. {group.name}",
                         aspect=section.name,
                         prompt=section.prompt,
                         content=response.content,

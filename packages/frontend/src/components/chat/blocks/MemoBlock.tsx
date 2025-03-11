@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { AgGridReact } from "ag-grid-react";
 import {
   ClientSideRowModelModule,
@@ -32,17 +33,20 @@ export default function MemoBlock({
   className?: string;
 }) {
   const { resolvedTheme } = useTheme();
-  const sections = useMemo(() => groupBy(message.memo?.sections ?? [], (section) => section.group), [message]);
-  const pages = useMemo(() => Object.keys(sections).sort(), [sections]);
+  const groupedSections = useMemo(() => groupBy(message.memo?.sections ?? [], (section) => section.group), [message]);
+  const pages = useMemo(() => Object.keys(groupedSections).sort(), [groupedSections]);
   const [page, setPage] = useState(0);
-  const [data, setData] = useState(sections[pages[page]]);
+  const [data, setData] = useState(groupedSections[pages[page]]);
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setData(
-      sections[pages[page]]?.map((section, index) => ({ ...section, value: { index, content: section.content } })),
+      groupedSections[pages[page]]?.map((section, index) => ({
+        ...section,
+        value: { index, content: section.content },
+      })),
     );
-  }, [page, pages, sections]);
+  }, [page, pages, groupedSections]);
 
   const toggleExpand = useCallback(
     (e: MouseEvent<SVGElement>) => {
@@ -55,6 +59,36 @@ export default function MemoBlock({
     },
     [onToggleExpand, setIsExpanded, isExpanded],
   );
+
+  const onCopy = useCallback(async () => {
+    const html = pages
+      .map((page) => {
+        const sections = groupedSections[page];
+
+        return renderToStaticMarkup(
+          <>
+            <h1> {page}</h1>
+            {sections.map((section) => (
+              <>
+                <h2>{section.aspect}</h2>
+                <Markdown remarkPlugins={[remarkGfm]} components={MarkdownComponents} key={section.id}>
+                  {section.content}
+                </Markdown>
+              </>
+            ))}
+          </>,
+        );
+      })
+      .join("")
+      .replace(/<button[^>]*>.*?<\/button>/g, "");
+
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([htmlToText(html)], { type: "text/plain" }),
+      }),
+    ]);
+  }, [pages, groupedSections, MarkdownComponents]);
 
   const columnDefs: ColDef<MemoSection>[] = useMemo(() => {
     const headerName = pages[page] || "";
@@ -114,7 +148,8 @@ export default function MemoBlock({
       className={`${className || ""} flex flex-col ${isExpanded ? "absolute z-3 top-0 left-0 h-screen w-full bg-base-100" : "h-[calc(100vh-10em)]"}`}
     >
       <div className="relative flex-1">
-        <div className="absolute top-2 right-2 p-2 z-2">
+        <div className="absolute top-2 right-2 p-2 z-2 flex flex-row gap-2">
+          <CopyButton onCopy={onCopy} />
           {isExpanded ? (
             <HiOutlineArrowsPointingIn className="w-4 h-4 cursor-pointer animate-press" onClick={toggleExpand} />
           ) : (
