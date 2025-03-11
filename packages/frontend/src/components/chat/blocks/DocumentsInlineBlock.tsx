@@ -80,7 +80,7 @@ function InlineDocument({
   }, [onOpen, id, status]);
 
   return (
-    <span className="flex items-center justify-end gap-2 p-2">
+    <span className="flex items-center justify-end gap-2 p-2 pr-0">
       <DocumentStatusIcon status={status} hasError={!!error} onRestartProcessing={() => onRestartProcessing(id)} />
       <DocumentIcon filename={filename} />
       <span className={`text-sm truncate ${status === "uploading" ? "" : "hover:link"}`} onClick={onClick}>

@@ -234,7 +234,7 @@ export default function ChatMessages({
   }
 
   return (
-    <div className={twMerge("flex flex-col justify-end", className)}>
+    <div className={twMerge("flex flex-col justify-end px-3 md:px-0", className)}>
       <div className="flex flex-col-reverse w-full overflow-y-scroll">
         <div className="space-y-4 w-full max-w-4xl mx-auto">
           {hasNextPage && (

@@ -131,29 +131,21 @@ export default function MemoBlock({
         />
       </div>
 
-      <div className="mt-2 relative flex justify-center">
-        <ul className="steps text-xs">
-          {Array.from({ length: pages.length }, (_, index) => (
-            <li
-              key={index}
-              className={`step cursor-pointer ${page === index ? "step-neutral" : ""}`}
-              onClick={() => setPage(index)}
-            ></li>
-          ))}
-          {/* TOOD: switch from steps to dots
-          {Array.from({ length: pages.length }, (_, index) => (
-            <li
-              key={index}
-              className={`cursor-pointer rounded-full w-7 h-7 flex items-center justify-center
-                ${page === index ? "inset-shadow-sm border-1 border-base-content/20" : "text-base-content/70"}`}
-              onClick={() => setPage(index)}
-            >
-              {index + 1}
-            </li>
-          ))}
-          */}
-        </ul>
-      </div>
+      {pages.length > 1 && (
+        <div className="my-2 relative flex justify-center">
+          <ul className="join">
+            {Array.from({ length: pages.length }, (_, index) => (
+              <button
+                className={`join-item btn btn-sm ${page === index ? "btn-active dark:bg-black/80" : ""}`}
+                key={index}
+                onClick={() => setPage(index)}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
