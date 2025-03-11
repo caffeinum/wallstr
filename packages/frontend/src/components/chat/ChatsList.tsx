@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 import { useState, useEffect } from "react";
@@ -27,15 +27,18 @@ export default function ChatsList({
   });
 
   const sse = useSSE();
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!sse) return;
 
-    function onChatTitleUpdated() {}
+    function onChatTitleUpdated() {
+      queryClient.invalidateQueries({ queryKey: ["/chats"] });
+    }
     sse.on("chat_title_updated", onChatTitleUpdated);
     return () => {
       sse.off("chat_title_updated", onChatTitleUpdated);
     };
-  }, [sse]);
+  }, [sse, queryClient]);
 
   useEffect(() => {
     if (forceCollapse) {

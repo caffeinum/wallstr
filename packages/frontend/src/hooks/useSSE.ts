@@ -4,10 +4,13 @@ import { settings } from "@/conf";
 import EventEmitter from "eventemitter3";
 
 const ee = new EventEmitter();
+let eventSource: EventSource | null = null;
 
 export const useSSE = (): EventEmitter => {
   useEffect(() => {
-    const eventSource = new EventSource(`${settings.API_URL}/sse`, {
+    if (eventSource) return;
+
+    eventSource = new EventSource(`${settings.API_URL}/sse`, {
       withCredentials: true,
     });
 
@@ -17,12 +20,14 @@ export const useSSE = (): EventEmitter => {
     };
 
     eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      eventSource.close();
+      console.warn("SSE Error:", error);
+      eventSource?.close();
+      eventSource = null;
     };
 
     return () => {
-      eventSource.close();
+      eventSource?.close();
+      eventSource = null;
     };
   }, []);
 
