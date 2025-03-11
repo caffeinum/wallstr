@@ -12,7 +12,12 @@ from structlog.contextvars import bind_contextvars
 
 from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.tasks import generate_memo
-from wallstr.chat.models import ChatMessageModel, ChatMessageRole, ChatMessageType
+from wallstr.chat.models import (
+    ChatMessageModel,
+    ChatMessageRole,
+    ChatMessageType,
+    ChatModel,
+)
 from wallstr.chat.schemas import (
     ChatMessageEndSSE,
     ChatMessageSSE,
@@ -86,7 +91,12 @@ async def process_chat_message(
 
     topic = f"{message.user_id}:{message.chat_id}:{message.id}"
     new_message_id = uuid4()
-    await redis.publish(topic, ChatMessageStartSSE(id=new_message_id).model_dump_json())
+    await redis.publish(
+        topic,
+        ChatMessageStartSSE(
+            id=new_message_id, chat_id=message.chat_id
+        ).model_dump_json(),
+    )
 
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
     logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
@@ -111,7 +121,7 @@ async def process_chat_message(
             await redis.publish(
                 topic,
                 ChatMessageSSE(
-                    id=new_message_id, content=chunk_content
+                    id=new_message_id, chat_id=message.chat_id, content=chunk_content
                 ).model_dump_json(),
             )
     logger.info(f"OpenAI tokens used: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$")
@@ -124,11 +134,11 @@ async def process_chat_message(
 
     # set chat title
     chat = await chat_svc.get_chat(message.chat_id, message.user_id)
-    if chat and not chat.title:
+    if chat:
         title = await derive_chat_title(
             db_session,
-            message.chat_id,
-            message.user_id,
+            chat,
+            allow_rewrite=True,
             content=new_message.content,
             model=model,
             user_prompt=message.content,
@@ -147,6 +157,7 @@ async def process_chat_message(
         ChatMessageEndSSE(
             id=new_message_id,
             new_id=new_message.id,
+            chat_id=new_message.chat_id,
             created_at=new_message.created_at,
             content=new_message.content,
         ).model_dump_json(),
@@ -155,13 +166,15 @@ async def process_chat_message(
 
 async def derive_chat_title(
     db_session: AsyncSession,
-    chat_id: UUID,
-    user_id: UUID,
-    content: str,
+    chat: ChatModel,
     *,
+    allow_rewrite: bool,
+    content: str,
     model: SUPPORTED_LLM_MODELS_TYPES,
     user_prompt: str,
 ) -> str | None:
+    if chat.title and not allow_rewrite:
+        return None
     llm = get_llm(model=model)
     rate_limiter = get_rate_limiter(model)
 
@@ -196,16 +209,17 @@ async def derive_chat_title(
 
     chat_svc = ChatService(db_session)
     async with db_session.begin():
-        chat = await chat_svc.get_chat(chat_id, user_id)
-        if not chat:
-            logger.error(f"Chat {chat_id} not found")
-            return None
+        if not allow_rewrite:
+            synced_chat = await chat_svc.get_chat(chat.id, chat.user_id)
+            if not synced_chat:
+                logger.error(f"Chat {chat.id} not found")
+                return None
 
-        if chat.title:
-            logger.warning(f"Chat {chat_id} already has a title")
-            return None
+            if synced_chat.title:
+                logger.warning(f"Chat {synced_chat.id} already has a title")
+                return None
 
-        await chat_svc.set_chat_title(chat_id, title)
+        await chat_svc.set_chat_title(chat.id, title)
     return title
 
 
