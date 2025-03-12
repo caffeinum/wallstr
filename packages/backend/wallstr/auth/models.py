@@ -6,8 +6,9 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils.types import PasswordType
 
+from wallstr.auth.schemas import UserSettings
 from wallstr.conf import settings
-from wallstr.models.base import RecordModel, string_column, utc_now
+from wallstr.models.base import PydanticJSON, RecordModel, string_column, utc_now
 
 
 class UserModel(RecordModel):
@@ -23,6 +24,10 @@ class UserModel(RecordModel):
             pdbkdf2_sha512__rounds=25000,
         ),
         nullable=True,
+    )
+
+    settings: Mapped[UserSettings] = mapped_column(
+        PydanticJSON(UserSettings), default=dict, server_default="{}"
     )
 
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)

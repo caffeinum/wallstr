@@ -1,10 +1,11 @@
 import base64
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 from uuid import UUID, uuid4
 
 import sqlalchemy
-from pydantic import EmailStr, HttpUrl
+from fastapi.encoders import jsonable_encoder
+from pydantic import EmailStr, HttpUrl, TypeAdapter, parse_obj_as
 from sqlalchemy import LargeBinary, MetaData, String, TypeDecorator
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Dialect
@@ -99,3 +100,26 @@ class RecordModel(TimestampModel):
         return (
             f"{self.__class__.__module__}.{self.__class__.__qualname__}(id='{self.id}')"
         )
+
+
+T = TypeVar("T", bound=BaseModel)
+
+
+class PydanticJSON(TypeDecorator[T]):
+    """
+    Creates a JSONB column that stores Pydantic models.
+    https://gist.github.com/imankulov/4051b7805ad737ace7d8de3d3f934d6b
+    """
+
+    impl = postgresql.JSONB
+
+    def __init__(self, pydantic_model: T, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.pydantic_model = pydantic_model
+        self.type_adapter: TypeAdapter[T] = TypeAdapter(pydantic_model)
+
+    def process_bind_param(self, value: T | None, dialect: Dialect) -> Any:
+        return jsonable_encoder(value)
+
+    def process_result_value(self, value: str | None, dialect: Dialect) -> T:
+        return self.type_adapter.validate_python(value)
