@@ -18,7 +18,7 @@ class ModelConfig(BaseSettings):
 
 class OpenAIModelConfig(ModelConfig):
     NAME: str
-    PROVIDER: Literal["OPENAI", "AZURE"] = "OPENAI"
+    PROVIDER: Literal["OPENAI", "AZURE"]
     AZURE_API_URL: str | None = None
     AZURE_API_KEY: SecretStr | None = None
     OPENAI_API_KEY: SecretStr | None = None
@@ -66,5 +66,14 @@ class ModelsConfig(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
-    GPT_4O: Gpt4oConfig = Gpt4oConfig()
-    GPT_4O_MINI: Gpt4oMiniConfig = Gpt4oMiniConfig()
+    GPT_4O: Gpt4oConfig | None = None
+    GPT_4O_MINI: Gpt4oMiniConfig | None = None
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def get_enabled_models(self) -> list[str]:
+        enabled_models = []
+        for model in self.__dict__.values():
+            if model and model.NAME:
+                enabled_models.append(model.NAME)
+        return enabled_models

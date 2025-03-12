@@ -25,3 +25,4 @@ class ConfigResponse(BaseModel):
     name: str = "Wallstr"
     version: str
     auth: AuthConfig
+    llm_models: list[str]

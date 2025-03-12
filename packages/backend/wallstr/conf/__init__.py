@@ -104,6 +104,16 @@ class Config(BaseSettings):
     def AUTH_PROVIDERS(self) -> list[str]:
         return []
 
+    @computed_field  # type: ignore[misc]
+    @property
+    def LLM_MODELS(self) -> list[str]:
+        return settings.MODELS.get_enabled_models
+
 
 # https://github.com/pydantic/pydantic/issues/3753
 config = Config.model_validate({})
+
+if not config.LLM_MODELS:
+    raise Exception(
+        "Application isn't configured with any LLM models, please provide MODELS__ env variables"
+    )

@@ -117,8 +117,10 @@ async def get_config() -> ConfigResponse:
     return ConfigResponse(
         version=settings.VERSION,
         auth=AuthConfig(
-            allow_signup=config.AUTH_ALLOW_SIGNUP, providers=config.AUTH_PROVIDERS
+            allow_signup=config.AUTH_ALLOW_SIGNUP,
+            providers=config.AUTH_PROVIDERS,
         ),
+        llm_models=config.LLM_MODELS,
     )
 
 
