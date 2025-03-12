@@ -7,7 +7,7 @@ from authlib.jose.errors import BadSignatureError, DecodeError
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 from wallstr.conf import settings
-from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
 from wallstr.models.base import utc_now
 
 

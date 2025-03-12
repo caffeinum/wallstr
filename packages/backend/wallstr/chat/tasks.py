@@ -5,11 +5,13 @@ import structlog
 from dramatiq.middleware import CurrentMessage
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from pydantic import BaseModel, Field
 from sqlalchemy import sql
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog.contextvars import bind_contextvars
 
+from wallstr.auth.services import UserService
 from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.tasks import generate_memo
 from wallstr.chat.models import (
@@ -25,9 +27,10 @@ from wallstr.chat.schemas import (
     ChatTitleUpdatedSSE,
 )
 from wallstr.chat.services import ChatService
-from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, get_llm
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
+from wallstr.core.llm import get_llm
 from wallstr.core.rate_limiters import get_rate_limiter
-from wallstr.documents.llm import get_pages, get_rag
+from wallstr.documents.llm import get_rag
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import debug
 from wallstr.worker import dramatiq
@@ -65,9 +68,20 @@ async def process_chat_message(
         raise Exception("No redis")
 
     bind_contextvars(chat_id=message.chat_id, message_id=message.id)
-    llm = get_llm(model=model)
 
-    response = await llm.with_structured_output(Action, strict=True).ainvoke(
+    user_svc = UserService(db_session)
+    user = await user_svc.get_user(message.user_id)
+    if not user:
+        raise Exception("User not found")
+    if user.deleted_at:
+        raise Exception("User is deleted")
+
+    bind_contextvars(user_id=user.id)
+    llm = get_llm(model=user.settings.llm_model or model)
+    openai_llm = (
+        llm if isinstance(llm, (ChatOpenAI, AzureChatOpenAI)) else get_llm(model)
+    )
+    response = await openai_llm.with_structured_output(Action, strict=True).ainvoke(
         [
             SystemMessage(SYSTEM_PROMPT),
             HumanMessage(
@@ -106,9 +120,9 @@ async def process_chat_message(
         async for chunk in llm.astream(
             [*llm_context, HumanMessage(content=message.content)], stream_usage=True
         ):
-            if not chunk.content:
+            chunk_content = chunk if isinstance(chunk, str) else chunk.content
+            if not chunk_content:
                 continue
-            chunk_content = chunk.content
             if not isinstance(chunk_content, str):
                 # TODO: don't output dict content when type handled
                 logger.error(f"Chunk content is not a string {chunk_content}")
@@ -198,7 +212,7 @@ async def derive_chat_title(
         f"OpenAI tokens used for getting title: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$"
     )
 
-    title = response.content
+    title = response if isinstance(response, str) else response.content
     if not title:
         logger.error("Title not derived")
         return None

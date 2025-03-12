@@ -13,7 +13,8 @@ from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.services import MemoService
 from wallstr.chat.models import ChatMessageType
 from wallstr.chat.services import ChatService
-from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, get_llm
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
+from wallstr.core.llm import get_llm
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.core.utils import tiktok
 from wallstr.documents.llm import get_rag
@@ -101,8 +102,9 @@ async def generate_memo(
                 await rate_limiter.acquire(llm, messages)
                 response = await llm.ainvoke(messages)
 
-                if not isinstance(response.content, str):
-                    logger.error(f"Invalid response content: {response.content}")
+                content = response if isinstance(response, str) else response.content
+                if not isinstance(content, str):
+                    logger.error(f"Invalid response content: {content}")
                     return
 
                 async with session_maker() as db_session:
@@ -112,7 +114,7 @@ async def generate_memo(
                         group=f"{group_index + 1}. {group.name}",
                         aspect=section.name,
                         prompt=section.prompt,
-                        content=response.content,
+                        content=content,
                         index=index,
                     )
 

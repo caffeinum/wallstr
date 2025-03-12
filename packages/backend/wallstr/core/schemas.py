@@ -2,6 +2,8 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, computed_field
 
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
+
 T = TypeVar("T")
 
 
@@ -25,4 +27,4 @@ class ConfigResponse(BaseModel):
     name: str = "Wallstr"
     version: str
     auth: AuthConfig
-    llm_models: list[str]
+    llm_models: list[SUPPORTED_LLM_MODELS_TYPES]

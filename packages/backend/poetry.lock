@@ -5883,21 +5883,21 @@ files = [
 
 [[package]]
 name = "replicate"
-version = "1.0.4"
+version = "0.34.2"
 description = "Python client for Replicate"
 optional = false
 python-versions = ">=3.8"
-groups = ["main"]
+groups = ["worker"]
 files = [
-    {file = "replicate-1.0.4-py3-none-any.whl", hash = "sha256:f568f6271ff715067901b6094c23c37373bbcfd7de0ff9b85e9c9ead567e09e7"},
-    {file = "replicate-1.0.4.tar.gz", hash = "sha256:f718601863ef1f419aa7dcdab1ea8770ba5489b571b86edf840cd506d68758ef"},
+    {file = "replicate-0.34.2-py3-none-any.whl", hash = "sha256:ea3ab3cf07116d893badbe5f829de001bd39340e0f01302b73c101fd2816ec63"},
+    {file = "replicate-0.34.2.tar.gz", hash = "sha256:e5fd7edaa6ff6be5c4b189b7c65874fa9bc968c6fb19a59d38cbeb6b4c5e10ee"},
 ]
 
 [package.dependencies]
 httpx = ">=0.21.0,<1"
 packaging = "*"
 pydantic = ">1.10.7"
-typing_extensions = ">=4.5.0"
+typing-extensions = ">=4.5.0"
 
 [[package]]
 name = "requests"
@@ -8627,4 +8627,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "a1a1487227a057679c641af204932d1748debba82954d1f3e33247d9f577c7a2"
+content-hash = "dce5d760b411021a0f607d7a37eb455d5a3d9160bba9169abbe4f2d192aaaf3e"

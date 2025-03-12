@@ -6,7 +6,7 @@ import tomllib
 from pydantic import HttpUrl, SecretStr, ValidationInfo, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from wallstr.conf.models import ModelsConfig
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES, ModelsConfig
 
 
 def get_version() -> str:
@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: SecretStr | None = None
     LOGFIRE_TOKEN: SecretStr | None = None
 
+    REPLICATE_API_KEY: SecretStr | None = None
     MODELS: ModelsConfig = ModelsConfig()
 
     CORS_ALLOW_ORIGINS: list[str] = []
@@ -106,7 +107,7 @@ class Config(BaseSettings):
 
     @computed_field  # type: ignore[misc]
     @property
-    def LLM_MODELS(self) -> list[str]:
+    def LLM_MODELS(self) -> list[SUPPORTED_LLM_MODELS_TYPES]:
         return settings.MODELS.get_enabled_models
 
 

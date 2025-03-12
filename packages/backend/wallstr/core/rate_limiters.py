@@ -6,11 +6,13 @@ from datetime import datetime, timedelta
 from typing import TypedDict, overload
 
 import structlog
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage
 from langchain_core.prompt_values import PromptValue
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from tiktoken import encoding_for_model
 
-from wallstr.core.llm import SUPPORTED_LLM_MODELS_TYPES, LLMModel, estimate_input_tokens
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
+from wallstr.core.llm import LLMModel, estimate_input_tokens
 
 logger = structlog.get_logger()
 
@@ -23,15 +25,16 @@ class Request(TypedDict):
 
 # Add distributed Redis rate-limiter
 class RateLimiter:
-    def __init__(self, model: str, *, key: str, tpm: int, rpm: int) -> None:
+    def __init__(
+        self, model: str, *, key: str, tpm: int | None = None, rpm: int | None = None
+    ) -> None:
         self.model = model
         self.key = key
         self.tpm = tpm
         self.rpm = rpm
 
-        self.tpm_capacity = tpm
-        self.rpm_capacity = rpm
-        self.enc = encoding_for_model(model)
+        self.tpm_capacity = tpm or float("inf")
+        self.rpm_capacity = rpm or float("inf")
 
         self.dequeue: deque[Request] = deque()
         self.lock = asyncio.Lock()
@@ -57,9 +60,19 @@ class RateLimiter:
         llm: LLMModel,
         input_: int | PromptValue | Sequence[BaseMessage],
     ) -> None:
+        if not isinstance(llm, (ChatOpenAI, AzureChatOpenAI)):
+            """
+            Rate limiter is only for OpenAI models
+            """
+            return
+
+        if not llm.model_name:
+            raise ValueError(f"Model name is not set for {llm}")
+
         tokens_per_message = 3
         if isinstance(input_, PromptValue):
-            tokens = len(self.enc.encode(input_.to_string()))
+            enc = encoding_for_model(llm.model_name)
+            tokens = len(enc.encode(input_.to_string()))
             messages = len(input_.to_messages())
         elif isinstance(input_, int):
             tokens = input_
@@ -127,6 +140,7 @@ TIERS = {
             "rpm": 5000,
         },
     },
+    "llama3-70b": {},
 }
 
 
@@ -142,6 +156,10 @@ gpt4o_rate_limiter = RateLimiter(
     tpm=TIERS["gpt-4o"]["tier2"]["tpm"],
     rpm=TIERS["gpt-4o"]["tier2"]["tpm"],
 )
+llama3_70b_rate_limiter = RateLimiter(
+    model="llama3-70b",
+    key="main",
+)
 
 
 def get_rate_limiter(model: SUPPORTED_LLM_MODELS_TYPES) -> RateLimiter:
@@ -149,4 +167,6 @@ def get_rate_limiter(model: SUPPORTED_LLM_MODELS_TYPES) -> RateLimiter:
         return gpt4o_mini_rate_limiter
     if model == "gpt-4o":
         return gpt4o_rate_limiter
+    if model == "llama3-70b":
+        return llama3_70b_rate_limiter
     raise ValueError(f"Unknown model {model}")

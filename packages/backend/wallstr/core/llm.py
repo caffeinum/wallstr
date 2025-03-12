@@ -5,24 +5,25 @@ from typing import Literal
 
 import structlog
 import tiktoken
+from langchain_community.llms.replicate import Replicate
 from langchain_core.messages import BaseMessage
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from PIL.Image import Image
 
 from wallstr.conf import settings
+from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
 
 logger = structlog.get_logger()
 
-SUPPORTED_LLM_MODELS_TYPES = Literal["llama3.2", "gpt-4o", "gpt-4o-mini", "llava"]
-SUPPORTED_LLM_MODELS_WITH_VISION = ["gpt-4o-mini", "llava"]
-SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = Literal["gpt-4o-mini", "llava"]
+SUPPORTED_LLM_MODELS_WITH_VISION = ["gpt-4o-mini"]
+SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = Literal["gpt-4o-mini"]
 
-LLMModel = ChatOllama | ChatOpenAI | AzureChatOpenAI
+LLMModel = ChatOllama | ChatOpenAI | AzureChatOpenAI | Replicate
 
 
 def get_llm(
-    model: SUPPORTED_LLM_MODELS_TYPES | None = None,
+    model: SUPPORTED_LLM_MODELS_TYPES,
 ) -> LLMModel:
     if model is not None:
         match model:
@@ -64,19 +65,28 @@ def get_llm(
                 raise Exception(
                     f"Not supported provider {settings.MODELS.GPT_4O.PROVIDER} for GPT-4o-mini"
                 )
-            case "llava" | "llama3.2":
-                return ChatOllama(
-                    model=model, base_url=settings.OLLAMA_URL.get_secret_value()
+            case "llama3-70b":
+                if settings.MODELS.LLAMA3_70B is None:
+                    raise Exception("Model llama3-70b is not supported in settings")
+                if settings.MODELS.LLAMA3_70B.PROVIDER == "REPLICATE":
+                    replicate_api_key = (
+                        settings.MODELS.LLAMA3_70B.REPLICATE_API_KEY
+                        or settings.REPLICATE_API_KEY
+                    )
+                    if replicate_api_key is None:
+                        raise Exception(
+                            "Replicate API key is not set for llama3-70b model"
+                        )
+                    return Replicate(
+                        model="meta/meta-llama-3-70b",
+                        replicate_api_token=replicate_api_key.get_secret_value(),
+                    )
+
+                raise Exception(
+                    f"Not supported provider {settings.MODELS.LLAMA3_70B.PROVIDER} for llama3-70b"
                 )
             case _:
                 raise ValueError(f"Unsupported model: {model}")
-
-    if settings.OLLAMA_URL.get_secret_value() is not None:
-        return ChatOllama(
-            model="llama3.2", base_url=settings.OLLAMA_URL.get_secret_value()
-        )
-
-    return ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-4o-2024-08-06")
 
 
 def get_llm_with_vision(

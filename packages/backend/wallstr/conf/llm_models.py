@@ -16,8 +16,15 @@ class ModelConfig(BaseSettings):
     RPM: int
 
 
+TGpt4o = Literal["gpt-4o"]
+TGpt4oMini = Literal["gpt-4o-mini"]
+TLlama3_70b = Literal["llama3-70b"]
+
+SUPPORTED_LLM_MODELS_TYPES = TGpt4o | TGpt4oMini | TLlama3_70b
+
+
 class OpenAIModelConfig(ModelConfig):
-    NAME: str
+    NAME: TGpt4o | TGpt4oMini
     PROVIDER: Literal["OPENAI", "AZURE"]
     AZURE_API_URL: str | None = None
     AZURE_API_KEY: SecretStr | None = None
@@ -43,20 +50,47 @@ class OpenAIModelConfig(ModelConfig):
 
 
 class Gpt4oConfig(OpenAIModelConfig):
+    """
+    https://platform.openai.com/docs/models/gpt-4o
+    """
+
     model_config = SettingsConfigDict(
         env_nested_delimiter="__",
     )
-    NAME: str = "gpt-4o"
+    NAME: TGpt4o | TGpt4oMini = "gpt-4o"
+
     TPM: int = 450_000
     TPD: int = 1_350_000
     RPM: int = 5_000
 
+    context_window: int = 128_000
+
 
 class Gpt4oMiniConfig(OpenAIModelConfig):
-    NAME: str = "gpt-4o-mini"
+    """
+    https://platform.openai.com/docs/models/gpt-4o-mini
+    """
+
+    NAME: TGpt4o | TGpt4oMini = "gpt-4o-mini"
+
     TPM: int = 2_000_000
     TPD: int = 20_000_000
     RPM: int = 5_000
+
+    context_window: int = 128_000
+
+
+class Llama3_70bConfig(ModelConfig):
+    NAME: TLlama3_70b = "llama3-70b"
+    PROVIDER: Literal["REPLICATE"]
+    REPLICATE_API_KEY: SecretStr | None = None
+
+    # Not supported
+    TPM: int = 0
+    TPD: int = 0
+    RPM: int = 0
+
+    context_window: int = 8_000
 
 
 class ModelsConfig(BaseSettings):
@@ -68,10 +102,11 @@ class ModelsConfig(BaseSettings):
     )
     GPT_4O: Gpt4oConfig | None = None
     GPT_4O_MINI: Gpt4oMiniConfig | None = None
+    LLAMA3_70B: Llama3_70bConfig | None = None
 
     @computed_field  # type: ignore[misc]
     @property
-    def get_enabled_models(self) -> list[str]:
+    def get_enabled_models(self) -> list[SUPPORTED_LLM_MODELS_TYPES]:
         enabled_models = []
         for model in self.__dict__.values():
             if model and model.NAME:
