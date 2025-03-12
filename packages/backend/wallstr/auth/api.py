@@ -11,6 +11,7 @@ from wallstr.auth.schemas import (
     SignInRequest,
     SignUpRequest,
     User,
+    UserSettings,
 )
 from wallstr.auth.services import AuthService, UserService
 from wallstr.auth.utils import generate_jwt
@@ -169,4 +170,21 @@ async def get_current_user(
             detail="User not found",
         )
 
+    return User.model_validate(user)
+
+
+@router.post("/me/settings", response_model=User)
+async def update_user_settings(
+    auth: Auth,
+    user_settings: UserSettings,
+    user_svc: Annotated[UserService, Depends(UserService.inject_svc)],
+) -> User:
+    user = await user_svc.get_user(auth.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    user = await user_svc.update_user_settings(user.id, user_settings)
     return User.model_validate(user)

@@ -27,6 +27,8 @@ def get_llm(
     if model is not None:
         match model:
             case "gpt-4o-mini":
+                if settings.MODELS.GPT_4O_MINI is None:
+                    raise Exception("Model gpt-4o-mini is not supported in settings")
                 if settings.MODELS.GPT_4O_MINI.PROVIDER == "OPENAI":
                     return ChatOpenAI(
                         api_key=settings.MODELS.GPT_4O_MINI.OPENAI_API_KEY
@@ -41,9 +43,11 @@ def get_llm(
                         model=settings.MODELS.GPT_4O_MINI.NAME,
                     )
                 raise Exception(
-                    f"Not supported provider {settings.MODELS.GPT_4O_MINI.PROVIDER} for GPT-4o-mini"
+                    f"Not supported provider {settings.MODELS.GPT_4O_MINI.PROVIDER} for gpt-4o-mini"
                 )
             case "gpt-4o":
+                if settings.MODELS.GPT_4O is None:
+                    raise Exception("Model gpt-4o is not supported in settings")
                 if settings.MODELS.GPT_4O.PROVIDER == "OPENAI":
                     return ChatOpenAI(
                         api_key=settings.MODELS.GPT_4O.OPENAI_API_KEY
@@ -53,19 +57,19 @@ def get_llm(
                 elif settings.MODELS.GPT_4O.PROVIDER == "AZURE":
                     return AzureChatOpenAI(
                         api_key=settings.MODELS.GPT_4O.AZURE_API_KEY,
-                        api_version=settings.MODELS.GPT_4O_MINI.AZURE_API_VERSION,
+                        api_version=settings.MODELS.GPT_4O.AZURE_API_VERSION,
                         azure_endpoint=settings.MODELS.GPT_4O.AZURE_API_URL,
                         model=settings.MODELS.GPT_4O.NAME,
                     )
                 raise Exception(
-                    f"Not supported provider {settings.MODELS.GPT_4O_MINI.PROVIDER} for GPT-4o-mini"
+                    f"Not supported provider {settings.MODELS.GPT_4O.PROVIDER} for GPT-4o-mini"
                 )
             case "llava" | "llama3.2":
                 return ChatOllama(
                     model=model, base_url=settings.OLLAMA_URL.get_secret_value()
                 )
             case _:
-                raise ValueError(f"Invalid model {model}")
+                raise ValueError(f"Unsupported model: {model}")
 
     if settings.OLLAMA_URL.get_secret_value() is not None:
         return ChatOllama(

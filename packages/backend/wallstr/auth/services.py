@@ -11,7 +11,7 @@ from wallstr.auth.errors import (
     PasswordNotSupportedError,
 )
 from wallstr.auth.models import SessionModel, UserModel
-from wallstr.auth.schemas import SignUpRequest
+from wallstr.auth.schemas import SignUpRequest, UserSettings
 from wallstr.auth.utils import generate_jwt
 from wallstr.conf import settings
 from wallstr.models.base import utc_now
@@ -122,3 +122,15 @@ class UserService(BaseService):
             await self.db.execute(
                 sql.delete(SessionModel).filter_by(refresh_token=refresh_token)
             )
+
+    async def update_user_settings(
+        self, user_id: UUID, settings: UserSettings
+    ) -> UserModel:
+        async with self.tx():
+            result = await self.db.execute(
+                sql.update(UserModel)
+                .filter_by(id=user_id)
+                .values(settings=UserModel.settings.concat(settings))
+                .returning(UserModel)
+            )
+        return result.scalar_one()

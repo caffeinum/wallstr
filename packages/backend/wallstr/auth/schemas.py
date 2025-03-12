@@ -35,6 +35,8 @@ class User(BaseModel):
     username: str
     fullname: str
 
+    settings: "UserSettings"
+
 
 class AccessToken(BaseModel):
     token: str
