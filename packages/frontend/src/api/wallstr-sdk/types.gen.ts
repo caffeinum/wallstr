@@ -36,6 +36,7 @@ export type ConfigResponse = {
   name?: string;
   version: string;
   auth: AuthConfig;
+  llm_models: Array<string>;
 };
 
 export type Document = {
@@ -129,6 +130,11 @@ export type User = {
   email: string;
   username: string;
   fullname: string;
+  settings: UserSettings;
+};
+
+export type UserSettings = {
+  llm_model?: ("llama3.2" | "gpt-4o" | "gpt-4o-mini" | "llava") | null;
 };
 
 export type ValidationError = {
@@ -242,6 +248,31 @@ export type GetCurrentUserResponses = {
 };
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type UpdateUserSettingsData = {
+  body: UserSettings;
+  path?: never;
+  query?: never;
+  url: "/auth/me/settings";
+};
+
+export type UpdateUserSettingsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type UpdateUserSettingsError = UpdateUserSettingsErrors[keyof UpdateUserSettingsErrors];
+
+export type UpdateUserSettingsResponses = {
+  /**
+   * Successful Response
+   */
+  200: User;
+};
+
+export type UpdateUserSettingsResponse = UpdateUserSettingsResponses[keyof UpdateUserSettingsResponses];
 
 export type GetChatData = {
   body?: never;

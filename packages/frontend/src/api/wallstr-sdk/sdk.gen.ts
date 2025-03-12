@@ -14,6 +14,9 @@ import type {
   SignoutResponse,
   GetCurrentUserData,
   GetCurrentUserResponse,
+  UpdateUserSettingsData,
+  UpdateUserSettingsResponse,
+  UpdateUserSettingsError,
   GetChatData,
   GetChatResponse,
   GetChatError,
@@ -129,6 +132,28 @@ export class AuthService {
       ],
       url: "/auth/me",
       ...options,
+    });
+  }
+
+  /**
+   * Update User Settings
+   */
+  public static updateUserSettings<ThrowOnError extends boolean = false>(
+    options: Options<UpdateUserSettingsData, ThrowOnError>,
+  ) {
+    return (options?.client ?? client).post<UpdateUserSettingsResponse, UpdateUserSettingsError, ThrowOnError>({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http",
+        },
+      ],
+      url: "/auth/me/settings",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
     });
   }
 }

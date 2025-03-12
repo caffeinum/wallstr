@@ -1,8 +1,11 @@
+"use client";
 import SignInForm from "@/components/auth/SignInForm";
-import { api } from "@/api";
+import { useContext } from "react";
 
-export default async function SignIn() {
-  const { data: config } = await api.default.getConfig();
+import { ConfigContext } from "@/providers/ConfigProvider";
+
+export default function SignIn() {
+  const config = useContext(ConfigContext);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

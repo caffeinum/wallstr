@@ -172,6 +172,52 @@
                 ]
             }
         },
+        "/auth/me/settings": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Update User Settings",
+                "operationId": "1::update_user_settings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserSettings"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/chats/{slug}": {
             "get": {
                 "tags": [
@@ -983,12 +1029,20 @@
                     },
                     "auth": {
                         "$ref": "#/components/schemas/AuthConfig"
+                    },
+                    "llm_models": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Llm Models"
                     }
                 },
                 "type": "object",
                 "required": [
                     "version",
-                    "auth"
+                    "auth",
+                    "llm_models"
                 ],
                 "title": "ConfigResponse"
             },
@@ -1401,6 +1455,9 @@
                     "fullname": {
                         "type": "string",
                         "title": "Fullname"
+                    },
+                    "settings": {
+                        "$ref": "#/components/schemas/UserSettings"
                     }
                 },
                 "type": "object",
@@ -1408,9 +1465,33 @@
                     "id",
                     "email",
                     "username",
-                    "fullname"
+                    "fullname",
+                    "settings"
                 ],
                 "title": "User"
+            },
+            "UserSettings": {
+                "properties": {
+                    "llm_model": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "llama3.2",
+                                    "gpt-4o",
+                                    "gpt-4o-mini",
+                                    "llava"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Llm Model"
+                    }
+                },
+                "type": "object",
+                "title": "UserSettings"
             },
             "ValidationError": {
                 "properties": {

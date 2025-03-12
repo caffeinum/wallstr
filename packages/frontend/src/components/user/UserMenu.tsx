@@ -1,13 +1,19 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "@/api";
+import { ConfigContext } from "@/providers/ConfigProvider";
+
+import type { MouseEvent } from "react";
+import type { UserSettings } from "@/api/wallstr-sdk";
 
 export default function UserMenu() {
   const router = useRouter();
+  const config = useContext(ConfigContext);
+  const queryClient = useQueryClient();
+  const [isLLMDropdownOpen, setLLMDropdownOpen] = useState(false);
 
   const { isPending, isError, data, error } = useQuery({
     queryKey: ["/auth/me"],
@@ -16,6 +22,37 @@ export default function UserMenu() {
       return data;
     },
   });
+
+  const { mutate: changeUserSettings } = useMutation({
+    mutationFn: async (llm_model: UserSettings["llm_model"]) => {
+      const { data } = await api.auth.updateUserSettings({
+        body: { llm_model },
+        throwOnError: true,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/auth/me"] });
+    },
+  });
+
+  const onLLMDropdownClick = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setLLMDropdownOpen((prev) => !prev);
+    },
+    [setLLMDropdownOpen],
+  );
+
+  const onModelChange = useCallback(
+    (model: string | null) => {
+      changeUserSettings(model as UserSettings["llm_model"]);
+      // https://github.com/saadeghi/daisyui/issues/157#issuecomment-1119796119
+      setLLMDropdownOpen(false);
+    },
+    [changeUserSettings, setLLMDropdownOpen],
+  );
 
   const handleSignOut = useCallback(() => {
     router.push("/auth/signout");
@@ -41,8 +78,26 @@ export default function UserMenu() {
           <span className="text-xs font-semibold uppercase text-base-content/80">Signed in as</span>
           <span className="text-sm font-medium">{data?.email}</span>
         </li>
-        <div className="divider my-0" />
-        <li>
+        {config && (
+          <li>
+            <details className="dropdown dropdown-end dropdown-bottom" open={isLLMDropdownOpen}>
+              <summary className="btn btn-xs btn-wide outline-none font-normal" onClick={onLLMDropdownClick}>
+                LLM: {data?.settings.llm_model || "system"}
+              </summary>
+              <ul className="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm mt-1">
+                <li>
+                  <a onClick={() => onModelChange(null)}>system</a>
+                </li>
+                {config.llm_models.map((model) => (
+                  <li key={model}>
+                    <a onClick={() => onModelChange(model)}>{model}</a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        )}
+        <li className="mt-2">
           <button onClick={handleSignOut}>Sign out</button>
         </li>
       </ul>

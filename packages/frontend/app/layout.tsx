@@ -7,6 +7,8 @@ import QueryClientProvider from "@/providers/QueryClientProvider";
 
 import "./globals.css";
 import { settings } from "@/conf";
+import { api } from "@/api";
+import ConfigProvider from "@/providers/ConfigProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,18 +25,22 @@ export const metadata: Metadata = {
   description: "AI-Powered Document Analysis",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { data: config } = await api.default.getConfig();
+
   return (
     <html lang="en" suppressHydrationWarning>
       {settings.GA_TAG ? <GoogleAnalytics gaId={settings.GA_TAG!} /> : null}
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <QueryClientProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </QueryClientProvider>
+        <ConfigProvider config={config}>
+          <QueryClientProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </QueryClientProvider>
+        </ConfigProvider>
       </body>
     </html>
   );
