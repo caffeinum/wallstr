@@ -7,20 +7,38 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class ModelConfig(BaseSettings):
     # Tokens per minute
-    TPM: int
+    TPM: int = -1
 
     # Tokens per day
-    TPD: int
+    TPD: int = -1
 
     # Requests per minute
-    RPM: int
+    RPM: int = -1
 
 
+TGemini2 = Literal["gemini-2.0-flash"]
+TGemma3_27b = Literal["gemma-3-27b"]
 TGpt4o = Literal["gpt-4o"]
 TGpt4oMini = Literal["gpt-4o-mini"]
 TLlama3_70b = Literal["llama3-70b"]
 
-SUPPORTED_LLM_MODELS_TYPES = TGpt4o | TGpt4oMini | TLlama3_70b
+SUPPORTED_LLM_MODELS_TYPES = TGemini2 | TGemma3_27b | TGpt4o | TGpt4oMini | TLlama3_70b
+
+
+class Gemma3_27bConfig(ModelConfig):
+    NAME: TGemma3_27b = "gemma-3-27b"
+    PROVIDER: Literal["REPLICATE"]
+    REPLICATE_API_KEY: SecretStr | None = None
+
+    context_window: int = 128_000
+
+
+class Gemini2Config(ModelConfig):
+    NAME: TGemini2 = "gemini-2.0-flash"
+    PROVIDER: Literal["GOOGLE"]
+    GOOGLE_API_KEY: SecretStr | None = None
+
+    context_window: int = 1_048_576
 
 
 class OpenAIModelConfig(ModelConfig):
@@ -85,11 +103,6 @@ class Llama3_70bConfig(ModelConfig):
     PROVIDER: Literal["REPLICATE"]
     REPLICATE_API_KEY: SecretStr | None = None
 
-    # Not supported
-    TPM: int = 0
-    TPD: int = 0
-    RPM: int = 0
-
     context_window: int = 8_000
 
 
@@ -100,6 +113,8 @@ class ModelsConfig(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
+    GEMINI_2: Gemini2Config | None = None
+    GEMMA_3_27B: Gemma3_27bConfig | None = None
     GPT_4O: Gpt4oConfig | None = None
     GPT_4O_MINI: Gpt4oMiniConfig | None = None
     LLAMA3_70B: Llama3_70bConfig | None = None

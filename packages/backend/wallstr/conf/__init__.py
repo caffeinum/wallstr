@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: SecretStr | None = None
     LOGFIRE_TOKEN: SecretStr | None = None
 
+    GOOGLE_API_KEY: SecretStr | None = None
     REPLICATE_API_KEY: SecretStr | None = None
     MODELS: ModelsConfig = ModelsConfig()
 

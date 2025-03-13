@@ -60,9 +60,12 @@ class RateLimiter:
         llm: LLMModel,
         input_: int | PromptValue | Sequence[BaseMessage],
     ) -> None:
+        if self.model == "noop":
+            return
+
         if not isinstance(llm, (ChatOpenAI, AzureChatOpenAI)):
             """
-            Rate limiter is only for OpenAI models
+            Rate limiter is implemented only for OpenAI models
             """
             return
 
@@ -160,6 +163,14 @@ llama3_70b_rate_limiter = RateLimiter(
     model="llama3-70b",
     key="main",
 )
+gemini_2_0_rate_limiter = RateLimiter(
+    model="gemini-2.0-flash",
+    key="main",
+)
+noop_rate_limiter = RateLimiter(
+    model="noop",
+    key="main",
+)
 
 
 def get_rate_limiter(model: SUPPORTED_LLM_MODELS_TYPES) -> RateLimiter:
@@ -169,4 +180,7 @@ def get_rate_limiter(model: SUPPORTED_LLM_MODELS_TYPES) -> RateLimiter:
         return gpt4o_rate_limiter
     if model == "llama3-70b":
         return llama3_70b_rate_limiter
-    raise ValueError(f"Unknown model {model}")
+    if model == "gemini-2.0-flash":
+        return gemini_2_0_rate_limiter
+
+    return noop_rate_limiter

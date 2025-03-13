@@ -116,9 +116,18 @@ async def process_chat_message(
     logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
     llm_context = await get_llm_context(db_session, document_ids, message)
     chunks: list[str] = []
+
     with get_openai_callback() as cb:
+        kwargs = (
+            {"stream_usage": True}
+            if isinstance(llm, (ChatOpenAI, AzureChatOpenAI))
+            else {}
+        )
         async for chunk in llm.astream(
-            [*llm_context, HumanMessage(content=message.content)], stream_usage=True
+            [*llm_context, HumanMessage(content=message.content)],
+            config=None,
+            stop=None,
+            **kwargs,
         ):
             chunk_content = chunk if isinstance(chunk, str) else chunk.content
             if not chunk_content:
@@ -138,7 +147,10 @@ async def process_chat_message(
                     id=new_message_id, chat_id=message.chat_id, content=chunk_content
                 ).model_dump_json(),
             )
-    logger.info(f"OpenAI tokens used: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$")
+    if isinstance(llm, (ChatOpenAI, AzureChatOpenAI)):
+        logger.info(
+            f"OpenAI tokens used: {cb.total_tokens:_}, cost: {cb.total_cost:.3f}$"
+        )
     new_message = await chat_svc.create_chat_message(
         chat_id=message.chat_id,
         message="".join(chunks),

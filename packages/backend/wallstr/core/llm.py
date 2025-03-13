@@ -7,9 +7,11 @@ import structlog
 import tiktoken
 from langchain_community.llms.replicate import Replicate
 from langchain_core.messages import BaseMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from PIL.Image import Image
+from pydantic import SecretStr
 
 from wallstr.conf import settings
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
@@ -19,7 +21,9 @@ logger = structlog.get_logger()
 SUPPORTED_LLM_MODELS_WITH_VISION = ["gpt-4o-mini"]
 SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = Literal["gpt-4o-mini"]
 
-LLMModel = ChatOllama | ChatOpenAI | AzureChatOpenAI | Replicate
+LLMModel = (
+    ChatOllama | ChatGoogleGenerativeAI | ChatOpenAI | AzureChatOpenAI | Replicate
+)
 
 
 def get_llm(
@@ -77,6 +81,7 @@ def get_llm(
                         raise Exception(
                             "Replicate API key is not set for llama3-70b model"
                         )
+                    _set_replicate_key(replicate_api_key)
                     return Replicate(
                         model="meta/meta-llama-3-70b",
                         replicate_api_token=replicate_api_key.get_secret_value(),
@@ -84,6 +89,51 @@ def get_llm(
 
                 raise Exception(
                     f"Not supported provider {settings.MODELS.LLAMA3_70B.PROVIDER} for llama3-70b"
+                )
+            case "gemini-2.0-flash":
+                if settings.MODELS.GEMINI_2 is None:
+                    raise Exception(
+                        "Model gemini-2.0-flash is not supported in settings"
+                    )
+
+                if settings.MODELS.GEMINI_2.PROVIDER == "GOOGLE":
+                    google_api_key = (
+                        settings.MODELS.GEMINI_2.GOOGLE_API_KEY
+                        or settings.GOOGLE_API_KEY
+                    )
+                    if google_api_key is None:
+                        raise Exception(
+                            "Google API key is not set for gemini-2.0-flash model"
+                        )
+                    return ChatGoogleGenerativeAI(
+                        model=settings.MODELS.GEMINI_2.NAME,
+                        google_api_key=google_api_key,
+                    )  # type: ignore
+
+                raise Exception(
+                    f"Not supported provider {settings.MODELS.GEMINI_2.PROVIDER} for gemini-2.0-flash"
+                )
+            case "gemma-3-27b":
+                if settings.MODELS.GEMMA_3_27B is None:
+                    raise Exception("Model gemma-3-27b is not supported in settings")
+
+                if settings.MODELS.GEMMA_3_27B.PROVIDER == "REPLICATE":
+                    replicate_api_key = (
+                        settings.MODELS.GEMMA_3_27B.REPLICATE_API_KEY
+                        or settings.REPLICATE_API_KEY
+                    )
+                    if replicate_api_key is None:
+                        raise Exception(
+                            "Replicate API key is not set for gemma-3-27b model"
+                        )
+                    _set_replicate_key(replicate_api_key)
+                    return Replicate(
+                        model="google-deepmind/gemma-3-27b-it",
+                        replicate_api_token=replicate_api_key.get_secret_value(),
+                    )
+
+                raise Exception(
+                    f"Not supported provider {settings.MODELS.GEMMA_3_27B.PROVIDER} for gemma-3-27b"
                 )
             case _:
                 raise ValueError(f"Unsupported model: {model}")
@@ -194,3 +244,13 @@ def _merge_langchain_messages(
         else:
             logger.warning(f"Unsupported message type {message}")
     return output
+
+
+def _set_replicate_key(replicate_api_key: SecretStr) -> None:
+    """
+    LangChain bug: https://github.com/langchain-ai/langchain/pull/27859
+    setting replicate_api_token doesn't work for replicate client
+    """
+    import os
+
+    os.environ["REPLICATE_API_TOKEN"] = replicate_api_key.get_secret_value()

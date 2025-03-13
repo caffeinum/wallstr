@@ -8,7 +8,9 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 from ruamel.yaml import YAML
+from structlog.contextvars import bind_contextvars
 
+from wallstr.auth.services import UserService
 from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.services import MemoService
 from wallstr.chat.models import ChatMessageType
@@ -63,9 +65,17 @@ async def generate_memo(
     message = await chat_svc.get_chat_message(UUID(message_id))
     if not message:
         raise Exception("Message not found")
-
     if message.message_type != ChatMessageType.MEMO:
         raise Exception("Message is not a memo")
+
+    user_svc = UserService(db_session_)
+    user = await user_svc.get_user(message.user_id)
+    if not user:
+        raise Exception("User not found")
+    if user.deleted_at:
+        raise Exception("User is deleted")
+
+    bind_contextvars(user_id=user.id, chat_id=message.chat_id, message_id=message.id)
 
     # TODO: fallback if there is no documents
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
@@ -77,7 +87,8 @@ async def generate_memo(
     if not memo:
         memo = await memo_svc.create_memo(message, user_prompt)
 
-    llm = get_llm(model=model)
+    bind_contextvars(memo_id=memo.id)
+    llm = get_llm(model=user.settings.llm_model or model)
     rate_limiter = get_rate_limiter(model)
 
     async def generate_memo_group(group_index: int, group: MemoGroupTemplate) -> None:
