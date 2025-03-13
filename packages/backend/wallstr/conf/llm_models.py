@@ -16,13 +16,24 @@ class ModelConfig(BaseSettings):
     RPM: int = -1
 
 
+TClaude35Sonnet = Literal["claude-3.5-sonnet"]
 TGemini2 = Literal["gemini-2.0-flash"]
 TGemma3_27b = Literal["gemma-3-27b"]
 TGpt4o = Literal["gpt-4o"]
 TGpt4oMini = Literal["gpt-4o-mini"]
 TLlama3_70b = Literal["llama3-70b"]
 
-SUPPORTED_LLM_MODELS_TYPES = TGemini2 | TGemma3_27b | TGpt4o | TGpt4oMini | TLlama3_70b
+SUPPORTED_LLM_MODELS_TYPES = (
+    TClaude35Sonnet | TGemini2 | TGemma3_27b | TGpt4o | TGpt4oMini | TLlama3_70b
+)
+
+
+class Claude35SonnetConfig(ModelConfig):
+    NAME: TClaude35Sonnet = "claude-3.5-sonnet"
+    PROVIDER: Literal["REPLICATE"]
+    REPLICATE_API_KEY: SecretStr | None = None
+
+    context_window: int = 200_000
 
 
 class Gemma3_27bConfig(ModelConfig):
@@ -113,6 +124,7 @@ class ModelsConfig(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
+    CLAUDE_35_SONNET: Claude35SonnetConfig | None = None
     GEMINI_2: Gemini2Config | None = None
     GEMMA_3_27B: Gemma3_27bConfig | None = None
     GPT_4O: Gpt4oConfig | None = None

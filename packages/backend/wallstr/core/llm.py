@@ -31,6 +31,29 @@ def get_llm(
 ) -> LLMModel:
     if model is not None:
         match model:
+            case "claude-3.5-sonnet":
+                if settings.MODELS.CLAUDE_35_SONNET is None:
+                    raise Exception(
+                        "Model claude-3.5-sonnet is not supported in settings"
+                    )
+                if settings.MODELS.CLAUDE_35_SONNET.PROVIDER == "REPLICATE":
+                    replicate_api_key = (
+                        settings.MODELS.CLAUDE_35_SONNET.REPLICATE_API_KEY
+                        or settings.REPLICATE_API_KEY
+                    )
+                    if replicate_api_key is None:
+                        raise Exception(
+                            "Replicate API key is not set for claude-3.5-sonnet model"
+                        )
+                    _set_replicate_key(replicate_api_key)
+                    return Replicate(
+                        model="anthropic/claude-3.5-sonnet",
+                        replicate_api_token=replicate_api_key.get_secret_value(),
+                    )
+
+                raise Exception(
+                    f"Not supported provider {settings.MODELS.CLAUDE_35_SONNET.PROVIDER} for claude-3.5-sonnet"
+                )
             case "gpt-4o-mini":
                 if settings.MODELS.GPT_4O_MINI is None:
                     raise Exception("Model gpt-4o-mini is not supported in settings")
@@ -128,7 +151,7 @@ def get_llm(
                         )
                     _set_replicate_key(replicate_api_key)
                     return Replicate(
-                        model="google-deepmind/gemma-3-27b-it",
+                        model="google-deepmind/gemma-3-27b-it:c0f0aebe8e578c15a7531e08a62cf01206f5870e9d0a67804b8152822db58c54",
                         replicate_api_token=replicate_api_key.get_secret_value(),
                     )
 
