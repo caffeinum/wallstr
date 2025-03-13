@@ -7,6 +7,7 @@ import structlog
 import tiktoken
 from langchain_community.llms.replicate import Replicate
 from langchain_core.messages import BaseMessage
+from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
@@ -22,8 +23,23 @@ SUPPORTED_LLM_MODELS_WITH_VISION = ["gpt-4o-mini"]
 SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = Literal["gpt-4o-mini"]
 
 LLMModel = (
-    ChatOllama | ChatGoogleGenerativeAI | ChatOpenAI | AzureChatOpenAI | Replicate
+    ChatDeepSeek
+    | ChatOllama
+    | ChatGoogleGenerativeAI
+    | ChatOpenAI
+    | AzureChatOpenAI
+    | Replicate
 )
+
+
+def exc_not_supported_model(model: str) -> Exception:
+    return Exception(
+        f"Model {model} is not supported in settings, please adjust settings"
+    )
+
+
+def exc_not_supported_provider(model: str, provider: str) -> Exception:
+    return Exception(f"Not supported provider {provider} for {model}")
 
 
 def get_llm(
@@ -33,9 +49,8 @@ def get_llm(
         match model:
             case "claude-3.5-sonnet":
                 if settings.MODELS.CLAUDE_35_SONNET is None:
-                    raise Exception(
-                        "Model claude-3.5-sonnet is not supported in settings"
-                    )
+                    raise exc_not_supported_model(model)
+
                 if settings.MODELS.CLAUDE_35_SONNET.PROVIDER == "REPLICATE":
                     replicate_api_key = (
                         settings.MODELS.CLAUDE_35_SONNET.REPLICATE_API_KEY
@@ -51,12 +66,56 @@ def get_llm(
                         replicate_api_token=replicate_api_key.get_secret_value(),
                     )
 
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.CLAUDE_35_SONNET.PROVIDER} for claude-3.5-sonnet"
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.CLAUDE_35_SONNET.PROVIDER
+                )
+            case "deepseek":
+                if settings.MODELS.DEEPSEEK is None:
+                    raise exc_not_supported_model(model)
+
+                if settings.MODELS.DEEPSEEK.PROVIDER == "DEEPSEEK":
+                    return ChatDeepSeek(
+                        model="deepseek-chat",
+                        api_key=settings.DEEPSEEK_API_KEY
+                        or settings.MODELS.DEEPSEEK.DEEPSEEK_API_KEY,
+                    )
+
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.DEEPSEEK.PROVIDER
+                )
+            case "deepseek-r1":
+                if settings.MODELS.DEEPSEEK_R1 is None:
+                    raise exc_not_supported_model(model)
+
+                if settings.MODELS.DEEPSEEK_R1.PROVIDER == "DEEPSEEK":
+                    return ChatDeepSeek(
+                        model="deepseek-reasoner",
+                        api_key=settings.MODELS.DEEPSEEK_R1.DEEPSEEK_API_KEY
+                        or settings.DEEPSEEK_API_KEY,
+                        max_retries=0,
+                    )
+                elif settings.MODELS.DEEPSEEK_R1.PROVIDER == "REPLICATE":
+                    replicate_api_key = (
+                        settings.MODELS.DEEPSEEK_R1.REPLICATE_API_KEY
+                        or settings.REPLICATE_API_KEY
+                    )
+                    if replicate_api_key is None:
+                        raise Exception(
+                            "Replicate API key is not set for deepseek-r1 model"
+                        )
+                    _set_replicate_key(replicate_api_key)
+                    return Replicate(
+                        model="deepseek-ai/deepseek-r1",
+                        replicate_api_token=replicate_api_key.get_secret_value(),
+                    )
+
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.DEEPSEEK_R1.PROVIDER
                 )
             case "gpt-4o-mini":
                 if settings.MODELS.GPT_4O_MINI is None:
-                    raise Exception("Model gpt-4o-mini is not supported in settings")
+                    raise exc_not_supported_model(model)
+
                 if settings.MODELS.GPT_4O_MINI.PROVIDER == "OPENAI":
                     return ChatOpenAI(
                         api_key=settings.MODELS.GPT_4O_MINI.OPENAI_API_KEY
@@ -70,12 +129,14 @@ def get_llm(
                         azure_endpoint=settings.MODELS.GPT_4O_MINI.AZURE_API_URL,
                         model=settings.MODELS.GPT_4O_MINI.NAME,
                     )
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.GPT_4O_MINI.PROVIDER} for gpt-4o-mini"
+
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.GPT_4O_MINI.PROVIDER
                 )
             case "gpt-4o":
                 if settings.MODELS.GPT_4O is None:
-                    raise Exception("Model gpt-4o is not supported in settings")
+                    raise exc_not_supported_model(model)
+
                 if settings.MODELS.GPT_4O.PROVIDER == "OPENAI":
                     return ChatOpenAI(
                         api_key=settings.MODELS.GPT_4O.OPENAI_API_KEY
@@ -89,12 +150,12 @@ def get_llm(
                         azure_endpoint=settings.MODELS.GPT_4O.AZURE_API_URL,
                         model=settings.MODELS.GPT_4O.NAME,
                     )
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.GPT_4O.PROVIDER} for GPT-4o-mini"
-                )
+
+                raise exc_not_supported_provider(model, settings.MODELS.GPT_4O.PROVIDER)
             case "llama3-70b":
                 if settings.MODELS.LLAMA3_70B is None:
-                    raise Exception("Model llama3-70b is not supported in settings")
+                    raise exc_not_supported_model(model)
+
                 if settings.MODELS.LLAMA3_70B.PROVIDER == "REPLICATE":
                     replicate_api_key = (
                         settings.MODELS.LLAMA3_70B.REPLICATE_API_KEY
@@ -110,14 +171,34 @@ def get_llm(
                         replicate_api_token=replicate_api_key.get_secret_value(),
                     )
 
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.LLAMA3_70B.PROVIDER} for llama3-70b"
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.LLAMA3_70B.PROVIDER
+                )
+            case "llama3.1-405b":
+                if settings.MODELS.LLAMA31_405B is None:
+                    raise exc_not_supported_model(model)
+
+                if settings.MODELS.LLAMA31_405B.PROVIDER == "REPLICATE":
+                    replicate_api_key = (
+                        settings.MODELS.LLAMA31_405B.REPLICATE_API_KEY
+                        or settings.REPLICATE_API_KEY
+                    )
+                    if replicate_api_key is None:
+                        raise Exception(
+                            "Replicate API key is not set for llama3.1-405b model"
+                        )
+                    _set_replicate_key(replicate_api_key)
+                    return Replicate(
+                        model="meta/meta-llama-3.1-405b-instruct",
+                        replicate_api_token=replicate_api_key.get_secret_value(),
+                    )
+
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.LLAMA31_405B.PROVIDER
                 )
             case "gemini-2.0-flash":
                 if settings.MODELS.GEMINI_2 is None:
-                    raise Exception(
-                        "Model gemini-2.0-flash is not supported in settings"
-                    )
+                    raise exc_not_supported_model(model)
 
                 if settings.MODELS.GEMINI_2.PROVIDER == "GOOGLE":
                     google_api_key = (
@@ -133,12 +214,12 @@ def get_llm(
                         google_api_key=google_api_key,
                     )  # type: ignore
 
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.GEMINI_2.PROVIDER} for gemini-2.0-flash"
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.GEMINI_2.PROVIDER
                 )
             case "gemma-3-27b":
                 if settings.MODELS.GEMMA_3_27B is None:
-                    raise Exception("Model gemma-3-27b is not supported in settings")
+                    raise exc_not_supported_model(model)
 
                 if settings.MODELS.GEMMA_3_27B.PROVIDER == "REPLICATE":
                     replicate_api_key = (
@@ -155,8 +236,8 @@ def get_llm(
                         replicate_api_token=replicate_api_key.get_secret_value(),
                     )
 
-                raise Exception(
-                    f"Not supported provider {settings.MODELS.GEMMA_3_27B.PROVIDER} for gemma-3-27b"
+                raise exc_not_supported_provider(
+                    model, settings.MODELS.GEMMA_3_27B.PROVIDER
                 )
             case _:
                 raise ValueError(f"Unsupported model: {model}")
