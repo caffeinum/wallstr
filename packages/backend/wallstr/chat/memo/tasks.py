@@ -1,11 +1,13 @@
 import asyncio
+from collections.abc import Sequence
 from pathlib import Path
 from uuid import UUID
 
 import structlog
 from dramatiq.middleware import CurrentMessage
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_deepseek import ChatDeepSeek
 from pydantic import BaseModel
 from ruamel.yaml import YAML
 from structlog.contextvars import bind_contextvars
@@ -16,7 +18,7 @@ from wallstr.chat.memo.services import MemoService
 from wallstr.chat.models import ChatMessageType
 from wallstr.chat.services import ChatService
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
-from wallstr.core.llm import get_llm
+from wallstr.core.llm import get_llm, interleave_messages
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.core.utils import tiktok
 from wallstr.documents.llm import get_rag
@@ -101,12 +103,19 @@ async def generate_memo(
                 logger.info(f'No RAG for "{group.name} | {section.name}"')
                 continue
 
-            messages = [
+            messages: Sequence[BaseMessage] = [
                 SystemMessage(SYSTEM_PROMPT),
                 SystemMessage(MEMO_TEMPLATE.system_prompt),
                 *rag,
                 HumanMessage(prompt),
             ]
+            if isinstance(llm, ChatDeepSeek) and llm.model_name == "deepseek-reasoner":
+                """
+                Deepseek R1 requires interleaved messages in the input
+                https://github.com/deepseek-ai/DeepSeek-R1/issues/21
+                """
+                messages = interleave_messages(messages)
+
             async with tiktok(
                 f'Generate memo section: "{group.name} | {section.name}"'
             ):

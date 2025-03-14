@@ -243,6 +243,31 @@ def get_llm(
                 raise ValueError(f"Unsupported model: {model}")
 
 
+def interleave_messages(messages: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
+    """
+    Interleave messages to avoid 2 sequential messages with the same type
+    """
+
+    if len(messages) < 1:
+        return messages
+
+    prev = messages[0]
+    i = 1
+    new_messages = []
+    while i < len(messages):
+        curr = messages[i]
+        if type(prev) is not type(curr):
+            new_messages.append(prev)
+            prev = curr
+            i += 1
+            continue
+        else:
+            prev = type(prev)(f"{prev.content}\n{curr.content}")
+            i += 1
+    new_messages.append(prev)
+    return new_messages
+
+
 def get_llm_with_vision(
     model: SUPPORTED_LLM_MODELS_WITH_VISION_TYPES = "gpt-4o-mini",
 ) -> ChatOpenAI | AzureChatOpenAI:

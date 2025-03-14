@@ -1,10 +1,12 @@
+from collections.abc import Sequence
 from typing import cast
 from uuid import UUID, uuid4
 
 import structlog
 from dramatiq.middleware import CurrentMessage
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_deepseek import ChatDeepSeek
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from pydantic import BaseModel, Field
 from sqlalchemy import sql
@@ -28,7 +30,7 @@ from wallstr.chat.schemas import (
 )
 from wallstr.chat.services import ChatService
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
-from wallstr.core.llm import get_llm
+from wallstr.core.llm import get_llm, interleave_messages
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.documents.llm import get_rag
 from wallstr.documents.weaviate import get_weaviate_client
@@ -115,8 +117,19 @@ async def process_chat_message(
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
     logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
     llm_context = await get_llm_context(db_session, document_ids, message)
-    chunks: list[str] = []
+    messages: Sequence[BaseMessage] = [
+        *llm_context,
+        HumanMessage(content=message.content),
+    ]
 
+    if isinstance(llm, ChatDeepSeek) and llm.model_name == "deepseek-reasoner":
+        """
+        Deepseek R1 requires interleaved messages in the input
+        https://github.com/deepseek-ai/DeepSeek-R1/issues/21
+        """
+        messages = interleave_messages(messages)
+
+    chunks: list[str] = []
     with get_openai_callback() as cb:
         kwargs = (
             {"stream_usage": True}
@@ -124,12 +137,13 @@ async def process_chat_message(
             else {}
         )
         async for chunk in llm.astream(
-            [*llm_context, HumanMessage(content=message.content)],
+            messages,
             config=None,
             stop=None,
             **kwargs,
         ):
             chunk_content = chunk if isinstance(chunk, str) else chunk.content
+
             if not chunk_content:
                 continue
             if not isinstance(chunk_content, str):
