@@ -86,8 +86,8 @@ async def process_chat_message(
     response = await openai_llm.with_structured_output(Action, strict=True).ainvoke(
         [
             SystemMessage(SYSTEM_PROMPT),
-            HumanMessage(
-                content="Define what users would like to do, building memo must be asked explicitly."
+            SystemMessage(
+                content="Analyze the user's prompt and determine if they are requesting to create an investment memorandum."
             ),
             HumanMessage(content=message.content),
         ]
