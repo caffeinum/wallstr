@@ -266,6 +266,15 @@ async def derive_chat_title(
 async def get_llm_context(
     db_session: AsyncSession, document_ids: list[UUID], message: ChatMessageModel
 ) -> list[SystemMessage | HumanMessage | AIMessage]:
+    if not document_ids:
+        return [
+            HumanMessage("""
+                Tell the user that he didn't upload any documents yet, and suggest to do it"
+                Remind that the more documents he uploads, the better the AI will reply on his questions.
+                As well point that you can work only with the documents that were uploaded to the chat.
+            """),
+        ]
+
     rag = await get_rag(document_ids, message.user_id, message.content)
     llm_context: list[SystemMessage | HumanMessage | AIMessage]
     if not rag:
