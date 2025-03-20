@@ -221,7 +221,7 @@ export default function LandingPage() {
       min-h-screen font-sans bg-neutral-950
       text-white
       bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]
-      snap-y snap-mandatory h-screen overflow-y-scroll`}
+      snap-y snap-mandatory overflow-y-scroll`}
     >
       <section id="hero" className="snap-start h-screen flex flex-col text-center">
         <Navbar />
@@ -431,7 +431,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="cta" className="snap-start h-screen pt-24 text-center text-white flex flex-col">
+      <section id="cta" className="snap-start pt-24 text-center text-white flex flex-col">
         <div className="max-w-4xl mx-auto px-4 md:px-0 flex-1 flex flex-col items-center justify-center">
           <div className="pb-24">
             <h2 className={`text-4xl font-bold mb-6 ${titleClassName}`}>Start Your AI-Powered Research Today</h2>
