@@ -37,7 +37,7 @@ export function AzureSVG() {
           y2="23.03"
         >
           <stop stopColor="#114A8B"></stop>
-          <stop offset="1" stop-color="#0669BC"></stop>
+          <stop offset="1" stopColor="#0669BC"></stop>
         </linearGradient>
         <linearGradient
           gradientUnits="userSpaceOnUse"
@@ -47,11 +47,11 @@ export function AzureSVG() {
           y1="15.302"
           y2="15.888"
         >
-          <stop stop-opacity=".3"></stop>
-          <stop offset=".071" stop-opacity=".2"></stop>
-          <stop offset=".321" stop-opacity=".1"></stop>
-          <stop offset=".623" stop-opacity=".05"></stop>
-          <stop offset="1" stop-opacity="0"></stop>
+          <stop stopOpacity=".3"></stop>
+          <stop offset=".071" stopOpacity=".2"></stop>
+          <stop offset=".321" stopOpacity=".1"></stop>
+          <stop offset=".623" stopOpacity=".05"></stop>
+          <stop offset="1" stopOpacity="0"></stop>
         </linearGradient>
         <linearGradient
           gradientUnits="userSpaceOnUse"
@@ -62,7 +62,7 @@ export function AzureSVG() {
           y2="22.814"
         >
           <stop stopColor="#3CCBF4"></stop>
-          <stop offset="1" stop-color="#2892DF"></stop>
+          <stop offset="1" stopColor="#2892DF"></stop>
         </linearGradient>
       </defs>
     </svg>
@@ -134,9 +134,9 @@ export function GemmaSVG() {
       <title>Gemma</title>
       <defs>
         <linearGradient id="lobe-icons-gemma-fill" x1="24.419%" x2="75.194%" y1="75.581%" y2="25.194%">
-          <stop offset="0%" stop-color="#446EFF"></stop>
-          <stop offset="36.661%" stop-color="#2E96FF"></stop>
-          <stop offset="83.221%" stop-color="#B1C5FF"></stop>
+          <stop offset="0%" stopColor="#446EFF"></stop>
+          <stop offset="36.661%" stopColor="#2E96FF"></stop>
+          <stop offset="83.221%" stopColor="#B1C5FF"></stop>
         </linearGradient>
       </defs>
       <path
@@ -154,9 +154,9 @@ export function GeminiSVG() {
       <title>Gemini</title>
       <defs>
         <linearGradient id="lobe-icons-gemini-fill" x1="0%" x2="68.73%" y1="100%" y2="30.395%">
-          <stop offset="0%" stop-color="#1C7DFF"></stop>
-          <stop offset="52.021%" stop-color="#1C69FF"></stop>
-          <stop offset="100%" stop-color="#F0DCD6"></stop>
+          <stop offset="0%" stopColor="#1C7DFF"></stop>
+          <stop offset="52.021%" stopColor="#1C69FF"></stop>
+          <stop offset="100%" stopColor="#F0DCD6"></stop>
         </linearGradient>
       </defs>
       <path
@@ -207,8 +207,8 @@ export function MetaSVG() {
         y2="24.75"
         gradientUnits="userSpaceOnUse"
       >
-        <stop offset="0" stop-color="#0081fb" />
-        <stop offset=".995" stop-color="#0064e1" />
+        <stop offset="0" stopColor="#0081fb" />
+        <stop offset=".995" stopColor="#0064e1" />
       </linearGradient>
       <path
         fill="url(#wSMw7pqi7WIWHewz2_TZXa)"
@@ -222,8 +222,8 @@ export function MetaSVG() {
         y2="13.012"
         gradientUnits="userSpaceOnUse"
       >
-        <stop offset="0" stop-color="#0081fb" />
-        <stop offset=".995" stop-color="#0064e1" />
+        <stop offset="0" stopColor="#0081fb" />
+        <stop offset=".995" stopColor="#0064e1" />
       </linearGradient>
       <path
         fill="url(#wSMw7pqi7WIWHewz2_TZXb)"
