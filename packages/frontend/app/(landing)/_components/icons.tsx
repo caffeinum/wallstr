@@ -36,7 +36,7 @@ export function AzureSVG() {
           y1="1.626"
           y2="23.03"
         >
-          <stop stop-color="#114A8B"></stop>
+          <stop stopColor="#114A8B"></stop>
           <stop offset="1" stop-color="#0669BC"></stop>
         </linearGradient>
         <linearGradient
@@ -61,7 +61,7 @@ export function AzureSVG() {
           y1="1.626"
           y2="22.814"
         >
-          <stop stop-color="#3CCBF4"></stop>
+          <stop stopColor="#3CCBF4"></stop>
           <stop offset="1" stop-color="#2892DF"></stop>
         </linearGradient>
       </defs>
