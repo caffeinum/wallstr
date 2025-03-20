@@ -13,12 +13,11 @@ from ruamel.yaml import YAML
 from structlog.contextvars import bind_contextvars
 
 from wallstr.auth.services import UserService
-from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.services import MemoService
 from wallstr.chat.models import ChatMessageType
 from wallstr.chat.services import ChatService
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
-from wallstr.core.llm import get_llm, interleave_messages
+from wallstr.core.llm import PROMPTS, get_llm, interleave_messages, load_prompts
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.core.utils import tiktok
 from wallstr.documents.llm import get_rag
@@ -44,9 +43,9 @@ class MemoTemplate(BaseModel):
 
 
 try:
-    with open(Path(__file__).parent / "prompts.yaml") as fd:
-        data = YAML().load(fd)
-        MEMO_TEMPLATE = MemoTemplate.model_validate(data["short_memo_template"])
+    MEMO_TEMPLATE = load_prompts(
+        Path(__file__).parent / "prompts.yaml", MemoTemplate, key="short_memo_template"
+    )
 except:
     logger.error("Failed to load memo template")
     raise
@@ -91,7 +90,7 @@ async def generate_memo(
 
     bind_contextvars(memo_id=memo.id)
     llm = get_llm(model=user.settings.llm_model or model)
-    rate_limiter = get_rate_limiter(model)
+    rate_limiter = get_rate_limiter(user.settings.llm_model or model)
 
     async def generate_memo_group(group_index: int, group: MemoGroupTemplate) -> None:
         for index, section in enumerate(group.prompts):
@@ -104,7 +103,7 @@ async def generate_memo(
                 continue
 
             messages: Sequence[BaseMessage] = [
-                SystemMessage(SYSTEM_PROMPT),
+                SystemMessage(PROMPTS.system_prompt),
                 SystemMessage(MEMO_TEMPLATE.system_prompt),
                 *rag,
                 HumanMessage(prompt),

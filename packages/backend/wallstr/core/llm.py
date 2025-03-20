@@ -1,7 +1,9 @@
 import itertools
 import math
 from collections.abc import Sequence
-from typing import Literal
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal, TypeVar
 
 import structlog
 import tiktoken
@@ -12,7 +14,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from PIL.Image import Image
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr, TypeAdapter
+from ruamel.yaml import YAML
 
 from wallstr.conf import settings
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
@@ -30,6 +33,10 @@ LLMModel = (
     | AzureChatOpenAI
     | Replicate
 )
+
+
+class BasicPrompts(BaseModel):
+    system_prompt: str
 
 
 def exc_not_supported_model(model: str) -> Exception:
@@ -353,6 +360,19 @@ def estimate_input_tokens_for_image(
     return 170 * tiles + 85
 
 
+PromptType = TypeVar("PromptType", bound=BaseModel)
+
+
+@lru_cache
+def load_prompts(
+    path: str, model_type: type[PromptType], *, key: str | None = None
+) -> PromptType:
+    type_adapter = TypeAdapter(model_type)
+    with open(path) as fd:
+        data = YAML().load(fd)
+        return type_adapter.validate_python(data[key] if key else data)
+
+
 def _merge_langchain_messages(
     input_: Sequence[BaseMessage],
 ) -> list[str]:
@@ -383,3 +403,10 @@ def _set_replicate_key(replicate_api_key: SecretStr) -> None:
     import os
 
     os.environ["REPLICATE_API_TOKEN"] = replicate_api_key.get_secret_value()
+
+
+try:
+    PROMPTS = load_prompts(Path(__file__).parent / "prompts.yaml", BasicPrompts)
+except:
+    logger.error("Failed to load basic prompts")
+    raise

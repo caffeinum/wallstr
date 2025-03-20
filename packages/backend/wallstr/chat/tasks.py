@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from pathlib import Path
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -14,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from structlog.contextvars import bind_contextvars
 
 from wallstr.auth.services import UserService
-from wallstr.chat.llm import SYSTEM_PROMPT
 from wallstr.chat.memo.tasks import generate_memo
 from wallstr.chat.models import (
     ChatMessageModel,
@@ -30,7 +30,7 @@ from wallstr.chat.schemas import (
 )
 from wallstr.chat.services import ChatService
 from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
-from wallstr.core.llm import get_llm, interleave_messages
+from wallstr.core.llm import PROMPTS, get_llm, interleave_messages
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.documents.llm import get_rag
 from wallstr.documents.weaviate import get_weaviate_client
@@ -85,7 +85,7 @@ async def process_chat_message(
     )
     response = await openai_llm.with_structured_output(Action, strict=True).ainvoke(
         [
-            SystemMessage(SYSTEM_PROMPT),
+            SystemMessage(PROMPTS.system_prompt),
             SystemMessage(
                 content="Analyze the user's prompt and determine if they are requesting to create an investment memorandum."
             ),
@@ -219,7 +219,7 @@ async def derive_chat_title(
     rate_limiter = get_rate_limiter(model)
 
     messages = [
-        SystemMessage(SYSTEM_PROMPT),
+        SystemMessage(PROMPTS.system_prompt),
         HumanMessage(
             content="""
             You need derive a title for the chat based on context in format as 'Company | Topic'.
@@ -270,7 +270,7 @@ async def get_llm_context(
     llm_context: list[SystemMessage | HumanMessage | AIMessage]
     if not rag:
         llm_context = [
-            SystemMessage(SYSTEM_PROMPT),
+            SystemMessage(PROMPTS.system_prompt),
             HumanMessage(content=message.content),
             HumanMessage(
                 content="Tell the user that you don't have needful data to provide the answer."
@@ -278,7 +278,7 @@ async def get_llm_context(
         ]
     else:
         llm_context = [
-            SystemMessage(SYSTEM_PROMPT),
+            SystemMessage(PROMPTS.system_prompt),
             *await get_prompts_examples(message),
             *rag,
             HumanMessage(content=message.content),
