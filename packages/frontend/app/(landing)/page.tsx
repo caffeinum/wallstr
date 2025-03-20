@@ -221,7 +221,7 @@ export default function LandingPage() {
       min-h-screen font-sans bg-neutral-950
       text-white
       bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]
-      snap-y snap-mandatory overflow-y-scroll`}
+      snap-y snap-proximity`}
     >
       <section id="hero" className="snap-start h-screen flex flex-col text-center">
         <Navbar />
@@ -248,7 +248,7 @@ export default function LandingPage() {
       </section>
 
       <section id="features" className="snap-start h-screen relative flex items-center justify-center overflow-hidden">
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-3/4 hidden md:block">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-3/4 hidden md:block rounded-xl overflow-hidden">
           <div className="relative w-full h-full">
             <Image
               src="/hero.jpg"
@@ -307,7 +307,7 @@ export default function LandingPage() {
 
       <section id="demo" className="snap-start h-screen flex flex-col items-center justify-center px-4 text-center">
         <h2 className={`text-5xl font-bold mb-12 ${titleClassName}`}>Take a look at our demo</h2>
-        <div className="relative h-96 md:h-108 w-full md:w-[52.2em] mx-auto">
+        <div className="relative h-96 md:h-108 w-full md:w-[52.2em] mx-auto overflow-hidden rounded-lg">
           <iframe
             src="https://www.loom.com/embed/6614feff88264d48b488118224a8cf82?sid=1eaf707d-f6ec-4852-8091-5996c3c590b3"
             allowFullScreen={true}
@@ -431,7 +431,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="cta" className="snap-start pt-24 text-center text-white flex flex-col">
+      <section id="cta" className="snap-start pt-24 h-screen text-center text-white flex flex-col">
         <div className="max-w-4xl mx-auto px-4 md:px-0 flex-1 flex flex-col items-center justify-center">
           <div className="pb-24">
             <h2 className={`text-4xl font-bold mb-6 ${titleClassName}`}>Start Your AI-Powered Research Today</h2>
@@ -449,7 +449,6 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
-
         <Footer />
       </section>
     </div>
