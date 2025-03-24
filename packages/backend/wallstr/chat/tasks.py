@@ -40,10 +40,6 @@ from wallstr.worker import dramatiq
 logger = structlog.get_logger()
 
 
-class Action(BaseModel):
-    build_memo: bool = Field(description="User would to build a memo")
-
-
 @dramatiq.actor  # type: ignore
 async def process_chat_message(
     message_id: str, model: SUPPORTED_LLM_MODELS_TYPES = "gpt-4o"
@@ -79,22 +75,10 @@ async def process_chat_message(
         raise Exception("User is deleted")
 
     bind_contextvars(user_id=user.id)
-    llm = get_llm(model=user.settings.llm_model or model)
-    openai_llm = (
-        llm if isinstance(llm, (ChatOpenAI, AzureChatOpenAI)) else get_llm(model)
-    )
-    response = await openai_llm.with_structured_output(Action, strict=True).ainvoke(
-        [
-            SystemMessage(PROMPTS.system_prompt),
-            HumanMessage(
-                content="Analyze the user's prompt and determine if they are explicitly requesting the creation of an investment memorandum."
-            ),
-            HumanMessage(content=message.content),
-        ]
-    )
-    action = cast(Action, response)
+    # use @memo keyword to trigger building a memo
+    is_memo = "@memo" in message.content
 
-    if action.build_memo:
+    if is_memo:
         new_message = await chat_svc.create_chat_message(
             chat_id=message.chat_id,
             message="",
@@ -116,6 +100,8 @@ async def process_chat_message(
 
     document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
     logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
+
+    llm = get_llm(model=user.settings.llm_model or model)
     llm_context = await get_llm_context(db_session, document_ids, message)
     messages: Sequence[BaseMessage] = [
         *llm_context,
