@@ -157,3 +157,7 @@ short_memo_template:
             Debt-to-Equity (D/E) Ratio: Report Total Debt / Shareholders’ Equity, assessing financial leverage trends.
             Interest Coverage Ratio: Provide Operating Income / Interest Expense, evaluating the company’s ability to cover debt obligations.
             Cash Flow Impact on Capital Structure: Analyze how operating cash flow, debt repayment, and shareholder distributions are affecting liquidity and balance sheet strength.
+        - name: Financials table
+          prompt: |
+            Provide a structured overview of the company’s financial performance, consolidating all core metrics into a single table. Include precise numerical values in $ billions (or % where applicable) and show Year-over-Year (YoY) changes to highlight growth trends. Always include margins for gross profit, operating income, and net income. Report full-year (FY) data for the last three fiscal years. Ensure all numerical values are precise, formatted consistently, and include comparative YoY trends.
+            The table should be structured for clear readability.
