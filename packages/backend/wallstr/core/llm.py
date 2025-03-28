@@ -250,7 +250,10 @@ def get_llm(
                 raise ValueError(f"Unsupported model: {model}")
 
 
-def interleave_messages(messages: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
+T = TypeVar("T", bound=BaseMessage)
+
+
+def interleave_messages(messages: list[T]) -> list[T]:
     """
     Interleave messages to avoid 2 sequential messages with the same type
     """

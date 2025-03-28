@@ -1,4 +1,7 @@
-from uuid import uuid4
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
+from typing import TypedDict
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import sql
@@ -11,7 +14,7 @@ from wallstr.chat.models import (
 )
 from wallstr.chat.schemas import DocumentPayload
 from wallstr.chat.services import ChatService
-from wallstr.documents.models import DocumentType
+from wallstr.documents.models import DocumentModel, DocumentStatus, DocumentType
 
 
 @pytest.fixture
@@ -112,3 +115,71 @@ async def test_get_chat_messages_empty_chat(
 
     assert len(messages) == 0
     assert cursor is None
+
+
+@dataclass
+class ChatWithDocs:
+    chat_id: UUID
+    doc1_id: UUID
+    doc2_id: UUID
+
+
+@pytest.fixture
+async def chat_with_docs(
+    db_session: AsyncSession,
+    alice: UserModel,
+) -> AsyncGenerator[ChatWithDocs, None]:
+    doc1_id = uuid4()
+    doc2_id = uuid4()
+
+    async with db_session.begin():
+        chat = ChatModel(
+            user_id=alice.id,
+            title="Test Chat",
+            documents=[
+                DocumentModel(
+                    id=doc1_id,
+                    user_id=alice.id,
+                    filename="doc1.pdf",
+                    doc_type=DocumentType.PDF,
+                    storage_path="path1",
+                    status=DocumentStatus.READY,
+                ),
+                DocumentModel(
+                    id=doc2_id,
+                    user_id=alice.id,
+                    filename="doc2.pdf",
+                    doc_type=DocumentType.PDF,
+                    storage_path="path2",
+                    status=DocumentStatus.UPLOADING,
+                ),
+            ],
+        )
+        db_session.add(chat)
+    yield ChatWithDocs(chat_id=chat.id, doc1_id=doc1_id, doc2_id=doc2_id)
+
+    async with db_session.begin():
+        await db_session.execute(sql.delete(ChatModel).filter_by(id=chat.id))
+
+
+@pytest.mark.asyncio
+async def test_get_chat_document_ids(
+    chat_svc: ChatService, chat_with_docs: ChatWithDocs
+) -> None:
+    chat_id = chat_with_docs.chat_id
+
+    doc_ids = await chat_svc.get_chat_document_ids(chat_id)
+    assert len(doc_ids) == 2
+    assert chat_with_docs.doc1_id in doc_ids
+    assert chat_with_docs.doc2_id in doc_ids
+
+    ready_doc_ids = await chat_svc.get_chat_document_ids(
+        chat_id, status=DocumentStatus.READY
+    )
+    assert len(ready_doc_ids) == 1
+    assert chat_with_docs.doc1_id in doc_ids
+
+    empty_doc_ids = await chat_svc.get_chat_document_ids(
+        chat_id, status=DocumentStatus.UPLOADED
+    )
+    assert len(empty_doc_ids) == 0

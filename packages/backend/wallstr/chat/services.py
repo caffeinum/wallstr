@@ -169,12 +169,17 @@ class ChatService(BaseService):
 
         return chat_message
 
-    async def get_chat_document_ids(self, chat_id: UUID) -> list[UUID]:
+    async def get_chat_document_ids(
+        self, chat_id: UUID, *, status: DocumentStatus | None = None
+    ) -> list[UUID]:
         async with self.tx():
+            query = sql.select(ChatXDocumentModel.document_id).filter(
+                ChatXDocumentModel.chat_id == chat_id
+            )
+            if status:
+                query = query.join(DocumentModel).filter(DocumentModel.status == status)
             result = await self.db.execute(
-                sql.select(ChatXDocumentModel.document_id)
-                .filter(ChatXDocumentModel.chat_id == chat_id)
-                .order_by(ChatXDocumentModel.created_at.desc())
+                query.order_by(ChatXDocumentModel.created_at.desc())
             )
             return [row[0] for row in result.all()]
 

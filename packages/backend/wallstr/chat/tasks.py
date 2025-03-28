@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from pathlib import Path
+from textwrap import dedent
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -33,6 +34,7 @@ from wallstr.conf.llm_models import SUPPORTED_LLM_MODELS_TYPES
 from wallstr.core.llm import PROMPTS, get_llm, interleave_messages
 from wallstr.core.rate_limiters import get_rate_limiter
 from wallstr.documents.llm import get_rag
+from wallstr.documents.models import DocumentStatus
 from wallstr.documents.weaviate import get_weaviate_client
 from wallstr.logging import debug
 from wallstr.worker import dramatiq
@@ -98,16 +100,15 @@ async def process_chat_message(
         ).model_dump_json(),
     )
 
-    document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
+    document_ids = await chat_svc.get_chat_document_ids(
+        message.chat_id, status=DocumentStatus.READY
+    )
     logger.info(f"Found {len(document_ids)} documents for chat {message.chat_id}")
 
     llm = get_llm(model=user.settings.llm_model or model)
-    llm_context = await get_llm_context(db_session, document_ids, message)
-    messages: Sequence[BaseMessage] = [
-        *llm_context,
-        HumanMessage(content=message.content),
-    ]
 
+    messages = await get_llm_messages(db_session, document_ids, message)
+    debug(messages)
     if isinstance(llm, ChatDeepSeek) and llm.model_name == "deepseek-reasoner":
         """
         Deepseek R1 requires interleaved messages in the input
@@ -249,22 +250,33 @@ async def derive_chat_title(
     return title
 
 
-async def get_llm_context(
+async def get_llm_messages(
     db_session: AsyncSession, document_ids: list[UUID], message: ChatMessageModel
 ) -> list[SystemMessage | HumanMessage | AIMessage]:
     if not document_ids:
+        prompt = dedent("""
+        Tell the user that he didn't upload any documents yet, and suggest to do it"
+        Remind that the more documents he uploads, the better the AI will reply on his questions.
+        As well point that you can work only with the documents that were uploaded to the chat.
+        """)
+
+        chat_svc = ChatService(db_session)
+        all_document_ids = await chat_svc.get_chat_document_ids(message.chat_id)
+        if len(all_document_ids):
+            prompt = dedent("""
+            Please inform the user that their documents are still being analyzed by the service
+            and that they should send their message later once the processing is complete.
+            """)
+
         return [
-            HumanMessage("""
-                Tell the user that he didn't upload any documents yet, and suggest to do it"
-                Remind that the more documents he uploads, the better the AI will reply on his questions.
-                As well point that you can work only with the documents that were uploaded to the chat.
-            """),
+            HumanMessage(content=message.content),
+            HumanMessage(prompt),
         ]
 
     rag = await get_rag(document_ids, message.user_id, message.content)
-    llm_context: list[SystemMessage | HumanMessage | AIMessage]
+    messages: list[SystemMessage | HumanMessage | AIMessage]
     if not rag:
-        llm_context = [
+        messages = [
             SystemMessage(PROMPTS.system_prompt),
             HumanMessage(content=message.content),
             HumanMessage(
@@ -272,15 +284,14 @@ async def get_llm_context(
             ),
         ]
     else:
-        llm_context = [
+        messages = [
             SystemMessage(PROMPTS.system_prompt),
             *await get_prompts_examples(message),
             *rag,
             HumanMessage(content=message.content),
         ]
 
-    debug(llm_context)
-    return list(llm_context)
+    return messages
 
 
 async def get_history(

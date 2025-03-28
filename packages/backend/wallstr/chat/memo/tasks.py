@@ -102,7 +102,7 @@ async def generate_memo(
                 logger.info(f'No RAG for "{group.name} | {section.name}"')
                 continue
 
-            messages: Sequence[BaseMessage] = [
+            messages = [
                 SystemMessage(PROMPTS.system_prompt),
                 SystemMessage(MEMO_TEMPLATE.system_prompt),
                 *rag,
