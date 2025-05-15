@@ -12,21 +12,20 @@
 
 ## Running locally
 
-1. Frontend
-   ```bash
-   pnpm frontend:dev
-   ```
-2. Backend, check [backend/README.md](packages/backend/README.md) for more information
+1. Backend, check [backend/README.md](packages/backend/README.md) for more information
 
    ```bash
    pnpm docker-compose
-   # once (optional)
-   docker exec -it wallstr_ollama /bin/ollama pull llama3.2
-   docker exec -it wallstr_ollama /bin/ollama pull nomic-embed-text
 
    pnpm backend:dev
    pnpm backend:worker -p 1
    pnpm backend:worker:heavy -p 1
+   ```
+
+2. Frontend (setup `packages/frontend/.env` file first)
+
+   ```bash
+   pnpm frontend:dev
    ```
 
 3. Open http://localhost:3000
