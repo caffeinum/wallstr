@@ -107,7 +107,11 @@ async def process_chat_message(
 
     llm = get_llm(model=user.settings.llm_model or model)
 
-    messages = await get_llm_messages(db_session, document_ids, message)
+    messages = (
+        await get_simple_llm_messages(document_ids, message)
+        if user.settings.simple_mode
+        else await get_llm_messages(db_session, document_ids, message)
+    )
     debug(messages)
     if isinstance(llm, ChatDeepSeek) and llm.model_name == "deepseek-reasoner":
         """
@@ -248,6 +252,18 @@ async def derive_chat_title(
 
         await chat_svc.set_chat_title(chat.id, title)
     return title
+
+
+async def get_simple_llm_messages(
+    document_ids: list[UUID], message: ChatMessageModel
+) -> list[SystemMessage | HumanMessage | AIMessage]:
+    rag = await get_rag(document_ids, message.user_id, message.content)
+    messages: list[SystemMessage | HumanMessage | AIMessage] = [
+        SystemMessage(PROMPTS.system_simple_prompt),
+        *rag,
+        HumanMessage(content=message.content),
+    ]
+    return messages
 
 
 async def get_llm_messages(

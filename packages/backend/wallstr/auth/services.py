@@ -130,7 +130,11 @@ class UserService(BaseService):
             result = await self.db.execute(
                 sql.update(UserModel)
                 .filter_by(id=user_id)
-                .values(settings=UserModel.settings.concat(settings))
+                .values(
+                    settings=UserModel.settings.concat(
+                        settings.model_dump(exclude_none=True)
+                    )
+                )
                 .returning(UserModel)
             )
         return result.scalar_one()

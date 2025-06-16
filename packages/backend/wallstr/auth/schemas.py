@@ -91,3 +91,4 @@ class TokenPair(BaseModel):
 
 class UserSettings(BaseModel):
     llm_model: SUPPORTED_LLM_MODELS_TYPES | None = None
+    simple_mode: bool | None = None

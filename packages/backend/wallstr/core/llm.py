@@ -37,6 +37,7 @@ LLMModel = (
 
 class BasicPrompts(BaseModel):
     system_prompt: str
+    system_simple_prompt: str
 
 
 def exc_not_supported_model(model: str) -> Exception:
