@@ -36,6 +36,19 @@ export default function UserMenu() {
     },
   });
 
+  const { mutate: changeSimpleMode } = useMutation({
+    mutationFn: async (simple_mode: boolean) => {
+      const { data } = await api.auth.updateUserSettings({
+        body: { simple_mode },
+        throwOnError: true,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/auth/me"] });
+    },
+  });
+
   const onLLMDropdownClick = useCallback(
     (e: MouseEvent) => {
       e.preventDefault();
@@ -97,6 +110,17 @@ export default function UserMenu() {
             </details>
           </li>
         )}
+        <li className="mt-2">
+          <label className="flex justify-start ">
+            <input
+              type="checkbox"
+              defaultChecked={!!data?.settings.simple_mode}
+              className="toggle toggle-xs"
+              onChange={(e) => changeSimpleMode(e.target.checked)}
+            />
+            <span>Simple mode</span>
+          </label>
+        </li>
         <li className="mt-2">
           <button onClick={handleSignOut}>Sign out</button>
         </li>

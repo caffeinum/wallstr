@@ -1032,7 +1032,44 @@
                     },
                     "llm_models": {
                         "items": {
-                            "type": "string"
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "const": "claude-3.5-sonnet"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "deepseek"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "deepseek-r1"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "gemini-2.0-flash"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "gemma-3-27b"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "gpt-4o"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "gpt-4o-mini"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "llama3.1-405b"
+                                },
+                                {
+                                    "type": "string",
+                                    "const": "llama3-70b"
+                                }
+                            ]
                         },
                         "type": "array",
                         "title": "Llm Models"
@@ -1476,18 +1513,56 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "enum": [
-                                    "llama3.2",
-                                    "gpt-4o",
-                                    "gpt-4o-mini",
-                                    "llava"
-                                ]
+                                "const": "claude-3.5-sonnet"
+                            },
+                            {
+                                "type": "string",
+                                "const": "deepseek"
+                            },
+                            {
+                                "type": "string",
+                                "const": "deepseek-r1"
+                            },
+                            {
+                                "type": "string",
+                                "const": "gemini-2.0-flash"
+                            },
+                            {
+                                "type": "string",
+                                "const": "gemma-3-27b"
+                            },
+                            {
+                                "type": "string",
+                                "const": "gpt-4o"
+                            },
+                            {
+                                "type": "string",
+                                "const": "gpt-4o-mini"
+                            },
+                            {
+                                "type": "string",
+                                "const": "llama3.1-405b"
+                            },
+                            {
+                                "type": "string",
+                                "const": "llama3-70b"
                             },
                             {
                                 "type": "null"
                             }
                         ],
                         "title": "Llm Model"
+                    },
+                    "simple_mode": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Simple Mode"
                     }
                 },
                 "type": "object",

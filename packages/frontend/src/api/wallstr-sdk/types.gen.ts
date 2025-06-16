@@ -36,7 +36,17 @@ export type ConfigResponse = {
   name?: string;
   version: string;
   auth: AuthConfig;
-  llm_models: Array<string>;
+  llm_models: Array<
+    | "claude-3.5-sonnet"
+    | "deepseek"
+    | "deepseek-r1"
+    | "gemini-2.0-flash"
+    | "gemma-3-27b"
+    | "gpt-4o"
+    | "gpt-4o-mini"
+    | "llama3.1-405b"
+    | "llama3-70b"
+  >;
 };
 
 export type Document = {
@@ -134,7 +144,18 @@ export type User = {
 };
 
 export type UserSettings = {
-  llm_model?: ("llama3.2" | "gpt-4o" | "gpt-4o-mini" | "llava") | null;
+  llm_model?:
+    | "claude-3.5-sonnet"
+    | "deepseek"
+    | "deepseek-r1"
+    | "gemini-2.0-flash"
+    | "gemma-3-27b"
+    | "gpt-4o"
+    | "gpt-4o-mini"
+    | "llama3.1-405b"
+    | "llama3-70b"
+    | null;
+  simple_mode?: boolean | null;
 };
 
 export type ValidationError = {
