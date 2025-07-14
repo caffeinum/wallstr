@@ -94,11 +94,11 @@ class RateLimiter:
             now = datetime.now()
             if self.tpm_capacity >= tokens and self.rpm_capacity >= requests:
                 if self.locked_at is not None:
-                    logger.trace(
+                    logger.debug(
                         f"RateLimiter unlocked in {time.perf_counter() - self.locked_at:.3f}s"
                     )
                     self.locked_at = None
-                logger.trace(
+                logger.debug(
                     f"Consume {tokens} tokens from {self.tpm_capacity}, {self.rpm_capacity} requests"
                 )
                 self.dequeue.append(
@@ -117,7 +117,7 @@ class RateLimiter:
                 self.tpm_capacity += slot["tokens"]
                 self.rpm_capacity += slot["requests"]
         if self.locked_at is None:
-            logger.trace("RateLimiter locked")
+            logger.debug("RateLimiter locked")
             self.locked_at = time.perf_counter()
         return False
 

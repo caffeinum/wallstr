@@ -33,10 +33,10 @@ class BaseService:
         stack = inspect.stack(0)[:-3]
         from_ = stack[2]
         if self.db.in_transaction():
-            logger.trace(f"Already in tx from {from_.function}")
+            logger.debug(f"Already in tx from {from_.function}")
             yield
             return
         async with self.db.begin():
-            logger.trace(f"tx starts from {from_.function}")
+            logger.debug(f"tx starts from {from_.function}")
             yield
-        logger.trace(f"tx commits from {from_.function}")
+        logger.debug(f"tx commits from {from_.function}")

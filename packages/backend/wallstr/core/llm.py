@@ -218,7 +218,7 @@ def get_llm(
                             "Google API key is not set for gemini-2.0-flash model"
                         )
                     return ChatGoogleGenerativeAI(
-                        model=settings.MODELS.GEMINI_2.NAME,
+                        model="gemini-2.5-flash-preview-04-17",
                         google_api_key=google_api_key,
                     )  # type: ignore
 

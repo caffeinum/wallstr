@@ -5,17 +5,40 @@ A quick guide to get the wallstr AI chat system running locally.
 ## Prerequisites
 
 - Docker & Docker Compose
-- Python 3.12
-- Node.js & pnpm
+- For development mode: Python 3.12, Node.js & pnpm
 - API Keys:
   - OpenAI API key
   - Google API key (for Gemini)
 
-## Quick Start
+## Two Ways to Run
 
-### 1. Start Infrastructure Services
+### Option 1: Full Docker Mode (Production-like)
 
-First, get the database, redis, and other services running:
+This runs everything in Docker containers. Choose this if you just want to run the application without modifying code.
+
+```bash
+# 1. Set up environment
+cd packages/backend
+cp .env.example .env
+# Edit .env to add your API keys
+
+# 2. Build and run everything
+docker-compose up --build
+```
+
+This will start all services including the backend API and worker.
+
+### Option 2: Hybrid Mode (Development)
+
+This runs infrastructure in Docker but backend/worker locally for easier debugging. 
+
+**Note**: We used this approach during setup because we were actively debugging issues (like the `logger.trace()` errors). Running the backend locally makes it much easier to:
+- See detailed error messages
+- Make quick code changes without rebuilding Docker images
+- Use debuggers and development tools
+- Have faster iteration cycles
+
+#### 1. Start Infrastructure Services
 
 ```bash
 cd packages/backend
@@ -28,7 +51,7 @@ This starts:
 - RabbitMQ (port 5672)
 - MinIO (port 9000)
 
-### 2. Set Up Environment
+#### 2. Set Up Environment
 
 Create `.env` file in `packages/backend/`:
 
@@ -42,21 +65,21 @@ OPENAI_API_KEY="your-openai-key-here"
 GOOGLE_API_KEY="your-google-api-key-here"
 ```
 
-### 3. Install Backend Dependencies
+#### 3. Install Backend Dependencies
 
 ```bash
 cd packages/backend
 poetry install
 ```
 
-### 4. Run Database Migrations
+#### 4. Run Database Migrations
 
 ```bash
 cd packages/backend
 poetry run alembic upgrade head
 ```
 
-### 5. Start Backend Services
+#### 5. Start Backend Services
 
 In separate terminals:
 
@@ -72,7 +95,7 @@ cd packages/backend
 poetry run dramatiq wallstr.chat.tasks wallstr.upload.tasks -p 10 -t 10
 ```
 
-### 6. Start Frontend
+#### 6. Start Frontend
 
 ```bash
 cd packages/frontend
