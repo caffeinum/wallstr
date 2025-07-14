@@ -48,10 +48,10 @@ class Settings(BaseSettings):
     STORAGE_BUCKET: str
     STORAGE_ACCESS_KEY: SecretStr
     STORAGE_SECRET_KEY: SecretStr
-    OLLAMA_URL: SecretStr
     OPENAI_API_KEY: SecretStr
 
     # Optional
+    OLLAMA_URL: SecretStr | None = None
     WEAVIATE_API_URL: SecretStr | None = None
     WEAVIATE_GRPC_URL: SecretStr | None = None
     SENTRY_DSN: SecretStr | None = None
@@ -78,7 +78,6 @@ class Settings(BaseSettings):
         "STORAGE_BUCKET",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
-        "OLLAMA_URL",
         "OPENAI_API_KEY",
         mode="before",
     )
