@@ -115,6 +115,25 @@ Update `CORS_ALLOW_ORIGINS` in `.env` when deploying to new domains.
 ### Fixed Issues
 - Replaced `logger.trace()` with `logger.debug()` (trace not available in structlog)
 - Updated Gemini model to `gemini-2.5-flash-preview-04-17`
+- File uploads failing with 429 error: Fixed by applying MinIO bucket policy for presigned URLs
+
+### MinIO/Storage Setup
+File uploads use MinIO with presigned URLs. If uploads fail:
+1. Ensure MinIO container is running: `docker ps | grep minio`
+2. Apply bucket policy to allow browser uploads:
+```python
+# Apply public read/write policy for presigned URL uploads
+s3_client.put_bucket_policy(Bucket='wallstr', Policy=json.dumps({
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {"AWS": "*"},
+        "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+        "Resource": "arn:aws:s3:::wallstr/*"
+    }]
+}))
+```
+3. Restart MinIO: `docker restart wallstr_minio`
 
 ### Deployment Notes
 - Backend uses custom PostgreSQL port 5441 to avoid conflicts
