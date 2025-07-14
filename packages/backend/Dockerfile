@@ -37,3 +37,6 @@ RUN poetry install --no-root --no-cache && \
 
 USER $APP_USER
 COPY --chown=$APP_USER:$APP_USER . .
+
+# Railway will override this with the startCommand from railway.json
+CMD ["poetry", "run", "uvicorn", "wallstr.server:app", "--host", "0.0.0.0", "--port", "8000"]
