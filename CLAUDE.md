@@ -5,9 +5,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 WallStr is a full-stack AI chat application with document processing capabilities. It's a monorepo containing:
-- **Backend**: FastAPI + PostgreSQL + Redis + RabbitMQ + Weaviate
+- **Backend**: FastAPI + PostgreSQL + Redis + RabbitMQ + MinIO + Weaviate
 - **Frontend**: Next.js with TypeScript
 - **Infrastructure**: Docker Compose for local development
+
+## Critical Setup Requirements
+
+### Both Workers MUST Be Running
+The system requires TWO separate worker processes:
+1. **Main Worker** (`poetry run task worker`) - Processes chat messages (default queue)
+2. **Heavy Worker** (`poetry run task worker:heavy`) - Processes document uploads (parse queue)
+
+**Without both workers, the system will not function properly!**
+
+### Database Migrations
+Always run BOTH migrations after infrastructure setup:
+```bash
+poetry run task migrate          # PostgreSQL database schema
+poetry run task migrate_weaviate # Vector database collections
+```
+
+Without Weaviate migration, document processing will fail with "class not found" errors.
 
 ## Essential Development Commands
 
@@ -19,8 +37,16 @@ docker-compose -f docker-compose-minimal.yaml up -d  # Start infrastructure
 
 # Development
 poetry run task dev              # API server (port 8000)
-poetry run task worker -p 1      # Main worker
-poetry run task worker:heavy -p 1 # Document processing worker
+poetry run task worker           # Main worker (chat processing)
+poetry run task worker:heavy     # Document processing worker
+
+# IMPORTANT: Both workers must be running for full functionality!
+# - worker: processes chat messages (default queue)
+# - worker:heavy: processes document uploads (parse queue)
+
+# Running workers manually (if needed):
+poetry run dramatiq wallstr.worker.main -p 1 -t 2 -Q default
+poetry run dramatiq wallstr.worker.heavy -p 1 -t 1 -Q parse
 
 # Database
 poetry run task migrate          # Apply migrations
@@ -93,9 +119,16 @@ poetry run pytest tests/chat/test_service.py::test_specific_function -v
 ```
 
 ### Debugging Worker Tasks
-- Check RabbitMQ management UI: http://localhost:15672
+- Check RabbitMQ management UI: http://localhost:15672 (user/password123)
 - Monitor Redis: http://localhost:8001
 - Worker logs show task execution details
+- Document processing uses `parse` queue, chat uses `default` queue
+
+### Troubleshooting Document Uploads
+1. Check both workers are running: `ps aux | grep dramatiq`
+2. Verify document status in DB - stuck in `UPLOADED` means worker issue
+3. Check for Weaviate errors - "class not found" means run migrations
+4. Monitor MinIO for uploaded files: http://localhost:9001 (user/password123)
 
 ## Key Configuration
 
@@ -116,6 +149,8 @@ Update `CORS_ALLOW_ORIGINS` in `.env` when deploying to new domains.
 - Replaced `logger.trace()` with `logger.debug()` (trace not available in structlog)
 - Updated Gemini model to `gemini-2.5-flash-preview-04-17`
 - File uploads failing with 429 error: Fixed by applying MinIO bucket policy for presigned URLs
+- Made `OLLAMA_URL` optional in settings (was required, blocking production deployments)
+- Document processing failing: Fixed by running Weaviate migrations
 
 ### MinIO/Storage Setup
 File uploads use MinIO with presigned URLs. If uploads fail:
@@ -135,10 +170,22 @@ s3_client.put_bucket_policy(Bucket='wallstr', Policy=json.dumps({
 ```
 3. Restart MinIO: `docker restart wallstr_minio`
 
+### Railway Deployment
+Environment variables for Railway:
+- `ENV` must be `prod` (not "production" or "development")
+- `DATABASE_URL` and `REDIS_URL` are auto-provided when you add those services
+- For RabbitMQ: Use internal URL `amqp://user:password@rabbitmq.railway.internal:5672/`
+- Update `CORS_ALLOW_ORIGINS` with your Railway frontend URL
+
+Workers need to be deployed as separate services with start commands:
+- Main worker: `poetry run task worker`
+- Heavy worker: `poetry run task worker:heavy`
+
 ### Deployment Notes
 - Backend uses custom PostgreSQL port 5441 to avoid conflicts
-- Frontend can be deployed to Vercel/Railway
+- Frontend can be deployed to Vercel/Railway  
 - Use ngrok for exposing local backend during development
+- For CORS with ngrok: Add ngrok URL to `CORS_ALLOW_ORIGINS` in .env
 
 ## Code Style
 
